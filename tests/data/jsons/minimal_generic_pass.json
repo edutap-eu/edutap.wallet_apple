@@ -1,0 +1,34 @@
+{
+    "description": "A Sample Pass",
+    "formatVersion": 1,
+    "organizationName": "Org Name",
+    "passTypeIdentifier": "pass.demo.lmu.de",
+    "serialNumber": "100005",
+    "teamIdentifier": "JG943677ZY",
+    "suppressStripShine": false,
+    "generic": {
+        "primaryFields": [
+            {
+                "key": "name",
+                "value": "John Doe",
+                "label": "Name",
+                "changeMessage": "",
+                "textAlignment": "PKTextAlignmentLeft"
+            }
+        ]
+    },
+    "barcodes": [
+        {
+            "format": "PKBarcodeFormatCode128",
+            "message": "test barcode",
+            "messageEncoding": "iso-8859-1",
+            "altText": "alternate text"
+        }
+    ],
+    "barcode": {
+        "format": "PKBarcodeFormatPDF417",
+        "message": "test barcode",
+        "messageEncoding": "iso-8859-1",
+        "altText": "alternate text"
+    }
+}

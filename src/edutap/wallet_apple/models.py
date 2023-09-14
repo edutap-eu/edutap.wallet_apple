@@ -208,7 +208,7 @@ class Pass(BaseModel):
     """Optional. Locations where the pass is relevant. For example, the location of your store."""
     ibeacons: list[IBeacon] | None = None
     """Optional. IBeacons data"""
-    relevantDate: DateField | None = None
+    relevantDate: DateField | str | None = None
     """Optional. Date and time when the pass becomes relevant."""
     associatedStoreIdentifiers: list[str] | None = None
     """Optional. Identifies which merchants’ locations accept the pass."""
@@ -222,12 +222,21 @@ class Pass(BaseModel):
     voided: bool = False
     
     @property
-    def passInformation():
+    def passInformation(self):
         """Returns the pass information object by checkinf all passmodel entries using all()"""
-        raise NotImplementedError()
-    
+        return next(
+            filter(
+                lambda x: x is not None,
+                (
+                    map(
+                        lambda x:getattr(self, x), 
+                        pass_model_registry)
+                    )
+                )
+            )    
     
 # hack in an optional field for each passmodel(passtype) since these are not known at compile time
+# because for each pass type whe PassInformation is stored in a different field of which only one is used
 for jsonname, cls in pass_model_registry.items():
     Pass.model_fields[jsonname] = FieldInfo(annotation=cls, required=False, default=None, exclude_none=True)
     
