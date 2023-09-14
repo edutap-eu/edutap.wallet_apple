@@ -23,9 +23,21 @@ def test_load_minimal_storecard():
     
     assert pass1.storeCard is not None
     assert pass1.passInformation.__class__ == models.StoreCard
+    assert pass1.nfc is None
     print(pass1.model_dump(exclude_none=True))
     
+   
+def test_load_storecard_nfc():
+    buf = open(jsons /'storecard_with_nfc.json', 'r').read()
+    pass1 = models.Pass.model_validate_json(buf)
     
+    assert pass1.storeCard is not None
+    assert pass1.passInformation.__class__ == models.StoreCard
+    
+    assert pass1.nfc is not None
+    print(pass1.model_dump(exclude_none=True))
+  
+   
 def test_load_minimal_generic_pass():
     buf = open(jsons / 'minimal_generic_pass.json', 'r').read()
     pass1 = models.Pass.model_validate_json(buf)

@@ -90,6 +90,11 @@ class IBeacon(BaseModel):
     relevantText: str = ''  # Optional. Text displayed on the lock screen when the pass is currently relevant
     
     
+class NFC(BaseModel):
+    message: str  # Required. Message to be displayed on the lock screen when the pass is currently relevant
+    encryptionPublicKey: str  # Required. Public encryption key used by the Value Added Services protocol
+    
+    
 class PassInformation(BaseModel):
     headerFields: typing.List[Field] = PydanticField(default_factory=list)  # Optional. Additional fields to be displayed in the header of the pass
     primaryFields: typing.List[Field] = PydanticField(default_factory=list)  # Optional. Fields to be displayed prominently in the pass
@@ -220,6 +225,9 @@ class Pass(BaseModel):
     expirationDate: DateField | None = None # TODO: check if this is correct
     """Optional. Date and time when the pass expires."""
     voided: bool = False
+    
+    nfc: NFC | None = None
+    """Optional. Information used for Value Added Service Protocol transactions."""
     
     @property
     def passInformation(self):

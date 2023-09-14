@@ -1,0 +1,108 @@
+{
+    "description": "description",
+    "formatVersion": 1,
+    "organizationName": "PassKit, Inc",
+    "passTypeIdentifier": "pass.com.passkit.pksamples.nfcdemo",
+    "serialNumber": "6PDkGcdvkPtb7mpXP0kkRv",
+    "teamIdentifier": "SSUX2R6S8X",
+    "storeCard": {
+        "backFields": [
+            {
+                "changeMessage": "%@",
+                "key": "universal.info",
+                "label": "universal.info.label",
+                "value": "universal.info.value",
+                "attributedValue": "universal.info.value",
+                "dataDetectorTypes": [
+                    "PKDataDetectorTypeCalendarEvent",
+                    "PKDataDetectorTypeLink",
+                    "PKDataDetectorTypePhoneNumber",
+                    "PKDataDetectorTypeAddress"
+                ]
+            },
+            {
+                "changeMessage": "%@",
+                "key": "meta.payload",
+                "label": "meta.payload.label",
+                "value": "meta.payload.value",
+                "attributedValue": "meta.payload.value",
+                "dataDetectorTypes": [
+                    "PKDataDetectorTypeAddress",
+                    "PKDataDetectorTypeCalendarEvent",
+                    "PKDataDetectorTypeLink",
+                    "PKDataDetectorTypePhoneNumber"
+                ]
+            },
+            {
+                "changeMessage": "%@",
+                "key": "custom.applePassTypeId",
+                "label": "custom.applePassTypeId.label",
+                "value": "custom.applePassTypeId.value",
+                "attributedValue": "custom.applePassTypeId.value",
+                "dataDetectorTypes": [
+                    "PKDataDetectorTypeLink",
+                    "PKDataDetectorTypePhoneNumber",
+                    "PKDataDetectorTypeAddress",
+                    "PKDataDetectorTypeCalendarEvent"
+                ]
+            },
+            {
+                "changeMessage": "%@",
+                "key": "custom.encryptionKey",
+                "label": "custom.encryptionKey.label",
+                "value": "custom.encryptionKey.value",
+                "attributedValue": "custom.encryptionKey.value",
+                "dataDetectorTypes": [
+                    "PKDataDetectorTypeCalendarEvent",
+                    "PKDataDetectorTypeLink",
+                    "PKDataDetectorTypePhoneNumber",
+                    "PKDataDetectorTypeAddress"
+                ]
+            },
+            {
+                "changeMessage": "%@",
+                "key": "custom.pk",
+                "label": "custom.pk.label",
+                "value": "custom.pk.value",
+                "attributedValue": "custom.pk.value",
+                "dataDetectorTypes": [
+                    "PKDataDetectorTypeAddress",
+                    "PKDataDetectorTypeCalendarEvent",
+                    "PKDataDetectorTypeLink",
+                    "PKDataDetectorTypePhoneNumber"
+                ]
+            }
+        ],
+        "secondaryFields": [
+            {
+                "changeMessage": "%@",
+                "key": "custom.payload",
+                "label": "custom.payload.label",
+                "value": "custom.payload.value"
+            }
+        ]
+    },
+    "barcode": {
+        "altText": "6PDkGcdvkPtb7mpXP0kkRv",
+        "format": "PKBarcodeFormatPDF417",
+        "message": "6PDkGcdvkPtb7mpXP0kkRv",
+        "messageEncoding": "iso-8859-1"
+    },
+    "barcodes": [
+        {
+            "altText": "6PDkGcdvkPtb7mpXP0kkRv",
+            "format": "PKBarcodeFormatPDF417",
+            "message": "6PDkGcdvkPtb7mpXP0kkRv",
+            "messageEncoding": "iso-8859-1"
+        }
+    ],
+    "backgroundColor": "rgb(255,255,255)",
+    "foregroundColor": "rgb(237,118,47)",
+    "labelColor": "rgb(63,143,228)",
+    "authenticationToken": "4lL3y8fVQFNgreqoYkXBnV",
+    "webServiceURL": "https://europe-west1-passkit-io.cloudfunctions.net/pfr",
+    "nfc": {
+        "message": "6PDkGcdvkPtb7mpXP0kkRv",
+        "encryptionPublicKey": "MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgADwKMBv29ByaSLiGF0FctuyB+Hs2oZ1kDIYhTVllPexNE="
+    }
+}
