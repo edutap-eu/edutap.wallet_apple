@@ -16,6 +16,7 @@ def test_model():
     
 def test_load_boarding_pass():
     buf = open(data / 'minimal_pass.json', 'r').read()
-    pass1 = models.BoardingPass.parse_raw(buf)
+    pass1 = models.Pass.parse_raw(buf)
     
+    assert pass1.storeCard is not None
     print(pass1.model_dump(exclude_none=True))
