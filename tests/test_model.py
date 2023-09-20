@@ -1,10 +1,8 @@
+import json
 import os
 from pathlib import Path
 from edutap.wallet_apple import models
-
-cwd = Path(__file__).parent
-data = cwd / 'data'
-jsons = data / 'jsons'
+from common import *
 
 
 def test_model():
@@ -81,3 +79,85 @@ def test_load_coupon():
     assert pass1.coupon is not None
     assert pass1.passInformation.__class__ == models.Coupon
     json_ = pass1.model_dump(exclude_none=True)
+
+
+from common import create_shell_pass
+
+def test_basic_pass():
+    passfile = create_shell_pass()
+    assert passfile.formatVersion == 1
+    assert passfile.barcode.format == BarcodeFormat.CODE128
+    assert len(passfile.files) == 0
+
+    passfile_json = passfile.model_dump(exclude_none=True)
+    assert passfile_json is not None
+    assert passfile_json['suppressStripShine'] == False
+    assert passfile_json['formatVersion'] == 1
+    assert passfile_json['passTypeIdentifier'] == 'Pass Type ID'
+    assert passfile_json['serialNumber'] == '1234567'
+    assert passfile_json['teamIdentifier'] == 'Team Identifier'
+    assert passfile_json['organizationName'] == 'Org Name'
+    assert passfile_json['description'] == 'A Sample Pass'
+
+
+def test_manifest_creation():
+    passfile = create_shell_pass()
+    manifest_json = passfile._createManifest()
+    manifest = json.loads(manifest_json)
+    assert "pass.json" in manifest
+    
+    
+def test_header_fields():
+    passfile = create_shell_pass()
+    passfile.passInformation.addHeaderField("header", "VIP Store Card", "Famous Inc.")
+    pass_json = passfile.model_dump(exclude_none=True)
+    assert pass_json["storeCard"]["headerFields"][0]["key"] == "header"
+    assert pass_json["storeCard"]["headerFields"][0]["value"] == "VIP Store Card"
+    assert pass_json["storeCard"]["headerFields"][0]["label"] == "Famous Inc."
+
+
+def test_secondary_fields():
+    passfile = create_shell_pass()
+    passfile.passInformation.addSecondaryField(
+        "secondary", "VIP Store Card", "Famous Inc."
+    )
+    pass_json = passfile.model_dump()
+    assert pass_json["storeCard"]["secondaryFields"][0]["key"] == "secondary"
+    assert pass_json["storeCard"]["secondaryFields"][0]["value"] == "VIP Store Card"
+    assert pass_json["storeCard"]["secondaryFields"][0]["label"] == "Famous Inc."
+
+
+def test_back_fields():
+    passfile = create_shell_pass()
+    passfile.passInformation.addBackField("back1", "VIP Store Card", "Famous Inc.")
+    pass_json = passfile.model_dump()
+    assert pass_json["storeCard"]["backFields"][0]["key"] == "back1"
+    assert pass_json["storeCard"]["backFields"][0]["value"] == "VIP Store Card"
+    assert pass_json["storeCard"]["backFields"][0]["label"] == "Famous Inc."
+
+
+def test_auxiliary_fields():
+    passfile = create_shell_pass()
+    passfile.passInformation.addAuxiliaryField("aux1", "VIP Store Card", "Famous Inc.")
+    pass_json = passfile.model_dump()
+    assert pass_json["storeCard"]["auxiliaryFields"][0]["key"] == "aux1"
+    assert pass_json["storeCard"]["auxiliaryFields"][0]["value"] == "VIP Store Card"
+    assert pass_json["storeCard"]["auxiliaryFields"][0]["label"] == "Famous Inc."
+
+
+def test_code128_pass():
+    """
+    This test is to create a pass with a new code128 format,
+    freezes it to json, then reparses it and validates it defaults
+    the legacy barcode correctly
+    """
+    passfile = create_shell_pass(barcodeFormat=BarcodeFormat.CODE128)
+    assert passfile.barcode.format == BarcodeFormat.PDF417
+    jsonData = passfile.model_dump_json()
+    thawedJson = json.loads(jsonData)
+    
+    # the legacy barcode field should be converted to PDF417 because CODE128 is not 
+    # in the legacy barcode list
+    assert thawedJson["barcode"]["format"] == BarcodeFormat.PDF417.value
+    assert thawedJson["barcodes"][0]["format"] == BarcodeFormat.CODE128.value
+
