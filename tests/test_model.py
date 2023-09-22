@@ -1,8 +1,11 @@
 import json
 import os
 from pathlib import Path
+
+import pytest
 from edutap.wallet_apple import models
 from common import *
+from M2Crypto import X509, BIO, SMIME
 
 
 def test_model():
@@ -161,3 +164,106 @@ def test_code128_pass():
     assert thawedJson["barcode"]["format"] == BarcodeFormat.PDF417.value
     assert thawedJson["barcodes"][0]["format"] == BarcodeFormat.CODE128.value
 
+
+def test_pdf_417_pass():
+    """
+    This test is to create a pass with a barcode that is valid
+    in both past and present versions of IOS
+    """
+    passfile = create_shell_pass(BarcodeFormat.PDF417)
+    jsonData = passfile.model_dump_json()
+    thawedJson = json.loads(jsonData)
+    assert thawedJson["barcode"]["format"] == BarcodeFormat.PDF417.value
+    assert thawedJson["barcodes"][0]["format"] == BarcodeFormat.PDF417.value
+
+
+def test_files():
+    passfile = create_shell_pass()
+    passfile.addFile("icon.png", open(resources / "white_square.png", "rb"))
+    assert len(passfile.files) == 1
+    assert "icon.png" in passfile.files
+
+    manifest_json = passfile._createManifest()
+    manifest = json.loads(manifest_json)
+    assert "170eed23019542b0a2890a0bf753effea0db181a" == manifest["icon.png"]
+
+    passfile.addFile("logo.png", open(resources / "white_square.png", "rb"))
+    assert len(passfile.files) == 2
+    assert "logo.png" in passfile.files
+
+    manifest_json = passfile._createManifest()
+    manifest = json.loads(manifest_json)
+    assert "170eed23019542b0a2890a0bf753effea0db181a" == manifest["logo.png"]
+
+
+def test_signing():
+    """
+    This test can only run locally if you provide your personal Apple Wallet
+    certificates, private key and password. It would not be wise to add
+    them to git. Store them in the files indicated below, they are ignored
+    by git.
+    """
+    try:
+        with open(password_file) as file_:
+            password = file_.read().strip()
+    except IOError:
+        password = ""
+
+    passfile = create_shell_pass()
+    manifest_json = passfile._createManifest()
+    signature = passfile._sign_manifest(
+        manifest_json,
+        cert_file,
+        key_file,
+        wwdr_file,
+        password,
+    )
+
+    smime = passfile._get_smime(
+        cert_file,
+        key_file,
+        wwdr_file,
+        password,
+    )
+
+    store = X509.X509_Store()
+    try:
+        store.load_info(bytes(str(wwdr_file), encoding="utf8"))
+    except TypeError:
+        store.load_info(str(wwdr_file))
+
+    smime.set_x509_store(store)
+
+    data_bio = BIO.MemoryBuffer(bytes(manifest_json, encoding="utf8"))
+
+    # PKCS7_NOVERIFY = do not verify the signers certificate of a signed message.
+    assert smime.verify(signature, data_bio, flags=SMIME.PKCS7_NOVERIFY) == bytes(
+        manifest_json, encoding="utf8"
+    )
+
+    tampered_manifest = bytes('{"pass.json": "foobar"}', encoding="utf8")
+    data_bio = BIO.MemoryBuffer(tampered_manifest)
+    # Verification MUST fail!
+    with pytest.raises(SMIME.PKCS7_Error):
+        smime.verify(signature, data_bio, flags=SMIME.PKCS7_NOVERIFY)
+
+
+def test_passbook_creation():
+    """
+    This test can only run locally if you provide your personal Apple Wallet
+    certificates, private key and password. It would not be wise to add
+    them to git. Store them in the files indicated below, they are ignored
+    by git.
+    """
+    try:
+        with open(password_file) as file_:
+            password = file_.read().strip()
+    except IOError:
+        password = ""
+
+    passfile = create_shell_pass()
+    passfile.addFile("icon.png", open(resources / "white_square.png", "rb"))
+    zip = passfile.create(cert_file, key_file, wwdr_file, password)
+    
+    open("test.pkpass", "wb").write(zip)
+    

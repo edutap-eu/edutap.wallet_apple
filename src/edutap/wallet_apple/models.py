@@ -5,10 +5,14 @@ from io import BytesIO
 import json
 from numbers import Number
 import typing
+import zipfile
 
 from pydantic import BaseModel, Field as PydanticField, computed_field
 from pydantic.fields import FieldInfo
 
+from M2Crypto import SMIME, X509
+from M2Crypto.X509 import X509_Stack
+                          
 
 class Alignment(Enum):
     LEFT = "PKTextAlignmentLeft"
@@ -292,7 +296,7 @@ class Pass(BaseModel):
         pass_json = self.model_dump_json(exclude_none=True)
         self.hashes["pass.json"] = hashlib.sha1(pass_json.encode("utf-8")).hexdigest()
         for filename, filedata in self.files.items():
-            self._hashes[filename] = hashlib.sha1(filedata).hexdigest()
+            self.hashes[filename] = hashlib.sha1(filedata).hexdigest()
         return json.dumps(self.hashes)
 
     def create(
@@ -317,6 +321,57 @@ class Pass(BaseModel):
         setattr(self, passtype, passcls())
 
 
+    def _get_smime(self, certificate, key, wwdr_certificate, password):
+        """
+        :return: M2Crypto.SMIME.SMIME
+        """
+        # from M2Crypto.X509 import X509_Stack
+        def passwordCallback(*args, **kwds):
+            return bytes(password, encoding='ascii')
+
+        smime = SMIME.SMIME()
+
+        wwdrcert = X509.load_cert(wwdr_certificate)
+        stack = X509_Stack()
+        stack.push(wwdrcert)
+        smime.set_x509_stack(stack)
+
+        smime.load_key(key, certfile=certificate, callback=passwordCallback)
+        return smime
+
+    def _sign_manifest(self, manifest, certificate, key, wwdr_certificate, password) -> SMIME.PKCS7:
+        """
+        :return: M2Crypto.SMIME.PKCS7
+        """
+        smime = self._get_smime(certificate, key, wwdr_certificate, password)
+        pkcs7 = smime.sign(
+            SMIME.BIO.MemoryBuffer(bytes(manifest, encoding='utf8')),
+            flags=SMIME.PKCS7_DETACHED | SMIME.PKCS7_BINARY
+        )
+        return pkcs7
+    
+    def _createSignature(
+        self, manifest, certificate, key, wwdr_certificate, password
+    ):
+        """
+        Creates the signature for the pass file.
+        """
+        pk7 = self._sign_manifest(manifest, certificate, key, wwdr_certificate, password)
+        der = SMIME.BIO.MemoryBuffer()
+        pk7.write_der(der)
+        return der.read()
+    
+    def _createZip(self, manifest, signature, zip_file=None):
+        pass_json = self.model_dump_json(exclude_none=True, indent=4)
+        zf = zipfile.ZipFile(zip_file or 'pass.pkpass', 'w')
+        zf.writestr('signature', signature)
+        zf.writestr('manifest.json', manifest)
+        zf.writestr('pass.json', pass_json)
+        for filename, filedata in self.files.items():
+            zf.writestr(filename, filedata)
+        zf.close()
+
+    
 # hack in an optional field for each passmodel(passtype) since these are not known at compile time
 # because for each pass type whe PassInformation is stored in a different field of which only one is used
 for jsonname, cls in pass_model_registry.items():
