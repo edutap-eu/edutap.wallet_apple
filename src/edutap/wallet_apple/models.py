@@ -276,6 +276,14 @@ class Pass(BaseModel):
     """Optional. Information used for Value Added Service Protocol transactions."""
 
     @property
+    def pass_dict(self):
+        return self.model_dump(exclude_none=True)
+    
+    @property
+    def pass_json(self):
+       return self.model_dump_json(exclude_none=True, indent=4)
+    
+    @property
     def passInformation(self):
         """Returns the pass information object by checkinf all passmodel entries using all()"""
         return next(
@@ -293,7 +301,7 @@ class Pass(BaseModel):
         """
         Creates the hashes for all the files included in the pass file.
         """
-        pass_json = self.model_dump_json(exclude_none=True)
+        pass_json = self.pass_json
         self.hashes["pass.json"] = hashlib.sha1(pass_json.encode("utf-8")).hexdigest()
         for filename, filedata in self.files.items():
             self.hashes[filename] = hashlib.sha1(filedata).hexdigest()
@@ -362,7 +370,7 @@ class Pass(BaseModel):
         return der.read()
     
     def _createZip(self, manifest, signature, zip_file=None):
-        pass_json = self.model_dump_json(exclude_none=True, indent=4)
+        pass_json = self.pass_json
         zf = zipfile.ZipFile(zip_file or 'pass.pkpass', 'w')
         zf.writestr('signature', signature)
         zf.writestr('manifest.json', manifest)

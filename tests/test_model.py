@@ -89,7 +89,10 @@ from common import create_shell_pass
 def test_basic_pass():
     passfile = create_shell_pass()
     assert passfile.formatVersion == 1
-    assert passfile.barcode.format == BarcodeFormat.CODE128
+    assert passfile.barcodes[0].format == BarcodeFormat.CODE128
+    # barcode is a legacy field, it should be the same as the first barcode, but in the legacy format
+    # if the barcode format is not in the legacy list, it should be PDF417
+    assert passfile.barcode.format == BarcodeFormat.PDF417
     assert len(passfile.files) == 0
 
     passfile_json = passfile.model_dump(exclude_none=True)
@@ -211,6 +214,7 @@ def test_signing():
 
     passfile = create_shell_pass()
     manifest_json = passfile._createManifest()
+    
     signature = passfile._sign_manifest(
         manifest_json,
         cert_file,
@@ -264,6 +268,4 @@ def test_passbook_creation():
     passfile = create_shell_pass()
     passfile.addFile("icon.png", open(resources / "white_square.png", "rb"))
     zip = passfile.create(cert_file, key_file, wwdr_file, password)
-    
-    open("test.pkpass", "wb").write(zip)
     

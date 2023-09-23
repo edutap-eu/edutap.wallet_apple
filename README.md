@@ -28,12 +28,12 @@ flowchart TD
 
 - create your own private key
 ```shell
-$ openssl genrsa -out key.pem 2048
+$ openssl genrsa -out private.key 2048
 ```
 
 - create a certificate signing request (CSR) with the private key
 ```shell
-$ openssl req -new -key key.pem -out request.csr -subj="/emailAddress=[your email addr],CN=[your full name],C=[your country ISO code]"
+$ openssl req -new -key private.key -out request.csr -subj="/emailAddress=[your email addr],CN=[your full name],C=[your country ISO code]"
 ```
 
 
@@ -72,9 +72,6 @@ openssl x509 -inform der -in AppleWWDRCA.cer -out wwdr_certificate.pem
 ```
 then copy it into the 'certs' folder of the passbook server
 
-### Install certificate and private key on your server
-
-copy the certificate.pem and the key.pem to the 'certa' directory your server.
 
 see [documentation @ apple](https://developer.apple.com/documentation/walletpasses/building_a_pass)
 
@@ -83,3 +80,15 @@ check expiration date of certificate
 ```shell
 openssl x509 -enddate -noout -in file.pem
 ```
+
+### Install certificate and private key for integration tests
+
+copy the `certificate.pem`, `private.key` and `wwdr_certificate.pem` to the 'certs' directory your server.
+
+## run the integration tests
+
+```shell
+pytest -m integration
+```
+
+the test "test_passbook_creation_integration" will create a passbook file and display it with the passbook viewer. This test runs just under OSX.
