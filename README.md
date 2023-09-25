@@ -12,7 +12,7 @@ this is the overall process to get the necessary certificates for issuing passes
 
 ```mermaid
 flowchart TD
-    B[create key.pem]
+    B[create private key.pem]
     D[get/create Pass ID - apple.com]
     WWDR[download AppleWWDRCA.cer] -->WWDRPEM[convert to wwdr_certificate.pem]
     D --> E[request Certificate.cer based on Pass Id - apple.com]
