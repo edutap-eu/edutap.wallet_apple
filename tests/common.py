@@ -1,6 +1,7 @@
 from pathlib import Path
+import uuid
 
-from edutap.wallet_apple.models import Barcode, BarcodeFormat, Pass, StoreCard
+from edutap.wallet_apple.models import Barcode, BarcodeFormat, Coupon, Field, Pass, StoreCard
 
 
 cwd = Path(__file__).parent
@@ -28,5 +29,34 @@ def create_shell_pass(barcodeFormat=BarcodeFormat.CODE128, passTypeIdentifier="P
         serialNumber="1234567",
         description="A Sample Pass"
     )
+    passfile.barcode = stdBarcode
+    return passfile
+
+def create_shell_pass_loyalty(barcodeFormat=BarcodeFormat.CODE128, passTypeIdentifier="Pass Type ID", teamIdentifier="Team Identifier"):
+    cardInfo = Coupon()
+    cardInfo.addPrimaryField("name", "Jähn Doe", "Name")
+    stdBarcode = Barcode(
+        message="test barcode", format=barcodeFormat, altText="alternate text"
+    )
+    sn = uuid.uuid4().hex
+    passfile = Pass(
+        coupon=cardInfo,
+        organizationName="eduTAP",
+        passTypeIdentifier=passTypeIdentifier,
+        teamIdentifier=teamIdentifier,
+        serialNumber=sn,
+        description="edutap Sample Pass"
+    )
+    
+    # passfile.passInformation.primaryFields.append(
+    #     Field(key="balance", label="Balance", value="100", currencyCode="EUR")
+    # )
+    # passfile.passInformation.secondaryFields.append(
+    #     Field(key="points", label="Points", value="101")
+    # )
+    # passfile.passInformation.backFields.append(
+    #     Field(key="terms", label="Terms", value="Terms and Conditions")
+    # )
+        
     passfile.barcode = stdBarcode
     return passfile

@@ -56,12 +56,25 @@ class NumberStyle(Enum):
     SPELLOUT = "PKNumberStyleSpellOut"
 
 
+class MyEnum(Enum):
+    def __str__(self):
+        return self.value
+    
+    a=1
+    b=2
+    
+class Schas(BaseModel):
+    i: int =1
+    s: str = "xx"
+    
 class Field(BaseModel):
     key: str  # Required. The key must be unique within the scope
     value: str | int | float  # Required. Value of the field. For example, 42
     label: str = ""  # Optional. Label text for the field.
     changeMessage: str = ""  # Optional. Format string for the alert text that is displayed when the pass is updated
-    textAlignment: Alignment = Alignment.LEFT
+    # textAlignment: Alignment = Alignment.LEFT
+    # textAlignment: Alignment|None = None # Optional. Alignment for the field’s contents
+    textAlignment: MyEnum | None = None  # Optional. Alignment for the field’s contents
 
 
 class DateField(Field):
@@ -177,6 +190,7 @@ class Generic(PassInformation):
 @passmodel("storeCard")
 class StoreCard(PassInformation):
     pass
+
 
 
 class Pass(BaseModel):
