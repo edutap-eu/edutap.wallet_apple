@@ -4,6 +4,6 @@ version = "0.0.1"
 
 dependencies = [
     'M2Crypto >= 0.28.2',
-    "pydantic >= 2.4.1",
+    "pydantic != 2.4.0,>=2.0.0",
     "pytest"
 ]
