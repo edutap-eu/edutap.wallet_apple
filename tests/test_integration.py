@@ -4,7 +4,7 @@ import uuid
 import pytest
 
 from common import create_shell_pass, certs, create_shell_pass_loyalty, resources
-from edutap.wallet_apple.models import Barcode, BarcodeFormat, Coupon, EventTicket, Pass
+from edutap.wallet_apple.models import NFC, Barcode, BarcodeFormat, Coupon, EventTicket, Pass, StoreCard
 
 
 @pytest.mark.integration
@@ -39,7 +39,7 @@ def test_passbook_creation_integration():
 
 
 @pytest.mark.integration
-def test_passbook_creation_integration_loyalty():
+def test_passbook_creation_integration_loyalty_with_nfc():
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -54,15 +54,16 @@ def test_passbook_creation_integration_loyalty():
 
     pass_file_name = "/Users/phil/dev/projects/edutap/apple/passes/pass1.pkpass"
     
-    
-    cardInfo = Coupon()
-    cardInfo.addPrimaryField("title", "EAIE2023", "")
-    stdBarcode = Barcode(
-        message="test barcode", format=BarcodeFormat.CODE128, altText="alternate text"
-    )
     sn = uuid.uuid4().hex
+    cardInfo = StoreCard()
+    cardInfo.addHeaderField("title", "EAIE2023", "")
+    # if name:
+    #     cardInfo.addSecondaryField("name", name, "")
+    stdBarcode = Barcode(
+        message=sn, format=BarcodeFormat.CODE128, altText=sn
+    )
     passfile = Pass(
-        coupon=cardInfo,
+        storeCard=cardInfo,
         organizationName="eduTAP",
         passTypeIdentifier="pass.demo.lmu.de",
         teamIdentifier="JG943677ZY",
@@ -73,19 +74,27 @@ def test_passbook_creation_integration_loyalty():
     passfile.barcode = stdBarcode
     
     passfile.addFile("icon.png", open(resources / "edutap.png", "rb"))
-    passfile.addFile("iconx2.png", open(resources / "edutap.png", "rb"))
+    passfile.addFile("icon@2x.png", open(resources / "edutap.png", "rb"))
+    passfile.addFile("icon@3x.png", open(resources / "edutap.png", "rb"))
     passfile.addFile("logo.png", open(resources / "edutap.png", "rb"))
-    passfile.addFile("logox2.png", open(resources / "edutap.png", "rb"))
+    passfile.addFile("logo@2x.png", open(resources / "edutap.png", "rb"))
     passfile.addFile("strip.png", open(resources / "eaie-hero.jpg", "rb"))
     
     passfile.backgroundColor = "#fa511e"
+    passfile.nfc = NFC(
+        message="Hello NFC",
+        encryptionPublicKey=
+        # "MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgAC0utmUaTA6mrvZoALBTpaKI0xIoQxHXtWj37OtiSttY4="
+        "MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACWpF1zC3h+dCh+eWyqV8unVddh2LQaUoV8LQrgb3BKkM=",
+        requiresAuthentication=False
+    )
+        
     zip = passfile.create(
         certs / "private" / "certificate.pem",
         certs / "private" / "private.key",
         certs / "private" / "wwdr_certificate.pem",
         "",
     )
-
     open(pass_file_name, "wb").write(zip.getvalue())
     os.system("open " + pass_file_name)
 

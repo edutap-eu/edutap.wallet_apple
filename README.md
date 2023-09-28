@@ -58,7 +58,7 @@ the certificate is preinstalled, but in case of expiration it can be downloaded 
 see [https://developer.apple.com/support/certificates/expiration/](apple support)
 
 ```shell
-curl https://developer.apple.com/certificationauthority/AppleWWDRCA.cer -o AppleWWDRCA.cer
+curl https://www.apple.com/certificateauthority/AppleWWDRCAG4.cer -o AppleWWDRCA.cer
 ```
 
 an overview of downloadable apple certs:
@@ -92,3 +92,9 @@ pytest -m integration
 ```
 
 the test "test_passbook_creation_integration" will create a passbook file and display it with the passbook viewer. This test runs just under OSX.
+
+# Notification
+
+https://developer.apple.com/documentation/walletpasses/adding_a_web_service_to_update_passes
+
+## Create a certificate for push notifications

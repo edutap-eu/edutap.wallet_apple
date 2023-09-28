@@ -119,6 +119,7 @@ class IBeacon(BaseModel):
 class NFC(BaseModel):
     message: str  # Required. Message to be displayed on the lock screen when the pass is currently relevant
     encryptionPublicKey: str  # Required. Public encryption key used by the Value Added Services protocol
+    requiresAuthentication: bool = False  # Optional. Indicates that the pass is not valid unless it contains a valid signature 
 
 
 class PassInformation(BaseModel):
