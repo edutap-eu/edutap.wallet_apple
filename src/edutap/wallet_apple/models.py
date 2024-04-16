@@ -337,7 +337,11 @@ class Pass(BaseModel):
     ):
         manifest = self._createManifest()
         signature = self._createSignature(
-            manifest, certificate, key, wwdr_certificate, password
+            manifest,
+            certificate,
+            key,
+            wwdr_certificate,
+            password,
         )
         if not zip_file:
             zip_file = BytesIO()
@@ -368,7 +372,12 @@ class Pass(BaseModel):
         return smime
 
     def _sign_manifest(
-        self, manifest, certificate, key, wwdr_certificate, password
+        self,
+        manifest,
+        certificate,
+        key,
+        wwdr_certificate,
+        password,
     ) -> SMIME.PKCS7:
         """
         :return: M2Crypto.SMIME.PKCS7
@@ -380,7 +389,14 @@ class Pass(BaseModel):
         )
         return pkcs7
 
-    def _createSignature(self, manifest, certificate, key, wwdr_certificate, password):
+    def _createSignature(
+        self,
+        manifest,
+        certificate,
+        key,
+        wwdr_certificate,
+        password,
+    ):
         """
         Creates the signature for the pass file.
         """
