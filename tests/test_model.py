@@ -1,12 +1,12 @@
-from common import *
+from edutap.wallet_apple import common
 from edutap.wallet_apple import models
+from edutap.wallet_apple.common import create_shell_pass
+from edutap.wallet_apple.models import BarcodeFormat
 from M2Crypto import BIO
 from M2Crypto import SMIME
 from M2Crypto import X509
-from pathlib import Path
 
 import json
-import os
 import pytest
 
 
@@ -21,7 +21,7 @@ def test_model():
 
 
 def test_load_minimal_storecard():
-    buf = open(jsons / "minimal_storecard.json").read()
+    buf = open(common.jsons / "minimal_storecard.json").read()
     pass1 = models.Pass.model_validate_json(buf)
 
     assert pass1.storeCard is not None
@@ -31,7 +31,7 @@ def test_load_minimal_storecard():
 
 
 def test_load_storecard_nfc():
-    buf = open(jsons / "storecard_with_nfc.json").read()
+    buf = open(common.jsons / "storecard_with_nfc.json").read()
     pass1 = models.Pass.model_validate_json(buf)
 
     assert pass1.storeCard is not None
@@ -42,51 +42,53 @@ def test_load_storecard_nfc():
 
 
 def test_load_minimal_generic_pass():
-    buf = open(jsons / "minimal_generic_pass.json").read()
+    buf = open(common.jsons / "minimal_generic_pass.json").read()
     pass1 = models.Pass.model_validate_json(buf)
 
     assert pass1.generic is not None
     assert pass1.passInformation.__class__ == models.Generic
     json_ = pass1.model_dump(exclude_none=True)
+    assert json_
 
 
 def test_load_generic_pass():
-    buf = open(jsons / "generic_pass.json").read()
+    buf = open(common.jsons / "generic_pass.json").read()
     pass1 = models.Pass.model_validate_json(buf)
 
     assert pass1.generic is not None
     assert pass1.passInformation.__class__ == models.Generic
     json_ = pass1.model_dump(exclude_none=True)
+    assert json_
 
 
 def test_load_boarding_pass():
-    buf = open(jsons / "boarding_pass.json").read()
+    buf = open(common.jsons / "boarding_pass.json").read()
     pass1 = models.Pass.model_validate_json(buf)
 
     assert pass1.boardingPass is not None
     assert pass1.passInformation.__class__ == models.BoardingPass
     json_ = pass1.model_dump(exclude_none=True)
+    assert json_
 
 
 def test_load_event_pass():
-    buf = open(jsons / "event_ticket.json").read()
+    buf = open(common.jsons / "event_ticket.json").read()
     pass1 = models.Pass.model_validate_json(buf)
 
     assert pass1.eventTicket is not None
     assert pass1.passInformation.__class__ == models.EventTicket
     json_ = pass1.model_dump(exclude_none=True)
+    assert json_
 
 
 def test_load_coupon():
-    buf = open(jsons / "coupon.json").read()
+    buf = open(common.jsons / "coupon.json").read()
     pass1 = models.Pass.model_validate_json(buf)
 
     assert pass1.coupon is not None
     assert pass1.passInformation.__class__ == models.Coupon
     json_ = pass1.model_dump(exclude_none=True)
-
-
-from common import create_shell_pass
+    assert json_
 
 
 def test_basic_pass():
@@ -100,7 +102,7 @@ def test_basic_pass():
 
     passfile_json = passfile.model_dump(exclude_none=True)
     assert passfile_json is not None
-    assert passfile_json["suppressStripShine"] == False
+    assert passfile_json["suppressStripShine"] is False
     assert passfile_json["formatVersion"] == 1
     assert passfile_json["passTypeIdentifier"] == "Pass Type ID"
     assert passfile_json["serialNumber"] == "1234567"
@@ -185,7 +187,7 @@ def test_pdf_417_pass():
 
 def test_files():
     passfile = create_shell_pass()
-    passfile.addFile("icon.png", open(resources / "white_square.png", "rb"))
+    passfile.addFile("icon.png", open(common.resources / "white_square.png", "rb"))
     assert len(passfile.files) == 1
     assert "icon.png" in passfile.files
 
@@ -193,7 +195,7 @@ def test_files():
     manifest = json.loads(manifest_json)
     assert "170eed23019542b0a2890a0bf753effea0db181a" == manifest["icon.png"]
 
-    passfile.addFile("logo.png", open(resources / "white_square.png", "rb"))
+    passfile.addFile("logo.png", open(common.resources / "white_square.png", "rb"))
     assert len(passfile.files) == 2
     assert "logo.png" in passfile.files
 
@@ -210,7 +212,7 @@ def test_signing():
     by git.
     """
     try:
-        with open(password_file) as file_:
+        with open(common.password_file) as file_:
             password = file_.read().strip()
     except OSError:
         password = ""
@@ -220,24 +222,24 @@ def test_signing():
 
     signature = passfile._sign_manifest(
         manifest_json,
-        cert_file,
-        key_file,
-        wwdr_file,
+        common.cert_file,
+        common.key_file,
+        common.wwdr_file,
         password,
     )
 
     smime = passfile._get_smime(
-        cert_file,
-        key_file,
-        wwdr_file,
+        common.cert_file,
+        common.key_file,
+        common.wwdr_file,
         password,
     )
 
     store = X509.X509_Store()
     try:
-        store.load_info(bytes(str(wwdr_file), encoding="utf8"))
+        store.load_info(bytes(str(common.wwdr_file), encoding="utf8"))
     except TypeError:
-        store.load_info(str(wwdr_file))
+        store.load_info(str(common.wwdr_file))
 
     smime.set_x509_store(store)
 
@@ -263,11 +265,12 @@ def test_passbook_creation():
     by git.
     """
     try:
-        with open(password_file) as file_:
+        with open(common.password_file) as file_:
             password = file_.read().strip()
     except OSError:
         password = ""
 
     passfile = create_shell_pass()
-    passfile.addFile("icon.png", open(resources / "white_square.png", "rb"))
-    zip = passfile.create(cert_file, key_file, wwdr_file, password)
+    passfile.addFile("icon.png", open(common.resources / "white_square.png", "rb"))
+    zip = passfile.create(common.cert_file, common.key_file, common.wwdr_file, password)
+    assert zip

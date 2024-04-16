@@ -3,7 +3,6 @@ from io import BytesIO
 from M2Crypto import SMIME
 from M2Crypto import X509
 from M2Crypto.X509 import X509_Stack
-from numbers import Number
 from pydantic import BaseModel
 from pydantic import computed_field
 from pydantic import Field as PydanticField
@@ -237,8 +236,8 @@ class Pass(BaseModel):
     # barcode: Barcode | None = PydanticField(
     #     default=None, deprecated=True, description="Use barcodes instead"
     # )
-    @computed_field
     @property
+    @computed_field
     def barcode(self) -> Barcode | None:
         """
         deprecated, use barcodes instead.
@@ -404,7 +403,7 @@ class Pass(BaseModel):
 
 
 # hack in an optional field for each passmodel(passtype) since these are not known at compile time
-# because for each pass type whe PassInformation is stored in a different field of which only one is used
+# because for each pass type the PassInformation is stored in a different field of which only one is used
 for jsonname, cls in pass_model_registry.items():
     Pass.model_fields[jsonname] = FieldInfo(
         annotation=cls, required=False, default=None, exclude_none=True

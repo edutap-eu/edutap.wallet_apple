@@ -1,10 +1,8 @@
 from common import certs
 from common import create_shell_pass
-from common import create_shell_pass_loyalty
 from common import resources
 from edutap.wallet_apple.models import Barcode
 from edutap.wallet_apple.models import BarcodeFormat
-from edutap.wallet_apple.models import Coupon
 from edutap.wallet_apple.models import EventTicket
 from edutap.wallet_apple.models import NFC
 from edutap.wallet_apple.models import Pass
@@ -12,7 +10,6 @@ from edutap.wallet_apple.models import StoreCard
 
 import os
 import pytest
-import resource
 import uuid
 
 
@@ -24,7 +21,7 @@ def test_passbook_creation_integration():
     them to git. Store them in the files indicated below, they are ignored
     by git.
 
-    ATTENTION: in order to run this test you have to install the necessary certifcates in data/certs/private following the README.md
+    ATTENTION: in order to run this test you have to install the necessary certificates in data/certs/private following the README.md
     these certificates are not provided in the repository for security reasons.
 
     this test opens the passbook file in the default application for .pkpass files )works only on OSX)
@@ -55,7 +52,7 @@ def test_passbook_creation_integration_loyalty_with_nfc():
     them to git. Store them in the files indicated below, they are ignored
     by git.
 
-    ATTENTION: in order to run this test you have to install the necessary certifcates in data/certs/private following the README.md
+    ATTENTION: in order to run this test you have to install the necessary certificates in data/certs/private following the README.md
     these certificates are not provided in the repository for security reasons.
 
     this test opens the passbook file in the default application for .pkpass files )works only on OSX)
@@ -90,9 +87,8 @@ def test_passbook_creation_integration_loyalty_with_nfc():
     passfile.backgroundColor = "#fa511e"
     passfile.nfc = NFC(
         message="Hello NFC",
-        encryptionPublicKey=
+        encryptionPublicKey="MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACWpF1zC3h+dCh+eWyqV8unVddh2LQaUoV8LQrgb3BKkM=",
         # "MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgAC0utmUaTA6mrvZoALBTpaKI0xIoQxHXtWj37OtiSttY4="
-        "MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACWpF1zC3h+dCh+eWyqV8unVddh2LQaUoV8LQrgb3BKkM=",
         requiresAuthentication=False,
     )
 
@@ -114,7 +110,7 @@ def test_passbook_creation_integration_eventticket():
     them to git. Store them in the files indicated below, they are ignored
     by git.
 
-    ATTENTION: in order to run this test you have to install the necessary certifcates in data/certs/private following the README.md
+    ATTENTION: in order to run this test you have to install the necessary certificates in data/certs/private following the README.md
     these certificates are not provided in the repository for security reasons.
 
     this test opens the passbook file in the default application for .pkpass files )works only on OSX)

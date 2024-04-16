@@ -1,7 +1,6 @@
 from edutap.wallet_apple.models import Barcode
 from edutap.wallet_apple.models import BarcodeFormat
 from edutap.wallet_apple.models import Coupon
-from edutap.wallet_apple.models import Field
 from edutap.wallet_apple.models import Pass
 from edutap.wallet_apple.models import StoreCard
 from pathlib import Path
