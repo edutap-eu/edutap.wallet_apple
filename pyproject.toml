@@ -1,9 +1,82 @@
 [project]
 name = "edutap.wallet_apple"
-version = "0.0.1"
-
-dependencies = [
-    'M2Crypto >= 0.28.2',
-    "pydantic != 2.4.0,>=2.0.0",
-    "pytest"
+version = "1.0.0a1.dev0"
+description = "Library for Apple Wallet Communication"
+keywords = ["wallet", "Apple", "api", "pass"]
+readme = "README.md"
+authors = [
+    {name = "Philipp Auersperg-Castell", email = "phil@bluedynamics.com"},
+    {name = "Alexander Loechel", email = "Alexander.Loechel@lmu.de"},
+    {name = "Jens Klein", email = "jk@kleinundpartner.at"},
 ]
+requires-python = ">=3.10"
+license = { text = "EUPL 1.2" }
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pydantic[email,dotenv]>=2.0",
+    "python-dotenv",
+    # 'M2Crypto >= 0.28.2',
+]
+
+[project.urls]
+Source = "https://github.com/edutap-eu/edutap.wallet_apple"
+Issues = "https://github.com/edutap-eu/edutap.wallet_apple/issues"
+Documentation = "https://docs.edutap.eu/packages/edutap_wallet_apple/index.html"
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "requests-mock",
+]
+typecheck  = [
+    "mypy",
+    "types-requests",
+    "pytest-stub",
+]
+develop = [
+    "pdbpp",
+    "ipython",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "tests",
+]
+
+[tool.isort]
+profile = "plone"
+
+[tool.black]
+target-version = ["py310"]
+include = "src"
+
+[tool.codespell]
+ignore-words-list = "discreet,"
+
+[tool.check-manifest]
+ignore = [
+    ".editorconfig",
+    ".pre-commit-config.yaml",
+    "tox.ini",
+    "mypy.ini",
+    ".flake8",
+    "mx.ini",
+]
+

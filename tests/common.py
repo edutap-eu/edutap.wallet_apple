@@ -1,7 +1,12 @@
+from edutap.wallet_apple.models import Barcode
+from edutap.wallet_apple.models import BarcodeFormat
+from edutap.wallet_apple.models import Coupon
+from edutap.wallet_apple.models import Field
+from edutap.wallet_apple.models import Pass
+from edutap.wallet_apple.models import StoreCard
 from pathlib import Path
-import uuid
 
-from edutap.wallet_apple.models import Barcode, BarcodeFormat, Coupon, Field, Pass, StoreCard
+import uuid
 
 
 cwd = Path(__file__).parent
@@ -15,7 +20,11 @@ key_file = certs / "private.key"
 wwdr_file = certs / "wwdr_certificate.pem"
 
 
-def create_shell_pass(barcodeFormat=BarcodeFormat.CODE128, passTypeIdentifier="Pass Type ID", teamIdentifier="Team Identifier"):
+def create_shell_pass(
+    barcodeFormat=BarcodeFormat.CODE128,
+    passTypeIdentifier="Pass Type ID",
+    teamIdentifier="Team Identifier",
+):
     cardInfo = StoreCard()
     cardInfo.addPrimaryField("name", "Jähn Doe", "Name")
     stdBarcode = Barcode(
@@ -27,12 +36,17 @@ def create_shell_pass(barcodeFormat=BarcodeFormat.CODE128, passTypeIdentifier="P
         passTypeIdentifier=passTypeIdentifier,
         teamIdentifier=teamIdentifier,
         serialNumber="1234567",
-        description="A Sample Pass"
+        description="A Sample Pass",
     )
     passfile.barcode = stdBarcode
     return passfile
 
-def create_shell_pass_loyalty(barcodeFormat=BarcodeFormat.CODE128, passTypeIdentifier="Pass Type ID", teamIdentifier="Team Identifier"):
+
+def create_shell_pass_loyalty(
+    barcodeFormat=BarcodeFormat.CODE128,
+    passTypeIdentifier="Pass Type ID",
+    teamIdentifier="Team Identifier",
+):
     cardInfo = Coupon()
     cardInfo.addPrimaryField("name", "Jähn Doe", "Name")
     stdBarcode = Barcode(
@@ -45,9 +59,9 @@ def create_shell_pass_loyalty(barcodeFormat=BarcodeFormat.CODE128, passTypeIdent
         passTypeIdentifier=passTypeIdentifier,
         teamIdentifier=teamIdentifier,
         serialNumber=sn,
-        description="edutap Sample Pass"
+        description="edutap Sample Pass",
     )
-    
+
     # passfile.passInformation.primaryFields.append(
     #     Field(key="balance", label="Balance", value="100", currencyCode="EUR")
     # )
@@ -57,6 +71,6 @@ def create_shell_pass_loyalty(barcodeFormat=BarcodeFormat.CODE128, passTypeIdent
     # passfile.passInformation.backFields.append(
     #     Field(key="terms", label="Terms", value="Terms and Conditions")
     # )
-        
+
     passfile.barcode = stdBarcode
     return passfile

@@ -1,18 +1,20 @@
 from enum import Enum
+from io import BytesIO
+from M2Crypto import SMIME
+from M2Crypto import X509
+from M2Crypto.X509 import X509_Stack
+from numbers import Number
+from pydantic import BaseModel
+from pydantic import computed_field
+from pydantic import Field as PydanticField
+from pydantic.fields import FieldInfo
+
 import functools
 import hashlib
-from io import BytesIO
 import json
-from numbers import Number
 import typing
 import zipfile
 
-from pydantic import BaseModel, Field as PydanticField, computed_field
-from pydantic.fields import FieldInfo
-
-from M2Crypto import SMIME, X509
-from M2Crypto.X509 import X509_Stack
-                          
 
 class Alignment(Enum):
     LEFT = "PKTextAlignmentLeft"
@@ -59,14 +61,16 @@ class NumberStyle(Enum):
 class MyEnum(Enum):
     def __str__(self):
         return self.value
-    
-    a=1
-    b=2
-    
+
+    a = 1
+    b = 2
+
+
 class Schas(BaseModel):
-    i: int =1
+    i: int = 1
     s: str = "xx"
-    
+
+
 class Field(BaseModel):
     key: str  # Required. The key must be unique within the scope
     value: str | int | float  # Required. Value of the field. For example, 42
@@ -119,7 +123,7 @@ class IBeacon(BaseModel):
 class NFC(BaseModel):
     message: str  # Required. Message to be displayed on the lock screen when the pass is currently relevant
     encryptionPublicKey: str  # Required. Public encryption key used by the Value Added Services protocol
-    requiresAuthentication: bool = False  # Optional. Indicates that the pass is not valid unless it contains a valid signature 
+    requiresAuthentication: bool = False  # Optional. Indicates that the pass is not valid unless it contains a valid signature
 
 
 class PassInformation(BaseModel):
@@ -193,7 +197,6 @@ class StoreCard(PassInformation):
     pass
 
 
-
 class Pass(BaseModel):
     files: dict = PydanticField(default_factory=dict, exclude=True)
     """# Holds the files to include in the .pkpass"""
@@ -230,6 +233,7 @@ class Pass(BaseModel):
     """Optional. Color of the label text, specified as a CSS-style RGB triple. For example, rgb(255, 255, 255)."""
     logoText: str | None = None
     """Optional. Text displayed next to the logo on the pass."""
+
     # barcode: Barcode | None = PydanticField(
     #     default=None, deprecated=True, description="Use barcodes instead"
     # )
@@ -246,18 +250,20 @@ class Pass(BaseModel):
         legacyBarcode = self.barcodes[0] if self.barcodes else None
         if legacyBarcode is None:
             return None
-        
+
         if legacyBarcode not in original_formats:
-            legacyBarcode = Barcode(message=legacyBarcode.message, format=BarcodeFormat.PDF417, altText=legacyBarcode.altText)
-            
+            legacyBarcode = Barcode(
+                message=legacyBarcode.message,
+                format=BarcodeFormat.PDF417,
+                altText=legacyBarcode.altText,
+            )
+
         return legacyBarcode
 
-    
-    
     @barcode.setter
     def barcode(self, value: Barcode | None):
         self.barcodes = [value] if value is not None else None
-    
+
     barcodes: list[Barcode] | None = None
     """Optional. Information specific to the pass’s barcode. The system uses the first valid"""
     suppressStripShine: bool = False
@@ -293,11 +299,11 @@ class Pass(BaseModel):
     @property
     def pass_dict(self):
         return self.model_dump(exclude_none=True)
-    
+
     @property
     def pass_json(self):
-       return self.model_dump_json(exclude_none=True, indent=4)
-    
+        return self.model_dump_json(exclude_none=True, indent=4)
+
     @property
     def passInformation(self):
         """Returns the pass information object by checkinf all passmodel entries using all()"""
@@ -343,14 +349,14 @@ class Pass(BaseModel):
         passcls = pass_model_registry[passtype]
         setattr(self, passtype, passcls())
 
-
     def _get_smime(self, certificate, key, wwdr_certificate, password):
         """
         :return: M2Crypto.SMIME.SMIME
         """
+
         # from M2Crypto.X509 import X509_Stack
         def passwordCallback(*args, **kwds):
-            return bytes(password, encoding='ascii')
+            return bytes(password, encoding="ascii")
 
         smime = SMIME.SMIME()
 
@@ -362,39 +368,41 @@ class Pass(BaseModel):
         smime.load_key(key, certfile=certificate, callback=passwordCallback)
         return smime
 
-    def _sign_manifest(self, manifest, certificate, key, wwdr_certificate, password) -> SMIME.PKCS7:
+    def _sign_manifest(
+        self, manifest, certificate, key, wwdr_certificate, password
+    ) -> SMIME.PKCS7:
         """
         :return: M2Crypto.SMIME.PKCS7
         """
         smime = self._get_smime(certificate, key, wwdr_certificate, password)
         pkcs7 = smime.sign(
-            SMIME.BIO.MemoryBuffer(bytes(manifest, encoding='utf8')),
-            flags=SMIME.PKCS7_DETACHED | SMIME.PKCS7_BINARY
+            SMIME.BIO.MemoryBuffer(bytes(manifest, encoding="utf8")),
+            flags=SMIME.PKCS7_DETACHED | SMIME.PKCS7_BINARY,
         )
         return pkcs7
-    
-    def _createSignature(
-        self, manifest, certificate, key, wwdr_certificate, password
-    ):
+
+    def _createSignature(self, manifest, certificate, key, wwdr_certificate, password):
         """
         Creates the signature for the pass file.
         """
-        pk7 = self._sign_manifest(manifest, certificate, key, wwdr_certificate, password)
+        pk7 = self._sign_manifest(
+            manifest, certificate, key, wwdr_certificate, password
+        )
         der = SMIME.BIO.MemoryBuffer()
         pk7.write_der(der)
         return der.read()
-    
+
     def _createZip(self, manifest, signature, zip_file=None):
         pass_json = self.pass_json
-        zf = zipfile.ZipFile(zip_file or 'pass.pkpass', 'w')
-        zf.writestr('signature', signature)
-        zf.writestr('manifest.json', manifest)
-        zf.writestr('pass.json', pass_json)
+        zf = zipfile.ZipFile(zip_file or "pass.pkpass", "w")
+        zf.writestr("signature", signature)
+        zf.writestr("manifest.json", manifest)
+        zf.writestr("pass.json", pass_json)
         for filename, filedata in self.files.items():
             zf.writestr(filename, filedata)
         zf.close()
 
-    
+
 # hack in an optional field for each passmodel(passtype) since these are not known at compile time
 # because for each pass type whe PassInformation is stored in a different field of which only one is used
 for jsonname, cls in pass_model_registry.items():
