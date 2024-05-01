@@ -1,5 +1,21 @@
 # edutap.apple_wallet
 
+
+
+
+
+
+
+## Install and Working
+
+If you have problems installing M2Crypto on an Apple Silicon, you need to use `LDFALGS` and `CFLAGS`:
+
+```console
+LDFLAGS="-L$(brew --prefix openssl)/lib" CFLAGS="-I$(brew --prefix openssl)/include" SWIG_FEATURES="-I$(brew --prefix openssl)/include" pip install m2crypto
+```
+
+
+
 ## Credits
 
 This project is based on the work of https://github.com/devartis/passbook
