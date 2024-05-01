@@ -334,15 +334,18 @@ class Pass(BaseModel):
         wwdr_certificate: str,
         password: str,
         zip_file: typing.BinaryIO | None = None,
+        sign: bool = True,
     ):
         manifest = self._createManifest()
-        signature = self._createSignature(
-            manifest,
-            certificate,
-            key,
-            wwdr_certificate,
-            password,
-        )
+        signature = None
+        if sign:
+            signature = self._createSignature(
+                manifest,
+                certificate,
+                key,
+                wwdr_certificate,
+                password,
+            )
         if not zip_file:
             zip_file = BytesIO()
         self._createZip(manifest, signature, zip_file=zip_file)
@@ -407,12 +410,13 @@ class Pass(BaseModel):
         pk7.write_der(der)
         return der.read()
 
-    def _createZip(self, manifest, signature, zip_file=None):
+    def _createZip(self, manifest, signature=None, zip_file=None):
         pass_json = self.pass_json
         zf = zipfile.ZipFile(zip_file or "pass.pkpass", "w")
-        zf.writestr("signature", signature)
-        zf.writestr("manifest.json", manifest)
         zf.writestr("pass.json", pass_json)
+        zf.writestr("manifest.json", manifest)
+        if signature:
+            zf.writestr("signature", signature)
         for filename, filedata in self.files.items():
             zf.writestr(filename, filedata)
         zf.close()
