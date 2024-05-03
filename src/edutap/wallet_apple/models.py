@@ -76,8 +76,9 @@ class Field(BaseModel):
     label: str = ""  # Optional. Label text for the field.
     changeMessage: str = ""  # Optional. Format string for the alert text that is displayed when the pass is updated
     # textAlignment: Alignment = Alignment.LEFT
-    # textAlignment: Alignment|None = None # Optional. Alignment for the field’s contents
-    textAlignment: MyEnum | None = None  # Optional. Alignment for the field’s contents
+    textAlignment: Alignment | None = None
+    # Optional. Alignment for the field’s contents
+    # textAlignment: MyEnum | None = None  # Optional. Alignment for the field’s contents
 
 
 class DateField(Field):
@@ -142,20 +143,30 @@ class PassInformation(BaseModel):
         default_factory=list
     )  # Optional. Additional fields to be displayed on the front of the pass
 
-    def addHeaderField(self, key, value, label):
-        self.headerFields.append(Field(key=key, value=value, label=label))
+    def addHeaderField(self, key, value, label, textAlignment=None):
+        self.headerFields.append(
+            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+        )
 
-    def addPrimaryField(self, key, value, label):
-        self.primaryFields.append(Field(key=key, value=value, label=label))
+    def addPrimaryField(self, key, value, label, textAlignment=None):
+        self.primaryFields.append(
+            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+        )
 
-    def addSecondaryField(self, key, value, label):
-        self.secondaryFields.append(Field(key=key, value=value, label=label))
+    def addSecondaryField(self, key, value, label, textAlignment=None):
+        self.secondaryFields.append(
+            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+        )
 
-    def addBackField(self, key, value, label):
-        self.backFields.append(Field(key=key, value=value, label=label))
+    def addBackField(self, key, value, label, textAlignment=None):
+        self.backFields.append(
+            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+        )
 
-    def addAuxiliaryField(self, key, value, label):
-        self.auxiliaryFields.append(Field(key=key, value=value, label=label))
+    def addAuxiliaryField(self, key, value, label, textAlignment=None):
+        self.auxiliaryFields.append(
+            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+        )
 
 
 pass_model_registry = {}
