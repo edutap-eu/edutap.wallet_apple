@@ -247,7 +247,6 @@ class Pass(BaseModel):
     # barcode: Barcode | None = PydanticField(
     #     default=None, deprecated=True, description="Use barcodes instead"
     # )
-    @property
     @computed_field
     def barcode(self) -> Barcode | None:
         """
