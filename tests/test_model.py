@@ -1,6 +1,6 @@
-from edutap.wallet_apple import common
+import common
 from edutap.wallet_apple import models
-from edutap.wallet_apple.common import create_shell_pass
+from common import create_shell_pass
 from edutap.wallet_apple.models import BarcodeFormat
 from M2Crypto import BIO
 from M2Crypto import SMIME

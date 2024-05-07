@@ -1,6 +1,7 @@
 from common import certs
 from common import create_shell_pass
 from common import resources
+from common import data
 from edutap.wallet_apple.models import Barcode
 from edutap.wallet_apple.models import BarcodeFormat
 from edutap.wallet_apple.models import EventTicket
@@ -13,8 +14,15 @@ import pytest
 import uuid
 
 
+@pytest.fixture
+def generated_passes_dir():
+    target = data/"generated_passes"
+    os.makedirs(target, exist_ok=True)
+    return target
+
+
 @pytest.mark.integration
-def test_passbook_creation_integration():
+def test_passbook_creation_integration(generated_passes_dir):
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -27,7 +35,7 @@ def test_passbook_creation_integration():
     this test opens the passbook file in the default application for .pkpass files )works only on OSX)
     """
 
-    pass_file_name = "/Users/phil/dev/projects/edutap/apple/passes/pass1.pkpass"
+    pass_file_name = generated_passes_dir / "basic_pass.pkpass"
     passfile = create_shell_pass(
         passTypeIdentifier="pass.demo.lmu.de", teamIdentifier="JG943677ZY"
     )
@@ -41,11 +49,11 @@ def test_passbook_creation_integration():
     )
 
     open(pass_file_name, "wb").write(zip.getvalue())
-    os.system("open " + pass_file_name)
+    os.system("open " + str(pass_file_name))
 
 
 @pytest.mark.integration
-def test_passbook_creation_integration_loyalty_with_nfc():
+def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -58,7 +66,7 @@ def test_passbook_creation_integration_loyalty_with_nfc():
     this test opens the passbook file in the default application for .pkpass files )works only on OSX)
     """
 
-    pass_file_name = "/Users/phil/dev/projects/edutap/apple/passes/pass1.pkpass"
+    pass_file_name = generated_passes_dir / "loyaltypass_nfc.pkpass"
 
     sn = uuid.uuid4().hex
     cardInfo = StoreCard()
@@ -99,11 +107,11 @@ def test_passbook_creation_integration_loyalty_with_nfc():
         "",
     )
     open(pass_file_name, "wb").write(zip.getvalue())
-    os.system("open " + pass_file_name)
+    os.system("open " + str(pass_file_name))
 
 
 @pytest.mark.integration
-def test_passbook_creation_integration_eventticket():
+def test_passbook_creation_integration_eventticket(generated_passes_dir):
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -116,7 +124,7 @@ def test_passbook_creation_integration_eventticket():
     this test opens the passbook file in the default application for .pkpass files )works only on OSX)
     """
 
-    pass_file_name = "/Users/phil/dev/projects/edutap/apple/passes/pass1.pkpass"
+    pass_file_name = generated_passes_dir / "eventticket.pkpass"
 
     cardInfo = EventTicket()
     cardInfo.addPrimaryField("title", "EAIE2023", "event")
@@ -151,7 +159,7 @@ def test_passbook_creation_integration_eventticket():
     )
 
     open(pass_file_name, "wb").write(zip.getvalue())
-    os.system("open " + pass_file_name)
+    os.system("open " + str(pass_file_name))
 
 
 @pytest.mark.integration
