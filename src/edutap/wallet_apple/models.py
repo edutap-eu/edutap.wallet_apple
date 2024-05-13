@@ -1,3 +1,5 @@
+import base64
+import binascii
 from enum import Enum
 from io import BytesIO
 from M2Crypto import SMIME
@@ -14,6 +16,13 @@ import json
 import typing
 import zipfile
 
+def bytearray_to_base64(bytearr):
+    encoded_data = base64.b64encode(bytearr)
+    return encoded_data.decode('utf-8')
+
+def base64_to_bytearray(base64_str):
+    decoded_data = base64.b64decode(base64_str)
+    return decoded_data
 
 class Alignment(Enum):
     LEFT = "PKTextAlignmentLeft"
@@ -306,6 +315,14 @@ class Pass(BaseModel):
     """Optional. Information used for Value Added Service Protocol transactions."""
 
     @property
+    def files_uuencoded(self)->dict[str,str]:
+        """
+        Returns the files dict with the values uuencoded so that they can
+        be stored in a JSON dict (e.g. for a REST API or a database)
+        """
+        return {k: bytearray_to_base64(v) for k, v in self.files.items()}    
+    
+    @property
     def pass_dict(self):
         return self.model_dump(exclude_none=True)
 
@@ -326,6 +343,12 @@ class Pass(BaseModel):
     def addFile(self, name: str, fd: typing.BinaryIO):
         """Adds a file to the pass. The file is stored in the files dict and the hash is stored in the hashes dict"""
         self.files[name] = fd.read()
+        
+    def files_from_json_dict(self, files: dict[str,str]):
+        """
+        Loads the files from a dict that has been uuencoded
+        """
+        self.files = {k: base64_to_bytearray(v) for k, v in files.items()}
 
     def _createManifest(self):
         """
