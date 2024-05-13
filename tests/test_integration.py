@@ -140,7 +140,7 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
         serialNumber=sn,
         description="edutap Sample Pass",
         webServiceURL="https://edutap.bluedynamics.net:8443/apple_update_service/v1",
-        authenticationToken="123"
+        authenticationToken="0123456789012345"  # must be 16 characters
     )
 
     passfile.barcode = stdBarcode
