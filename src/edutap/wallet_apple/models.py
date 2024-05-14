@@ -384,7 +384,7 @@ class Pass(BaseModel):
         sign: bool = True,
     ) -> BytesIO:
         """
-        creates the .pkpass file as a BytesIO object
+        creates and signs the .pkpass file as a BytesIO object
         """
         manifest = self._createManifest()
         signature = None
