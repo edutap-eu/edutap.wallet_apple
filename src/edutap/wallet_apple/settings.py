@@ -16,3 +16,6 @@ class AppleWalletSettings(BaseSettings):
     certificate: Path = ROOT_DIR / "certificate.pem"
     wwdr_certificate: Path = ROOT_DIR / "wwdr_certificate.pem"
     password: str | None = None
+
+    pass_type_identifier: str | None = None
+    team_dentifier: str | None = None
