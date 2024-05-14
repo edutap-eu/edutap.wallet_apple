@@ -238,7 +238,7 @@ class Pass(BaseModel):
     Required. Display name of the organization that originated and
     signed the pass."""
     serialNumber: str
-    """Required. Serial number that uniquely identifies the pass. 
+    """Required. Serial number that uniquely identifies the pass.
     Must not be changed after creation"""
     description: str
     """Required. Brief description of the pass, used by the iOS accessibility technologies."""
@@ -258,7 +258,8 @@ class Pass(BaseModel):
     # barcode: Barcode | None = PydanticField(
     #     default=None, deprecated=True, description="Use barcodes instead"
     # )
-    @computed_field
+
+    @computed_field  # type: ignore [no-redef]
     @deprecated("Use 'barcodes' instead")
     def barcode(self) -> Barcode | None:
         """
@@ -281,7 +282,8 @@ class Pass(BaseModel):
 
         return legacyBarcode
 
-    @barcode.setter
+
+    @barcode.setter  # type: ignore [no-redef]
     @deprecated("Use 'barcodes' instead")
     def barcode(self, value: Barcode | None):
         self.barcodes = [value] if value is not None else None
@@ -305,7 +307,7 @@ class Pass(BaseModel):
     """Optional. Locations where the pass is relevant. For example, the location of your store."""
     ibeacons: list[IBeacon] | None = None
     """Optional. IBeacons data"""
-    relevantDate: DateField | str | None = None
+    relevantDate: str | DateField | None = None
     """Optional. Date and time when the pass becomes relevant."""
     associatedStoreIdentifiers: list[str] | None = None
     """Optional. Identifies which merchants’ locations accept the pass."""
@@ -314,7 +316,7 @@ class Pass(BaseModel):
     """Optional. A URL to be passed to the associated app when launching it."""
     userInfo: dict | None = None
     """Optional. Custom information for the pass."""
-    expirationDate: DateField | None = None  # TODO: check if this is correct
+    expirationDate: str | DateField | None = None  # TODO: check if this is correct
     """Optional. Date and time when the pass expires."""
     voided: bool = False
 
@@ -327,15 +329,15 @@ class Pass(BaseModel):
         Returns the files dict with the values uuencoded so that they can
         be stored in a JSON dict (e.g. for a REST API or a database)
         """
-        return {k: bytearray_to_base64(v) for k, v in self.files.items()}    
-    
+        return {k: bytearray_to_base64(v) for k, v in self.files.items()}
+
     @files_uuencoded.setter
     def files_uuencoded(self, files: dict[str,str]):
         """
         Loads the files from a dict that has been uuencoded
         """
         self.files = {k: base64_to_bytearray(v) for k, v in files.items()}
-        
+
     @property
     def pass_dict(self):
         return self.model_dump(exclude_none=True, round_trip=True)
@@ -357,7 +359,7 @@ class Pass(BaseModel):
     def addFile(self, name: str, fd: typing.BinaryIO):
         """Adds a file to the pass. The file is stored in the files dict and the hash is stored in the hashes dict"""
         self.files[name] = fd.read()
-        
+
     def files_from_json_dict(self, files: dict[str,str]):
         """
         Loads the files from a dict that has been uuencoded
