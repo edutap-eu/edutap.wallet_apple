@@ -237,7 +237,8 @@ class Pass(BaseModel):
     Required. Display name of the organization that originated and
     signed the pass."""
     serialNumber: str
-    """Required. Serial number that uniquely identifies the pass."""
+    """Required. Serial number that uniquely identifies the pass. 
+    Must not be changed after creation"""
     description: str
     """Required. Brief description of the pass, used by the iOS accessibility technologies."""
     formatVersion: int = 1
@@ -289,9 +290,12 @@ class Pass(BaseModel):
 
     # Web Service Keys
     webServiceURL: str | None = None
-    """Optional. The URL of a web service that conforms to the API described in PassKit Web Service Reference."""
+    """Optional. The URL of a web service that conforms to the API described in PassKit Web Service Reference.
+    Must not be changed after creation"""
     authenticationToken: str | None = None
-    """Optional. The authentication token to use with the web service."""
+    """Optional. The authentication token to use with the web service.
+    Minimum 16 chars
+    Must not be changed after creation."""
 
     # Relevance Keys
     locations: list[Location] | None = None
@@ -322,9 +326,16 @@ class Pass(BaseModel):
         """
         return {k: bytearray_to_base64(v) for k, v in self.files.items()}    
     
+    @files_uuencoded.setter
+    def files_uuencoded(self, files: dict[str,str]):
+        """
+        Loads the files from a dict that has been uuencoded
+        """
+        self.files = {k: base64_to_bytearray(v) for k, v in files.items()}
+        
     @property
     def pass_dict(self):
-        return self.model_dump(exclude_none=True)
+        return self.model_dump(exclude_none=True, round_trip=True)
 
     @property
     def pass_json(self):
@@ -368,7 +379,10 @@ class Pass(BaseModel):
         password: str,
         zip_file: typing.BinaryIO | None = None,
         sign: bool = True,
-    ):
+    ) -> BytesIO:
+        """
+        creates the .pkpass file as a BytesIO object
+        """
         manifest = self._createManifest()
         signature = None
         if sign:
