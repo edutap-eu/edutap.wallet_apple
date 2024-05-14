@@ -1,11 +1,11 @@
-import common
-from edutap.wallet_apple import models
 from common import create_shell_pass
+from edutap.wallet_apple import models
 from edutap.wallet_apple.models import BarcodeFormat
 from M2Crypto import BIO
 from M2Crypto import SMIME
 from M2Crypto import X509
 
+import common
 import json
 import pytest
 

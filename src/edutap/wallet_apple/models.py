@@ -1,8 +1,5 @@
-import base64
-import binascii
 from enum import Enum
 from io import BytesIO
-from typing_extensions import deprecated
 from M2Crypto import SMIME
 from M2Crypto import X509
 from M2Crypto.X509 import X509_Stack
@@ -10,20 +7,25 @@ from pydantic import BaseModel
 from pydantic import computed_field
 from pydantic import Field as PydanticField
 from pydantic.fields import FieldInfo
+from typing_extensions import deprecated
 
+import base64
 import functools
 import hashlib
 import json
 import typing
 import zipfile
 
+
 def bytearray_to_base64(bytearr):
     encoded_data = base64.b64encode(bytearr)
-    return encoded_data.decode('utf-8')
+    return encoded_data.decode("utf-8")
+
 
 def base64_to_bytearray(base64_str):
     decoded_data = base64.b64decode(base64_str)
     return decoded_data
+
 
 class Alignment(Enum):
     LEFT = "PKTextAlignmentLeft"
@@ -282,7 +284,6 @@ class Pass(BaseModel):
 
         return legacyBarcode
 
-
     @barcode.setter  # type: ignore [no-redef]
     @deprecated("Use 'barcodes' instead")
     def barcode(self, value: Barcode | None):
@@ -324,7 +325,7 @@ class Pass(BaseModel):
     """Optional. Information used for Value Added Service Protocol transactions."""
 
     @property
-    def files_uuencoded(self)->dict[str,str]:
+    def files_uuencoded(self) -> dict[str, str]:
         """
         Returns the files dict with the values uuencoded so that they can
         be stored in a JSON dict (e.g. for a REST API or a database)
@@ -332,7 +333,7 @@ class Pass(BaseModel):
         return {k: bytearray_to_base64(v) for k, v in self.files.items()}
 
     @files_uuencoded.setter
-    def files_uuencoded(self, files: dict[str,str]):
+    def files_uuencoded(self, files: dict[str, str]):
         """
         Loads the files from a dict that has been uuencoded
         """
@@ -360,7 +361,7 @@ class Pass(BaseModel):
         """Adds a file to the pass. The file is stored in the files dict and the hash is stored in the hashes dict"""
         self.files[name] = fd.read()
 
-    def files_from_json_dict(self, files: dict[str,str]):
+    def files_from_json_dict(self, files: dict[str, str]):
         """
         Loads the files from a dict that has been uuencoded
         """
@@ -382,9 +383,9 @@ class Pass(BaseModel):
         key: str,
         wwdr_certificate: str,
         password: str,
-        zip_file: typing.BinaryIO | None = None,
+        zip_file: typing.BinaryIO | BytesIO | None = None,
         sign: bool = True,
-    ) -> BytesIO:
+    ) -> typing.BinaryIO | BytesIO:
         """
         creates and signs the .pkpass file as a BytesIO object
         """

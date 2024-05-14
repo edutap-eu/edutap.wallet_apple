@@ -1,7 +1,7 @@
 from common import certs
 from common import create_shell_pass
-from common import resources
 from common import data
+from common import resources
 from edutap.wallet_apple.models import Barcode
 from edutap.wallet_apple.models import BarcodeFormat
 from edutap.wallet_apple.models import EventTicket
@@ -16,7 +16,7 @@ import uuid
 
 @pytest.fixture
 def generated_passes_dir():
-    target = data/"generated_passes"
+    target = data / "generated_passes"
     os.makedirs(target, exist_ok=True)
     return target
 
@@ -140,7 +140,7 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
         serialNumber=sn,
         description="edutap Sample Pass",
         webServiceURL="https://edutap.bluedynamics.net:8443/apple_update_service/v1",
-        authenticationToken="0123456789012345"  # must be 16 characters
+        authenticationToken="0123456789012345",  # must be 16 characters
     )
 
     passfile.barcode = stdBarcode
