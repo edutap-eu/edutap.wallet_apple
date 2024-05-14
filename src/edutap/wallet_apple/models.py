@@ -2,6 +2,7 @@ import base64
 import binascii
 from enum import Enum
 from io import BytesIO
+from typing_extensions import deprecated
 from M2Crypto import SMIME
 from M2Crypto import X509
 from M2Crypto.X509 import X509_Stack
@@ -258,6 +259,7 @@ class Pass(BaseModel):
     #     default=None, deprecated=True, description="Use barcodes instead"
     # )
     @computed_field
+    @deprecated("Use 'barcodes' instead")
     def barcode(self) -> Barcode | None:
         """
         deprecated, use barcodes instead.
@@ -280,6 +282,7 @@ class Pass(BaseModel):
         return legacyBarcode
 
     @barcode.setter
+    @deprecated("Use 'barcodes' instead")
     def barcode(self, value: Barcode | None):
         self.barcodes = [value] if value is not None else None
 

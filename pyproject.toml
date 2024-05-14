@@ -25,6 +25,7 @@ dependencies = [
     "pydantic[email,dotenv]>=2.0",
     "python-dotenv",
     "M2Crypto >= 0.28.2",
+    "typing_extensions",
 ]
 
 [project.urls]
