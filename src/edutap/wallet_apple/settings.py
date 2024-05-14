@@ -18,4 +18,4 @@ class AppleWalletSettings(BaseSettings):
     password: str | None = None
 
     pass_type_identifier: str | None = None
-    team_dentifier: str | None = None
+    team_identifier: str | None = None
