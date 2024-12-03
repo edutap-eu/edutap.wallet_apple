@@ -1,29 +1,35 @@
 # edutap.wallet_apple
 
-this package provides
+This package provides a Python API and web server endpoints to create and update official Apple Wallet Passes.
 
-- [x] creation of apple pass files (.pkpass)
-- [x] signing pass files
-- [ ] provide pass delivery 
-- [ ] update passes using apple push notifications
+This package provides
+
+- [x] an API and models for the creation of apple pass files (.pkpass)
+- [x] infrastructure to sign pass files with an Apples certificate.
+- [ ] Initial pass delivery with save link creation and a matching FastAPI endpoint.
+- [ ] Support for the update process of passes 
+    - using apple push notifications and 
+    - providing an update information endpoint (FastAPI)
+    - providing an pass delivery endpoint for fetching updated passes.
+- [ ] abstract/pluggable data providers are defined to fetch data on pass-delivery or -update.
 
 
 ## Installation
 
 Prerequisites:
 
-- python >= 3.10
-- SWIG (needed by the M2crypto python lib)
+- Python >= 3.10
+- SWIG (needed by the M2crypto Python library), for Debian/Ubuntu based system sue:
+  
+  ```bash
+  sudo apt-get install swig
+  ```
 
-    ```bash
-    sudo apt-get install swig
-    ```
-
-Normal installation for development via pip, it is recommended to use a virtual env.
-
-
+Example installation for development via Pip, it is recommended to use a Python Virtual Environment:
 
 ```bash
+python -m venv .venv
+source .venv/bin/activate
 pip install -e .[test]
 ```
 
@@ -36,7 +42,7 @@ LDFLAGS="-L$(brew --prefix openssl)/lib" CFLAGS="-I$(brew --prefix openssl)/incl
 ```
 
 
-## Run the unittests
+## Running the Unittests
 
 The unit tests can be run without the cert files:
 
@@ -44,14 +50,17 @@ The unit tests can be run without the cert files:
 pytest -m "not integration"
 ```
 
-## Installation Cert stuff
+## Installation of Certificates
 
 PKPASS is a file format, used for storage and exchange of digital passes, developed by Apple for its Wallet application (Formerly known as PassBook until iOS 9)
 
-For signing the .pkpass files we need certificate and key files that need to be created. Please follow exactly the steps described below. You need an Apple developer account to obtain the certificate for the pass identifier.
-<!-- To run integration tests and the passbook server you need a certificate and a private key. The certificate is used to sign the passbook files and the private key is used to sign the push notifications. The certificate and the private key are stored in the config file of the passbook server. -->
+For signing the .pkpass files we need certificate and key files that need to be created. 
+Please follow exactly the steps described below. 
+You need an Apple developer account to obtain the certificate for the pass identifier.
 
-this is the overall process to get the necessary certificates for issuing passes
+To run integration tests a private key, a certificate and the Apple root certificate needs to be prepared.
+
+This is the overall process to get the necessary certificates for issuing passes:
 
 ```mermaid
 flowchart TD
@@ -67,79 +76,87 @@ flowchart TD
     WWDRPEM --> H
 ```
 
-### prepare key and CSR for requesting a certificate from apple
+### Preparing Private Key and Certificate Signing Request
 
-- create your own private key
-```shell
-$ openssl genrsa -out private.key 2048
-```
+> **_NOTE:_**  This is only necessary when you create a new certificate, if you already have certificates in your account you can download them.
 
-- create a certificate signing request (CSR) with the private key
+1. Create your own private key
+   ```shell
+   openssl genrsa -out private.key 2048
+   ```
 
-    (this is only necessary when you create a new certificate, if you already have certificates in your account you can download them)
-```shell
-$ openssl req -new -key private.key -out request.csr -subj="/emailAddress=[your email addr],CN=[your full name],C=[your country ISO code]"
-```
+2. Create a certificate signing request (CSR) with the private key
 
-Name and email do not necessarily have to match with the account data of your apple developer account.
+   Name and email do not necessarily have to match with the account data of your apple developer account.
+   
+   ```shell
+   openssl req -new -key private.key -out request.csr -subj="/emailAddress=[your email addr],CN=[your full name],C=[your country ISO code]"
+   ```
 
-### Get a Pass Type Id and certificate from Apple
+### Get a Pass Type ID and Certificate from Apple
 
-you need a developer account at apple to get a pass type id and a certificate for signing your passes. you can get a free developer account at [developer.apple.com](https://developer.apple.com/programs/)
+You need a developer account at Apple to get a pass type ID and a certificate for signing passes. 
+You can get a free developer account at [developer.apple.com](https://developer.apple.com/programs/)
+
+To get the certificate:
 
 * Visit the iOS Provisioning [Portal -> Pass Type IDs -> New Pass Type ID](https://developer.apple.com/account/resources/identifiers/list/passTypeId)
-    - either create a new pass type id by clicking the blue (+) icon on top of the menu
-    - or select one of the existing pass type id's
-* In the screen labelled `Edit your Identifier Configuration` you can do one of
-    - select an existing certificate and hit the `Download` button
-    - or hit `Create Certificate` on the bottom of the page (there you need the above mentioned `pass.cer`)
-* Use Keychain tool to export a Certificates.cer  file (need Apple Root Certificate installed)
-* Convert the certificate.cer (X509 format) to a certificate.pem file by calling
+    - either create a new pass type ID by clicking the blue (+) icon on top of the menu
+    - or select one of the existing pass type ID's
 
-```shell
-    $ openssl x509 -inform der -in pass.cer -out certificate.pem
-```
+* In the screen labelled `Edit your Identifier Configuration` either
+    - select an existing certificate and hit the `Download` button
+    - or hit `Create Certificate` on the bottom of the page (there you need the above mentioned `request.cer`) and download it
+
+* Convert the `certificate.cer` (X509 format) to a `certificate.pem` file by calling
+
+  ```shell
+  openssl x509 -inform der -in pass.cer -out certificate.pem
+  ```
 
 ### Apple Worldwide Developer Relations (WWDR) root certificate
 
-
-see [https://developer.apple.com/support/certificates/expiration/](apple support)
+The certificate is usually preinstalled in your OS, but either in case of expiration or if you want to run the integration tests, the most recent can be downloaded at
+[Apple Certification Authority AppleWWDRCA.cer download](https://developer.apple.com/certificationauthority/AppleWWDRCA.cer)
 
 ```shell
 curl https://www.apple.com/certificateauthority/AppleWWDRCAG4.cer -o AppleWWDRCA.cer
 ```
 
-an overview of downloadable apple certs:
+For more on expiration read [Apple Support - Expiration](https://developer.apple.com/support/certificates/expiration/).
+There is also an [overview of downloadable Apple certificates](https://www.apple.com/certificateauthority/)
 
-https://www.apple.com/certificateauthority/
-
-convert it to a pem file
+Once downloaded, convert the root certificate into a pem file"
 
 ```shell
 openssl x509 -inform der -in AppleWWDRCA.cer -out wwdr_certificate.pem
 ```
-then copy it into the 'certs' folder of the passbook server
 
+Further reading: [Building a Pass - documentation at Apple](https://developer.apple.com/documentation/walletpasses/building_a_pass)
 
-see [documentation @ apple](https://developer.apple.com/documentation/walletpasses/building_a_pass)
-
-check expiration date of certificate
+To check the expiration date of the certificate use:
 
 ```shell
-openssl x509 -enddate -noout -in file.pem
+openssl x509 -enddate -noout -in wwdr_certificate.pem
 ```
 
-## run the integration tests
+In case the OS provided certificate is expired, copy the certificate to the OS certificates folder (this depends on the system).
 
-> ⚠️ **Attention:**
->for running the integration tests, the above mentioned files (`certificate.pem`, `private.key`, `wwdr_certificate.pem`) have to be located in `tests/data/certs/private`
+## Running the Integration Tests
+
+⚠️ **Attention:**
+ To run integration tests, the above mentioned files (`certificate.pem`, `private.key` and `wwdr_certificate.pem`) have to be located at `tests/data/certs/private`. 
+Create the folder if it is missing, do *never* add/commit them it to Git!
 
 ```shell
 pytest -m integration
 ```
 
-the test "test_passbook_creation_integration" will create a passbook file and display it with the passbook viewer. Displaying the pass works just under OSX since the passbook viewer is part of OSX.
+the test "test_passbook_creation_integration" will create a passbook file and display it with the passbook viewer. 
 
+The test case `test_passbook_creation_integration` will create some pkpass-files. 
+Those are located under tests/data/genererated_passes.
+Displaying the pass works only under OSX since the passbook viewer is part of it.
 
 # Notification
 
@@ -155,8 +172,32 @@ TODO
 
 - [passninja docs](https://www.passninja.com/tutorials/apple-platform/how-does-pass-updating-work-on-apple-wallet)
 
+
+## Documentation
+
+TODO
+
+Read the [complete `edutap.wallet_apple` documentation](https://docs.edutap.eu/packages/edutap_wallet_apple.html) to get started.
+
 ## Credits
 
-This project is inspired by the work of https://github.com/devartis/passbook
+This project was initiated and initially financed by [LMU München](https://www.lmu.de).
+Further development was financially supported by [Hochschule München](https://hm.edu/).
 
+Contributors:
 
+- Alexander Loechel (LMU)
+- Philipp Auersperg-Castell (BlueDynamics Alliance)
+- Jens Klein (BlueDynamics Alliance)
+
+## Source Code
+
+The sources are in a GIT DVCS with its main branches at the [GitHub `edutap-eu` `edutap.wallet_apple` repository](https://github.com/edutap-eu/edutap.wallet_apple) .
+
+We'd be happy to see many issue reports, forks and pull requests to make the package even better.
+
+## License
+
+The code is copyrighted 2023 by eduTAP - EUGLOH Working Package - Campus Life and contributors.
+
+It is licensed under the [EUROPEAN UNION PUBLIC LICENCE v. 1.2](https://opensource.org/license/eupl-1-2/), a free and OpenSource software license.
