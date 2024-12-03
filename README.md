@@ -4,9 +4,19 @@
 
 
 
+## Installation
+
+Precondition is python >= 3.10.
+
+Normal installation for development via pip, it is recommended to use a virtual env.
 
 
-## Install and Working
+
+```bash
+pip install -e .[test]
+```
+
+### OSX
 
 If you have problems installing M2Crypto on an Apple Silicon, you need to use `LDFALGS` and `CFLAGS`:
 
@@ -15,14 +25,17 @@ LDFLAGS="-L$(brew --prefix openssl)/lib" CFLAGS="-I$(brew --prefix openssl)/incl
 ```
 
 
+## Run the unittests
 
-## Credits
+The unit tests can be run without the cert files:
 
-This project is based on the work of https://github.com/devartis/passbook
+```shell
+pytest -m "not integration"
+```
 
 ## Installation Cert stuff
 
-To run the passbook server you need a certificate and a private key. The certificate is used to sign the passbook files and the private key is used to sign the push notifications. The certificate and the private key are stored in the config file of the passbook server.
+To run integration tests and the passbook server you need a certificate and a private key. The certificate is used to sign the passbook files and the private key is used to sign the push notifications. The certificate and the private key are stored in the config file of the passbook server.
 
 this is the overall process to get the necessary certificates for issuing passes
 
@@ -101,16 +114,12 @@ openssl x509 -enddate -noout -in file.pem
 
 copy the `certificate.pem`, `private.key` and `wwdr_certificate.pem` to the 'certs' directory your server.
 
-## run the unittests
 
-> ⚠️ **Attention:**
->for running the tests, the above mentioned files (`certificate.pem`, `private.key`, `wwdr_certificate.pem`) have to be located in `tests/data/certs/private`
-
-```shell
-pytest -m "not integration"
-```
 
 ## run the integration tests
+
+> ⚠️ **Attention:**
+>for running the integration tests, the above mentioned files (`certificate.pem`, `private.key`, `wwdr_certificate.pem`) have to be located in `tests/data/certs/private`
 
 ```shell
 pytest -m integration
@@ -120,12 +129,20 @@ the test "test_passbook_creation_integration" will create a passbook file and di
 
 # Notification
 
-
+TODO
 
 ## Create a certificate for push notifications
+
+TODO
 
 ## Further readings
 
 - [apple doc for updating passes](https://developer.apple.com/documentation/walletpasses/adding_a_web_service_to_update_passes)
 
 - [passninja docs](https://www.passninja.com/tutorials/apple-platform/how-does-pass-updating-work-on-apple-wallet)
+
+## Credits
+
+This project is inspired by the work of https://github.com/devartis/passbook
+
+

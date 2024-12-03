@@ -16,7 +16,7 @@ certs = data / "certs"
 password_file = certs / "password.txt"
 cert_file = certs / "private" / "certificate.pem"
 key_file = certs / "private" / "private.key"
-wwdr_file = certs / "wwdr_certificate.pem"
+wwdr_file = certs / "private" / "wwdr_certificate.pem"
 
 
 def create_shell_pass(
