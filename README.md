@@ -1,4 +1,11 @@
-# edutap.apple_wallet
+# edutap.wallet_apple
+
+this package provides
+
+- [x] creation of apple pass files (.pkpass)
+- [x] signing pass files
+- [ ] provide pass delivery 
+
 
 
 
@@ -6,7 +13,14 @@
 
 ## Installation
 
-Precondition is python >= 3.10.
+Prerequisites:
+
+- python >= 3.10
+- SWIG
+
+    ```bash
+    sudo apt-get install swig
+    ```
 
 Normal installation for development via pip, it is recommended to use a virtual env.
 
