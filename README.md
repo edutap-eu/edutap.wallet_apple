@@ -184,6 +184,8 @@ Read the [complete `edutap.wallet_apple` documentation](https://docs.edutap.eu/p
 This project was initiated and initially financed by [LMU München](https://www.lmu.de).
 Further development was financially supported by [Hochschule München](https://hm.edu/).
 
+It is inspired by the work of the [devartis/passbook Python library](https://github.com/devartis/passbook).
+
 Contributors:
 
 - Alexander Loechel (LMU)
