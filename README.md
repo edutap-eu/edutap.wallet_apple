@@ -101,6 +101,15 @@ openssl x509 -enddate -noout -in file.pem
 
 copy the `certificate.pem`, `private.key` and `wwdr_certificate.pem` to the 'certs' directory your server.
 
+## run the unittests
+
+> ⚠️ **Attention:**
+>for running the tests, the above mentioned files (`certificate.pem`, `private.key`, `wwdr_certificate.pem`) have to be located in `tests/data/certs/private`
+
+```shell
+pytest -m "not integration"
+```
+
 ## run the integration tests
 
 ```shell
@@ -111,6 +120,12 @@ the test "test_passbook_creation_integration" will create a passbook file and di
 
 # Notification
 
-https://developer.apple.com/documentation/walletpasses/adding_a_web_service_to_update_passes
+
 
 ## Create a certificate for push notifications
+
+## Further readings
+
+- [apple doc for updating passes](https://developer.apple.com/documentation/walletpasses/adding_a_web_service_to_update_passes)
+
+- [passninja docs](https://www.passninja.com/tutorials/apple-platform/how-does-pass-updating-work-on-apple-wallet)

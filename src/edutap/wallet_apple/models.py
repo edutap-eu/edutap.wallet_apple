@@ -1,5 +1,6 @@
 from enum import Enum
 from io import BytesIO
+import os
 from M2Crypto import SMIME
 from M2Crypto import X509
 from M2Crypto.X509 import X509_Stack
@@ -456,6 +457,16 @@ class Pass(BaseModel):
         """
         Creates the signature for the pass file.
         """
+
+        # check for cert file existence
+        if not os.path.exists(key):
+            raise FileNotFoundError(f"Key file {key} not found")
+        if not os.path.exists(certificate):
+            raise FileNotFoundError(f"Certificate file {certificate} not found")
+        if not os.path.exists(wwdr_certificate):
+            raise FileNotFoundError(f"WWDR Certificate file {wwdr_certificate} not found")
+
+
         pk7 = self._sign_manifest(
             manifest, certificate, key, wwdr_certificate, password
         )
