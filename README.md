@@ -46,7 +46,10 @@ pytest -m "not integration"
 
 ## Installation Cert stuff
 
-To run integration tests and the passbook server you need a certificate and a private key. The certificate is used to sign the passbook files and the private key is used to sign the push notifications. The certificate and the private key are stored in the config file of the passbook server.
+PKPASS is a file format, used for storage and exchange of digital passes, developed by Apple for its Wallet application (Formerly known as PassBook until iOS 9)
+
+For signing the .pkpass files we need certificate and key files that need to be created. Please follow exactly the steps described below. You need an Apple developer account to obtain the certificate for the pass identifier.
+<!-- To run integration tests and the passbook server you need a certificate and a private key. The certificate is used to sign the passbook files and the private key is used to sign the push notifications. The certificate and the private key are stored in the config file of the passbook server. -->
 
 this is the overall process to get the necessary certificates for issuing passes
 
@@ -78,6 +81,7 @@ $ openssl genrsa -out private.key 2048
 $ openssl req -new -key private.key -out request.csr -subj="/emailAddress=[your email addr],CN=[your full name],C=[your country ISO code]"
 ```
 
+Name and email do not necessarily have to match with the account data of your apple developer account.
 
 ### Get a Pass Type Id and certificate from Apple
 
@@ -98,8 +102,6 @@ you need a developer account at apple to get a pass type id and a certificate fo
 
 ### Apple Worldwide Developer Relations (WWDR) root certificate
 
-the certificate is preinstalled, but in case of expiration it can be downloaded from
-[https://developer.apple.com/certificationauthority/AppleWWDRCA.cer](apple authority)
 
 see [https://developer.apple.com/support/certificates/expiration/](apple support)
 
@@ -136,7 +138,7 @@ openssl x509 -enddate -noout -in file.pem
 pytest -m integration
 ```
 
-the test "test_passbook_creation_integration" will create a passbook file and display it with the passbook viewer. This test runs just under OSX.
+the test "test_passbook_creation_integration" will create a passbook file and display it with the passbook viewer. Displaying the pass works just under OSX since the passbook viewer is part of OSX.
 
 
 # Notification
