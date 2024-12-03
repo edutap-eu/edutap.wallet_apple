@@ -177,7 +177,7 @@ TODO
 
 TODO
 
-Read the [complete `edutap.wallet_apple` documentation](https://docs.edutap.eu/packages/edutap_wallet_apple.html) to get started.
+Read the [complete `edutap.wallet_apple` documentation](https://docs.edutap.eu/packages/edutap_wallet_apple/index.html) to get started.
 
 ## Credits
 
