@@ -16,7 +16,7 @@ this package provides
 Prerequisites:
 
 - python >= 3.10
-- SWIG
+- SWIG (needed by the M2crypto python lib)
 
     ```bash
     sudo apt-get install swig
