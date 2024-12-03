@@ -127,12 +127,6 @@ check expiration date of certificate
 openssl x509 -enddate -noout -in file.pem
 ```
 
-### Install certificate and private key for integration tests
-
-copy the `certificate.pem`, `private.key` and `wwdr_certificate.pem` to the 'certs' directory your server.
-
-
-
 ## run the integration tests
 
 > ⚠️ **Attention:**
@@ -143,6 +137,7 @@ pytest -m integration
 ```
 
 the test "test_passbook_creation_integration" will create a passbook file and display it with the passbook viewer. This test runs just under OSX.
+
 
 # Notification
 
