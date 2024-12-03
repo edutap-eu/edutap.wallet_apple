@@ -23,7 +23,7 @@ def generated_passes_dir():
     os.makedirs(target, exist_ok=True)
     return target
 
-
+@pytest.mark.integration
 def test_signing():
     """
     This test can only run locally if you provide your personal Apple Wallet
@@ -76,7 +76,7 @@ def test_signing():
     with pytest.raises(SMIME.PKCS7_Error):
         smime.verify(signature, data_bio, flags=SMIME.PKCS7_NOVERIFY)
 
-
+@pytest.mark.integration
 def test_passbook_creation():
     """
     This test can only run locally if you provide your personal Apple Wallet
