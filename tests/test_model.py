@@ -104,7 +104,7 @@ def test_basic_pass():
     assert passfile_json is not None
     assert passfile_json["suppressStripShine"] is False
     assert passfile_json["formatVersion"] == 1
-    assert passfile_json["passTypeIdentifier"] == "Pass Type ID"
+    assert passfile_json["passTypeIdentifier"] == common.PASS_TYPE_IDENTIFIER
     assert passfile_json["serialNumber"] == "1234567"
     assert passfile_json["teamIdentifier"] == "Team Identifier"
     assert passfile_json["organizationName"] == "Org Name"

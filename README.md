@@ -170,6 +170,8 @@ TODO
 
 - [apple doc for updating passes](https://developer.apple.com/documentation/walletpasses/adding_a_web_service_to_update_passes)
 
+- [apple instructions for building passes](https://developer.apple.com/documentation/walletpasses/building-a-pass)
+
 - [passninja docs](https://www.passninja.com/tutorials/apple-platform/how-does-pass-updating-work-on-apple-wallet)
 
 
@@ -203,3 +205,7 @@ We'd be happy to see many issue reports, forks and pull requests to make the pac
 The code is copyrighted 2023 by eduTAP - EUGLOH Working Package - Campus Life and contributors.
 
 It is licensed under the [EUROPEAN UNION PUBLIC LICENCE v. 1.2](https://opensource.org/license/eupl-1-2/), a free and OpenSource software license.
+
+## TODOS
+
+- [ ] pass verification following [apple instructions for building passes](https://developer.apple.com/documentation/walletpasses/building-a-pass)

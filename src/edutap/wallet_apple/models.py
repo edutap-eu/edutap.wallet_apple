@@ -393,7 +393,7 @@ class Pass(BaseModel):
         manifest = self._createManifest()
         signature = None
         if sign:
-            signature = self._createSignature(
+            signature : bytes = self._createSignature(
                 manifest,
                 certificate,
                 key,
@@ -453,7 +453,7 @@ class Pass(BaseModel):
         key,
         wwdr_certificate,
         password,
-    ):
+    ) -> bytes:
         """
         Creates the signature for the pass file.
         """
