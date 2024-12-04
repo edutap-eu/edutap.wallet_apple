@@ -1,14 +1,27 @@
 from enum import Enum
 from io import BytesIO
 import os
-from M2Crypto import SMIME
-from M2Crypto import X509
-from M2Crypto.X509 import X509_Stack
+from pathlib import Path
+
+from typing import Optional, Union
+from typing_extensions import deprecated
+
+
+from cryptography.x509 import load_pem_x509_certificate, load_der_x509_certificate
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.primitives.serialization import Encoding
+from cryptography.hazmat.primitives.serialization.pkcs7 import (
+    PKCS7SignatureBuilder,
+    PKCS7Options,
+)
+
 from pydantic import BaseModel
 from pydantic import computed_field
 from pydantic import Field as PydanticField
 from pydantic.fields import FieldInfo
-from typing_extensions import deprecated
+
 
 import base64
 import functools
@@ -127,7 +140,9 @@ class Location(BaseModel):
 
 
 class IBeacon(BaseModel):
-    proximityUUID: str  # Required. Unique identifier of a Bluetooth Low Energy location beacon
+    proximityUUID: (
+        str  # Required. Unique identifier of a Bluetooth Low Energy location beacon
+    )
     major: int  # Required. Major identifier of a Bluetooth Low Energy location beacon
     minor: int  # Required. Minor identifier of a Bluetooth Low Energy location beacon
     relevantText: str = ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
@@ -135,7 +150,9 @@ class IBeacon(BaseModel):
 
 class NFC(BaseModel):
     message: str  # Required. Message to be displayed on the lock screen when the pass is currently relevant
-    encryptionPublicKey: str  # Required. Public encryption key used by the Value Added Services protocol
+    encryptionPublicKey: (
+        str  # Required. Public encryption key used by the Value Added Services protocol
+    )
     requiresAuthentication: bool = False  # Optional. Indicates that the pass is not valid unless it contains a valid signature
 
 
@@ -383,7 +400,7 @@ class Pass(BaseModel):
         certificate: str,
         key: str,
         wwdr_certificate: str,
-        password: str,
+        password: Optional[str] = None,
         zip_file: typing.BinaryIO | BytesIO | None = None,
         sign: bool = True,
     ) -> typing.BinaryIO | BytesIO:
@@ -393,7 +410,7 @@ class Pass(BaseModel):
         manifest = self._createManifest()
         signature = None
         if sign:
-            signature : bytes = self._createSignature(
+            signature: bytes = self._createSignature(
                 manifest,
                 certificate,
                 key,
@@ -430,21 +447,53 @@ class Pass(BaseModel):
 
     def _sign_manifest(
         self,
-        manifest,
-        certificate,
-        key,
-        wwdr_certificate,
-        password,
-    ) -> SMIME.PKCS7:
+        manifest: str,
+        certificate_path: Union[str, Path],
+        private_key_path: Union[str, Path],
+        wwdr_certificate_path: Union[str, Path],
+        password: Optional[bytes],
+    ) -> bytes:
         """
-        :return: M2Crypto.SMIME.PKCS7
+        :param manifest: contains the manifest content
+        :param certificate: path to certificate
+        :param key: path to private key
+        :wwdr_certificate: path to wwdr_certificate
+        :return: ...
         """
-        smime = self._get_smime(certificate, key, wwdr_certificate, password)
-        pkcs7 = smime.sign(
-            SMIME.BIO.MemoryBuffer(bytes(manifest, encoding="utf8")),
-            flags=SMIME.PKCS7_DETACHED | SMIME.PKCS7_BINARY,
+        # smime = self._get_smime(certificate, key, wwdr_certificate, password)
+        # pkcs7 = smime.sign(
+        #     SMIME.BIO.MemoryBuffer(bytes(manifest, encoding="utf8")),
+        #     flags=SMIME.PKCS7_DETACHED | SMIME.PKCS7_BINARY,
+        # )
+        # return pkcs7
+
+        with open(certificate_path, "rb") as fh:
+            certificate_data = fh.read()
+        with open(private_key_path, "rb") as fh:
+            private_key_data = fh.read()
+        with open(wwdr_certificate_path, "rb") as fh:
+            wwdr_certificate_data = fh.read()
+
+        certificate = load_pem_x509_certificate(certificate_data, default_backend())
+        private_key = load_pem_private_key(
+            private_key_data, password=password, backend=default_backend()
         )
-        return pkcs7
+        # if not isinstance(private_key, (RSAPrivateKey, EllipticCurvePrivateKey)):
+        #     raise TypeError("Private key must be an RSAPrivateKey or EllipticCurvePrivateKey")
+        wwdr_certificate = load_pem_x509_certificate(
+            wwdr_certificate_data, default_backend()
+        )
+
+        signature_builder = (
+            PKCS7SignatureBuilder()
+            .set_data(manifest.encode('utf-8'))
+            .add_signer(certificate, private_key, hashes.SHA256())
+            .add_certificate(wwdr_certificate)
+        )
+
+        pkcs7_signature = signature_builder.sign(Encoding.DER, [])
+        return pkcs7_signature
+
 
     def _createSignature(
         self,
@@ -464,15 +513,15 @@ class Pass(BaseModel):
         if not os.path.exists(certificate):
             raise FileNotFoundError(f"Certificate file {certificate} not found")
         if not os.path.exists(wwdr_certificate):
-            raise FileNotFoundError(f"WWDR Certificate file {wwdr_certificate} not found")
-
+            raise FileNotFoundError(
+                f"WWDR Certificate file {wwdr_certificate} not found"
+            )
 
         pk7 = self._sign_manifest(
             manifest, certificate, key, wwdr_certificate, password
         )
-        der = SMIME.BIO.MemoryBuffer()
-        pk7.write_der(der)
-        return der.read()
+        
+        return pk7
 
     def _createZip(self, manifest, signature=None, zip_file=None):
         pass_json = self.pass_json
