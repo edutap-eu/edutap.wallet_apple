@@ -23,6 +23,7 @@ def generated_passes_dir():
     os.makedirs(target, exist_ok=True)
     return target
 
+
 @pytest.mark.integration
 def test_signing():
     """
@@ -76,6 +77,7 @@ def test_signing():
     with pytest.raises(SMIME.PKCS7_Error):
         smime.verify(signature, data_bio, flags=SMIME.PKCS7_NOVERIFY)
 
+
 @pytest.mark.integration
 def test_passbook_creation():
     """
@@ -84,15 +86,15 @@ def test_passbook_creation():
     them to git. Store them in the files indicated below, they are ignored
     by git.
     """
-    try:
-        with open(common.password_file) as file_:
-            password = file_.read().strip()
-    except OSError:
-        password = ""
+    # try:
+    #     with open(common.password_file) as file_:
+    #         password = file_.read().strip()
+    # except OSError:
+    #     password = None
 
     passfile = create_shell_pass()
     passfile.addFile("icon.png", open(common.resources / "white_square.png", "rb"))
-    zip = passfile.create(common.cert_file, common.key_file, common.wwdr_file, password)
+    zip = passfile.create(common.cert_file, common.key_file, common.wwdr_file, None)
     assert zip
 
 
@@ -120,7 +122,6 @@ def test_passbook_creation_integration(generated_passes_dir):
         certs / "private" / "certificate.pem",
         certs / "private" / "private.key",
         certs / "private" / "wwdr_certificate.pem",
-        "",
     )
 
     open(pass_file_name, "wb").write(zip.getvalue())
@@ -179,7 +180,7 @@ def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
         certs / "private" / "certificate.pem",
         certs / "private" / "private.key",
         certs / "private" / "wwdr_certificate.pem",
-        "",
+        None,
     )
     open(pass_file_name, "wb").write(zip.getvalue())
     os.system("open " + str(pass_file_name))
@@ -232,7 +233,7 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
         certs / "private" / "certificate.pem",
         certs / "private" / "private.key",
         certs / "private" / "wwdr_certificate.pem",
-        "",
+        None,
     )
 
     open(pass_file_name, "wb").write(zip.getvalue())
