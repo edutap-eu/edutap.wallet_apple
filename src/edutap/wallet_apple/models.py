@@ -14,7 +14,6 @@ from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.hazmat.primitives.serialization.pkcs7 import (
     PKCS7SignatureBuilder,
-    PKCS7Options,
 )
 
 from pydantic import BaseModel
@@ -83,24 +82,13 @@ class NumberStyle(Enum):
     SPELLOUT = "PKNumberStyleSpellOut"
 
 
-class MyEnum(Enum):
-    def __str__(self):
-        return self.value
-
-    a = 1
-    b = 2
-
-
-class Schas(BaseModel):
-    i: int = 1
-    s: str = "xx"
-
-
 class Field(BaseModel):
     key: str  # Required. The key must be unique within the scope
     value: str | int | float  # Required. Value of the field. For example, 42
     label: str = ""  # Optional. Label text for the field.
-    changeMessage: str = ""  # Optional. Format string for the alert text that is displayed when the pass is updated
+    changeMessage: str = (
+        ""  # Optional. Format string for the alert text that is displayed when the pass is updated
+    )
     # textAlignment: Alignment = Alignment.LEFT
     textAlignment: Alignment | None = None
     # Optional. Alignment for the field’s contents
@@ -135,8 +123,12 @@ class Location(BaseModel):
     latitude: float = 0.0  # Required. Latitude, in degrees, of the location
     longitude: float = 0.0  # Required. Longitude, in degrees, of the location
     altitude: float = 0  # Optional. Altitude, in meters, of the location
-    distance: float = 0  # Optional. Maximum distance, in meters, from the location that the pass is relevant
-    relevantText: str = ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
+    distance: float = (
+        0  # Optional. Maximum distance, in meters, from the location that the pass is relevant
+    )
+    relevantText: str = (
+        ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
+    )
 
 
 class IBeacon(BaseModel):
@@ -145,7 +137,9 @@ class IBeacon(BaseModel):
     )
     major: int  # Required. Major identifier of a Bluetooth Low Energy location beacon
     minor: int  # Required. Minor identifier of a Bluetooth Low Energy location beacon
-    relevantText: str = ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
+    relevantText: str = (
+        ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
+    )
 
 
 class NFC(BaseModel):
@@ -153,7 +147,9 @@ class NFC(BaseModel):
     encryptionPublicKey: (
         str  # Required. Public encryption key used by the Value Added Services protocol
     )
-    requiresAuthentication: bool = False  # Optional. Indicates that the pass is not valid unless it contains a valid signature
+    requiresAuthentication: bool = (
+        False  # Optional. Indicates that the pass is not valid unless it contains a valid signature
+    )
 
 
 class PassInformation(BaseModel):
@@ -426,25 +422,6 @@ class Pass(BaseModel):
         passcls = pass_model_registry[passtype]
         setattr(self, passtype, passcls())
 
-    def _get_smime(self, certificate, key, wwdr_certificate, password):
-        """
-        :return: M2Crypto.SMIME.SMIME
-        """
-
-        # from M2Crypto.X509 import X509_Stack
-        def passwordCallback(*args, **kwds):
-            return bytes(password, encoding="ascii")
-
-        smime = SMIME.SMIME()
-
-        wwdrcert = X509.load_cert(wwdr_certificate)
-        stack = X509_Stack()
-        stack.push(wwdrcert)
-        smime.set_x509_stack(stack)
-
-        smime.load_key(key, certfile=certificate, callback=passwordCallback)
-        return smime
-
     def _sign_manifest(
         self,
         manifest: str,
@@ -458,14 +435,8 @@ class Pass(BaseModel):
         :param certificate: path to certificate
         :param key: path to private key
         :wwdr_certificate: path to wwdr_certificate
-        :return: ...
+        :return: signature as bytes
         """
-        # smime = self._get_smime(certificate, key, wwdr_certificate, password)
-        # pkcs7 = smime.sign(
-        #     SMIME.BIO.MemoryBuffer(bytes(manifest, encoding="utf8")),
-        #     flags=SMIME.PKCS7_DETACHED | SMIME.PKCS7_BINARY,
-        # )
-        # return pkcs7
 
         with open(certificate_path, "rb") as fh:
             certificate_data = fh.read()
@@ -486,7 +457,7 @@ class Pass(BaseModel):
 
         signature_builder = (
             PKCS7SignatureBuilder()
-            .set_data(manifest.encode('utf-8'))
+            .set_data(manifest.encode("utf-8"))
             .add_signer(certificate, private_key, hashes.SHA256())
             .add_certificate(wwdr_certificate)
         )
@@ -494,33 +465,36 @@ class Pass(BaseModel):
         pkcs7_signature = signature_builder.sign(Encoding.DER, [])
         return pkcs7_signature
 
-
     def _createSignature(
         self,
         manifest,
-        certificate,
-        key,
-        wwdr_certificate,
-        password,
+        certificate_path: Union[str, Path],
+        private_key_path: Union[str, Path],
+        wwdr_certificate_path: Union[str, Path],
+        password: Optional[bytes] = None,
     ) -> bytes:
         """
         Creates the signature for the pass file.
         """
 
         # check for cert file existence
-        if not os.path.exists(key):
-            raise FileNotFoundError(f"Key file {key} not found")
-        if not os.path.exists(certificate):
-            raise FileNotFoundError(f"Certificate file {certificate} not found")
-        if not os.path.exists(wwdr_certificate):
+        if not os.path.exists(private_key_path):
+            raise FileNotFoundError(f"Key file {private_key_path} not found")
+        if not os.path.exists(certificate_path):
+            raise FileNotFoundError(f"Certificate file {certificate_path} not found")
+        if not os.path.exists(wwdr_certificate_path):
             raise FileNotFoundError(
-                f"WWDR Certificate file {wwdr_certificate} not found"
+                f"WWDR Certificate file {wwdr_certificate_path} not found"
             )
 
         pk7 = self._sign_manifest(
-            manifest, certificate, key, wwdr_certificate, password
+            manifest,
+            certificate_path,
+            private_key_path,
+            wwdr_certificate_path,
+            password,
         )
-        
+
         return pk7
 
     def _createZip(self, manifest, signature=None, zip_file=None):
