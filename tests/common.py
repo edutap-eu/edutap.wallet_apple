@@ -18,10 +18,12 @@ cert_file = certs / "private" / "certificate.pem"
 key_file = certs / "private" / "private.key"
 wwdr_file = certs / "private" / "wwdr_certificate.pem"
 
+PASS_TYPE_IDENTIFIER = "pass.demo.lmu.de"
+
 
 def create_shell_pass(
     barcodeFormat=BarcodeFormat.CODE128,
-    passTypeIdentifier="Pass Type ID",
+    passTypeIdentifier=PASS_TYPE_IDENTIFIER,
     teamIdentifier="Team Identifier",
 ):
     cardInfo = StoreCard()
@@ -43,7 +45,7 @@ def create_shell_pass(
 
 def create_shell_pass_loyalty(
     barcodeFormat=BarcodeFormat.CODE128,
-    passTypeIdentifier="Pass Type ID",
+    passTypeIdentifier=PASS_TYPE_IDENTIFIER,
     teamIdentifier="Team Identifier",
 ):
     cardInfo = Coupon()
