@@ -145,7 +145,7 @@ def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
 
     sn = uuid.uuid4().hex
     cardInfo = StoreCard()
-    cardInfo.addHeaderField("title", "EAIE2023", "")
+    cardInfo.addHeaderField("title", "EAIE2023NFC", "")
     # if name:
     #     cardInfo.addSecondaryField("name", name, "")
     stdBarcode = Barcode(message=sn, format=BarcodeFormat.CODE128, altText=sn)

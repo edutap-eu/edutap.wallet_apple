@@ -35,7 +35,7 @@ pip install -e .[test]
 
 ### OSX
 
-If you have problems installing M2Crypto on an Apple Silicon, you need to use `LDFALGS` and `CFLAGS`:
+If you have problems installing M2Crypto on an Apple Silicon or Intel, you need to use `LDFALGS` and `CFLAGS`:
 
 ```console
 LDFLAGS="-L$(brew --prefix openssl)/lib" CFLAGS="-I$(brew --prefix openssl)/include" SWIG_FEATURES="-I$(brew --prefix openssl)/include" pip install m2crypto
