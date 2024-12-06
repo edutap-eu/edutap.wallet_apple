@@ -438,6 +438,7 @@ class Pass(BaseModel):
         :return: signature as bytes
         """
 
+        # PKCS7: see https://www.youtube.com/watch?v=3YJ0by1r3qE
         with open(certificate_path, "rb") as fh:
             certificate_data = fh.read()
         with open(private_key_path, "rb") as fh:

@@ -9,9 +9,14 @@ from edutap.wallet_apple.models import EventTicket
 from edutap.wallet_apple.models import NFC
 from edutap.wallet_apple.models import Pass
 from edutap.wallet_apple.models import StoreCard
-from M2Crypto import BIO
-from M2Crypto import SMIME
-from M2Crypto import X509
+
+from cryptography.hazmat.primitives.serialization import pkcs7
+from cryptography.hazmat.bindings._rust import test_support
+from cryptography.hazmat.primitives import serialization
+from cryptography.x509 import load_pem_x509_certificate
+from cryptography.hazmat.backends import default_backend
+import cryptography.exceptions
+
 import os
 import pytest
 import uuid
@@ -38,6 +43,8 @@ def test_signing():
     except OSError:
         password = ""
 
+    password = None
+
     passfile = create_shell_pass()
     manifest_json = passfile._createManifest()
 
@@ -48,34 +55,28 @@ def test_signing():
         common.wwdr_file,
         password,
     )
+    cert  = load_pem_x509_certificate(open(common.cert_file, "rb").read(), default_backend())
 
-    smime = passfile._get_smime(
-        common.cert_file,
-        common.key_file,
-        common.wwdr_file,
-        password,
-    )
-
-    store = X509.X509_Store()
-    try:
-        store.load_info(bytes(str(common.wwdr_file), encoding="utf8"))
-    except TypeError:
-        store.load_info(str(common.wwdr_file))
-
-    smime.set_x509_store(store)
-
-    data_bio = BIO.MemoryBuffer(bytes(manifest_json, encoding="utf8"))
-
-    # PKCS7_NOVERIFY = do not verify the signers certificate of a signed message.
-    assert smime.verify(signature, data_bio, flags=SMIME.PKCS7_NOVERIFY) == bytes(
-        manifest_json, encoding="utf8"
+    test_support.pkcs7_verify(
+        serialization.Encoding.DER,
+        signature,
+        manifest_json.encode("utf-8"),
+        [cert],
+        [pkcs7.PKCS7Options.NoVerify],
     )
 
     tampered_manifest = bytes('{"pass.json": "foobar"}', encoding="utf8")
-    data_bio = BIO.MemoryBuffer(tampered_manifest)
+
+
     # Verification MUST fail!
-    with pytest.raises(SMIME.PKCS7_Error):
-        smime.verify(signature, data_bio, flags=SMIME.PKCS7_NOVERIFY)
+    with pytest.raises(cryptography.exceptions.InternalError):
+        test_support.pkcs7_verify(
+            serialization.Encoding.DER,
+            signature,
+            tampered_manifest,
+            [cert],
+            [pkcs7.PKCS7Options.NoVerify],
+        )
 
 
 @pytest.mark.integration
