@@ -24,7 +24,7 @@ classifiers = [
 dependencies = [
     "pydantic[email,dotenv]>=2.0",
     "python-dotenv",
-    "M2Crypto >= 0.28.2",
+    "cryptography",
     "typing_extensions",
 ]
 
