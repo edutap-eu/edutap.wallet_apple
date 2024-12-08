@@ -19,11 +19,7 @@ This package provides
 Prerequisites:
 
 - Python >= 3.10
-- SWIG (needed by the M2crypto Python library), for Debian/Ubuntu based system sue:
-  
-  ```bash
-  sudo apt-get install swig
-  ```
+
 
 Example installation for development via Pip, it is recommended to use a Python Virtual Environment:
 
