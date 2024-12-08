@@ -10,17 +10,11 @@ from edutap.wallet_apple.models import NFC
 from edutap.wallet_apple.models import Pass
 from edutap.wallet_apple.models import StoreCard
 
-from cryptography.hazmat.primitives.serialization import pkcs7
-from cryptography.hazmat.bindings._rust import test_support
-from cryptography.hazmat.primitives import serialization
-from cryptography.x509 import load_pem_x509_certificate
-from cryptography.hazmat.backends import default_backend
-import cryptography.exceptions
-
 import os
 import pytest
 import uuid
 
+from edutap.wallet_apple import crypto
 
 @pytest.fixture
 def generated_passes_dir():
@@ -37,46 +31,23 @@ def test_signing():
     them to git. Store them in the files indicated below, they are ignored
     by git.
     """
-    try:
-        with open(common.password_file) as file_:
-            password = file_.read().strip()
-    except OSError:
-        password = ""
-
-    password = None
 
     passfile = create_shell_pass()
     manifest_json = passfile._createManifest()
 
-    signature = passfile._sign_manifest(
+    signature = crypto.sign_manifest(
         manifest_json,
         common.cert_file,
         common.key_file,
         common.wwdr_file,
-        password,
-    )
-    cert  = load_pem_x509_certificate(open(common.cert_file, "rb").read(), default_backend())
-
-    test_support.pkcs7_verify(
-        serialization.Encoding.DER,
-        signature,
-        manifest_json.encode("utf-8"),
-        [cert],
-        [pkcs7.PKCS7Options.NoVerify],
     )
 
-    tampered_manifest = bytes('{"pass.json": "foobar"}', encoding="utf8")
-
+    crypto.verify_manifest(manifest_json, signature)
+    tampered_manifest = '{"pass.json": "foobar"}'
 
     # Verification MUST fail!
-    with pytest.raises(cryptography.exceptions.InternalError):
-        test_support.pkcs7_verify(
-            serialization.Encoding.DER,
-            signature,
-            tampered_manifest,
-            [cert],
-            [pkcs7.PKCS7Options.NoVerify],
-        )
+    with pytest.raises(crypto.VerificationError):
+        crypto.verify_manifest(tampered_manifest, signature)
 
 
 @pytest.mark.integration
