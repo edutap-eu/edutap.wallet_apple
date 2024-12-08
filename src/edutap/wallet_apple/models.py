@@ -29,6 +29,7 @@ import json
 import typing
 import zipfile
 
+from edutap.wallet_apple import crypto
 
 def bytearray_to_base64(bytearr):
     encoded_data = base64.b64encode(bytearr)
@@ -420,9 +421,9 @@ class Pass(BaseModel):
 
         """
         manifest = self._createManifest()
-        signature = None
+        signature: Optional[bytes] = None
         if sign:
-            signature: bytes = self._createSignature(
+            signature = crypto.create_signature(
                 manifest,
                 certificate,
                 key,
@@ -434,81 +435,7 @@ class Pass(BaseModel):
         self._createZip(manifest, signature, zip_file=zip_file)
         return zip_file
 
-    def _sign_manifest(
-        self,
-        manifest: str,
-        certificate_path: Union[str, Path],
-        private_key_path: Union[str, Path],
-        wwdr_certificate_path: Union[str, Path],
-        password: Optional[bytes],
-    ) -> bytes:
-        """
-        :param manifest: contains the manifest content as json string
-        :param certificate: path to certificate
-        :param key: path to private key
-        :wwdr_certificate: path to wwdr_certificate
-        :return: signature as bytes
-        """
 
-        # PKCS7: see https://www.youtube.com/watch?v=3YJ0by1r3qE
-        with open(certificate_path, "rb") as fh:
-            certificate_data = fh.read()
-        with open(private_key_path, "rb") as fh:
-            private_key_data = fh.read()
-        with open(wwdr_certificate_path, "rb") as fh:
-            wwdr_certificate_data = fh.read()
-
-        certificate = load_pem_x509_certificate(certificate_data, default_backend())
-        private_key = load_pem_private_key(
-            private_key_data, password=password, backend=default_backend()
-        )
-        # if not isinstance(private_key, (RSAPrivateKey, EllipticCurvePrivateKey)):
-        #     raise TypeError("Private key must be an RSAPrivateKey or EllipticCurvePrivateKey")
-        wwdr_certificate = load_pem_x509_certificate(
-            wwdr_certificate_data, default_backend()
-        )
-
-        signature_builder = (
-            PKCS7SignatureBuilder()
-            .set_data(manifest.encode("utf-8"))
-            .add_signer(certificate, private_key, hashes.SHA256())
-            .add_certificate(wwdr_certificate)
-        )
-
-        pkcs7_signature = signature_builder.sign(Encoding.DER, [])
-        return pkcs7_signature
-
-    def _createSignature(
-        self,
-        manifest,
-        certificate_path: Union[str, Path],
-        private_key_path: Union[str, Path],
-        wwdr_certificate_path: Union[str, Path],
-        password: Optional[bytes] = None,
-    ) -> bytes:
-        """
-        Creates the signature for the pass file.
-        """
-
-        # check for cert file existence
-        if not os.path.exists(private_key_path):
-            raise FileNotFoundError(f"Key file {private_key_path} not found")
-        if not os.path.exists(certificate_path):
-            raise FileNotFoundError(f"Certificate file {certificate_path} not found")
-        if not os.path.exists(wwdr_certificate_path):
-            raise FileNotFoundError(
-                f"WWDR Certificate file {wwdr_certificate_path} not found"
-            )
-
-        pk7 = self._sign_manifest(
-            manifest,
-            certificate_path,
-            private_key_path,
-            wwdr_certificate_path,
-            password,
-        )
-
-        return pk7
 
     def _createZip(self, manifest, signature=None, zip_file=None):
         pass_json = self.pass_json
@@ -520,29 +447,6 @@ class Pass(BaseModel):
         for filename, filedata in self.files.items():
             zf.writestr(filename, filedata)
         zf.close()
-
-    def _verify_manifest(self, manifest, signature, cert_pem=None):
-        """
-        Verifies the manifest against the signature.
-        Currently no check against the cert supported, only the
-        manifest is verified against the signature to check for manipulation
-        in the manifest
-        """
-        from cryptography.hazmat.bindings._rust import test_support # this is preliminary hence the local import
-
-        # if cert_pem:
-        #     with  open(cert_pem, "rb") as fh:
-        #         cert = load_pem_x509_certificate(fh.read(), default_backend())
-        # else:
-        #     cert = None
-
-        test_support.pkcs7_verify(
-            Encoding.DER,
-            signature,
-            manifest.encode("utf-8"),
-            [], #
-            [PKCS7Options.NoVerify],
-        )
 
 
 # hack in an optional field for each passmodel(passtype) since these are not known at compile time
