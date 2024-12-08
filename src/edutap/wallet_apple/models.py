@@ -3,7 +3,7 @@ from io import BytesIO
 import os
 from pathlib import Path
 
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 from typing_extensions import deprecated
 
 
@@ -13,7 +13,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.hazmat.primitives.serialization.pkcs7 import (
-    PKCS7SignatureBuilder,
+    PKCS7SignatureBuilder, PKCS7Options
 )
 
 from pydantic import BaseModel
@@ -195,10 +195,16 @@ class PassInformation(BaseModel):
         )
 
 
-pass_model_registry = {}
+pass_model_registry: Dict[str, PassInformation] = {}
+"""
+this registry identifies the different apple pass types by their name
+"""
 
 
 def passmodel(name: str):
+    """
+    decorator function for registering a pass type
+    """
     @functools.wraps(passmodel)
     def inner(cls):
         pass_model_registry[name] = cls
@@ -210,27 +216,38 @@ def passmodel(name: str):
 
 @passmodel("boardingPass")
 class BoardingPass(PassInformation):
+    """
+    see https://developer.apple.com/documentation/walletpasses/pass/boardingpass-data.dictionary
+    """
     transitType: TransitType = TransitType.AIR
 
 
 @passmodel("coupon")
 class Coupon(PassInformation):
-    pass
+    """
+    see https://developer.apple.com/documentation/walletpasses/pass/coupon-data.dictionary
+    """
 
 
 @passmodel("eventTicket")
 class EventTicket(PassInformation):
-    pass
+    """
+    see https://developer.apple.com/documentation/walletpasses/pass/eventticket-data.dictionary
+    """
 
 
 @passmodel("generic")
 class Generic(PassInformation):
-    pass
+    """
+    see https://developer.apple.com/documentation/walletpasses/pass/generic-data.dictionary
+    """
 
 
 @passmodel("storeCard")
 class StoreCard(PassInformation):
-    pass
+    """
+    see https://developer.apple.com/documentation/walletpasses/pass/storecard
+    """
 
 
 class Pass(BaseModel):
@@ -270,10 +287,6 @@ class Pass(BaseModel):
     """Optional. Color of the label text, specified as a CSS-style RGB triple. For example, rgb(255, 255, 255)."""
     logoText: str | None = None
     """Optional. Text displayed next to the logo on the pass."""
-
-    # barcode: Barcode | None = PydanticField(
-    #     default=None, deprecated=True, description="Use barcodes instead"
-    # )
 
     @computed_field  # type: ignore [no-redef]
     @deprecated("Use 'barcodes' instead")
@@ -402,6 +415,9 @@ class Pass(BaseModel):
     ) -> typing.BinaryIO | BytesIO:
         """
         creates and signs the .pkpass file as a BytesIO object
+
+        following the apple guidlines at https://developer.apple.com/documentation/walletpasses/building-a-pass#Sign-the-Pass-and-Create-the-Bundle
+
         """
         manifest = self._createManifest()
         signature = None
@@ -418,10 +434,6 @@ class Pass(BaseModel):
         self._createZip(manifest, signature, zip_file=zip_file)
         return zip_file
 
-    def create_pass_object(self, passtype: str):
-        passcls = pass_model_registry[passtype]
-        setattr(self, passtype, passcls())
-
     def _sign_manifest(
         self,
         manifest: str,
@@ -431,7 +443,7 @@ class Pass(BaseModel):
         password: Optional[bytes],
     ) -> bytes:
         """
-        :param manifest: contains the manifest content
+        :param manifest: contains the manifest content as json string
         :param certificate: path to certificate
         :param key: path to private key
         :wwdr_certificate: path to wwdr_certificate
@@ -508,6 +520,29 @@ class Pass(BaseModel):
         for filename, filedata in self.files.items():
             zf.writestr(filename, filedata)
         zf.close()
+
+    def _verify_manifest(self, manifest, signature, cert_pem=None):
+        """
+        Verifies the manifest against the signature.
+        Currently no check against the cert supported, only the
+        manifest is verified against the signature to check for manipulation
+        in the manifest
+        """
+        from cryptography.hazmat.bindings._rust import test_support # this is preliminary hence the local import
+
+        # if cert_pem:
+        #     with  open(cert_pem, "rb") as fh:
+        #         cert = load_pem_x509_certificate(fh.read(), default_backend())
+        # else:
+        #     cert = None
+
+        test_support.pkcs7_verify(
+            Encoding.DER,
+            signature,
+            manifest.encode("utf-8"),
+            [], #
+            [PKCS7Options.NoVerify],
+        )
 
 
 # hack in an optional field for each passmodel(passtype) since these are not known at compile time
