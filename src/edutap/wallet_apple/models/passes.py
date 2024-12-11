@@ -430,14 +430,13 @@ class Pass(BaseModel):
 
     def _createZip(self, manifest, signature=None, zip_file=None):
         pass_json = self.pass_json
-        zf = zipfile.ZipFile(zip_file or "pass.pkpass", "w")
-        zf.writestr("pass.json", pass_json)
-        zf.writestr("manifest.json", manifest)
-        if signature:
-            zf.writestr("signature", signature)
-        for filename, filedata in self.files.items():
-            zf.writestr(filename, filedata)
-        zf.close()
+        with zipfile.ZipFile(zip_file or "pass.pkpass", "w") as zf:
+            zf.writestr("pass.json", pass_json)
+            zf.writestr("manifest.json", manifest)
+            if signature:
+                zf.writestr("signature", signature)
+            for filename, filedata in self.files.items():
+                zf.writestr(filename, filedata)
 
 
 # hack in an optional field for each passmodel(passtype) since these are not known at compile time

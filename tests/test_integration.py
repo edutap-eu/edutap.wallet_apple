@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 from common import certs
 from common import create_shell_pass
 from common import data
@@ -66,8 +67,8 @@ def test_passbook_creation():
 
     passfile = create_shell_pass()
     passfile.addFile("icon.png", open(common.resources / "white_square.png", "rb"))
-    zip = passfile.create(common.cert_file, common.key_file, common.wwdr_file, None)
-    assert zip
+    zipfile = passfile.create(common.cert_file, common.key_file, common.wwdr_file, None)
+    assert zipfile
 
 
 @pytest.mark.integration
@@ -90,13 +91,14 @@ def test_passbook_creation_integration(generated_passes_dir):
     )
     passfile.addFile("icon.png", open(resources / "white_square.png", "rb"))
 
-    zip = passfile.create(
+    zipfile = passfile.create(
         certs / "private" / "certificate.pem",
         certs / "private" / "private.key",
         certs / "private" / "wwdr_certificate.pem",
     )
 
-    open(pass_file_name, "wb").write(zip.getvalue())
+    with open(pass_file_name, "wb") as fh:
+        fh.write(zipfile.getvalue())
     os.system("open " + str(pass_file_name))
 
 
@@ -148,14 +150,15 @@ def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
         requiresAuthentication=False,
     )
 
-    zip = passfile.create(
+    zipfile = passfile.create(
         certs / "private" / "certificate.pem",
         certs / "private" / "private.key",
         certs / "private" / "wwdr_certificate.pem",
         None,
     )
-    open(pass_file_name, "wb").write(zip.getvalue())
-    os.system("open " + str(pass_file_name))
+    with open(pass_file_name, "wb") as fh:
+        fh.write(zipfile.getvalue())
+        os.system("open " + str(pass_file_name))
 
 
 @pytest.mark.integration
@@ -201,15 +204,16 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
     # passfile.addFile("background.png", open(resources / "eaie-hero.jpg", "rb"))
 
     passfile.backgroundColor = "#fa511e"
-    zip = passfile.create(
+    zipfile = passfile.create(
         certs / "private" / "certificate.pem",
         certs / "private" / "private.key",
         certs / "private" / "wwdr_certificate.pem",
         None,
     )
 
-    open(pass_file_name, "wb").write(zip.getvalue())
-    os.system("open " + str(pass_file_name))
+    with open(pass_file_name, "wb") as fh:
+        fh.write(zipfile.getvalue())
+        os.system("open " + str(pass_file_name))
 
 
 @pytest.mark.integration
