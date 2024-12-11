@@ -342,6 +342,7 @@ class Pass(BaseModel):
     nfc: NFC | None = None
     """Optional. Information used for Value Added Service Protocol transactions."""
 
+    # convenience stuff -> exract into api
     @property
     def files_uuencoded(self) -> dict[str, str]:
         """

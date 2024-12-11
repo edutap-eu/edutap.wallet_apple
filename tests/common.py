@@ -1,8 +1,8 @@
-from edutap.wallet_apple.models import Barcode
-from edutap.wallet_apple.models import BarcodeFormat
-from edutap.wallet_apple.models import Coupon
-from edutap.wallet_apple.models import Pass
-from edutap.wallet_apple.models import StoreCard
+from edutap.wallet_apple.models.passes import Barcode
+from edutap.wallet_apple.models.passes import BarcodeFormat
+from edutap.wallet_apple.models.passes import Coupon
+from edutap.wallet_apple.models.passes import Pass
+from edutap.wallet_apple.models.passes import StoreCard
 from pathlib import Path
 
 import uuid

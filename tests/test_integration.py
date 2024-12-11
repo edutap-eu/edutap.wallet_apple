@@ -3,12 +3,12 @@ from common import create_shell_pass
 from common import data
 from common import resources
 import common
-from edutap.wallet_apple.models import Barcode
-from edutap.wallet_apple.models import BarcodeFormat
-from edutap.wallet_apple.models import EventTicket
-from edutap.wallet_apple.models import NFC
-from edutap.wallet_apple.models import Pass
-from edutap.wallet_apple.models import StoreCard
+from edutap.wallet_apple.models.passes import Barcode
+from edutap.wallet_apple.models.passes import BarcodeFormat
+from edutap.wallet_apple.models.passes import EventTicket
+from edutap.wallet_apple.models.passes import NFC
+from edutap.wallet_apple.models.passes import Pass
+from edutap.wallet_apple.models.passes import StoreCard
 
 import os
 import pytest

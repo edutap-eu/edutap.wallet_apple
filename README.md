@@ -205,3 +205,6 @@ It is licensed under the [EUROPEAN UNION PUBLIC LICENCE v. 1.2](https://opensour
 ## TODOS
 
 - [ ] pass verification following [apple instructions for building passes](https://developer.apple.com/documentation/walletpasses/building-a-pass)
+- [ ] implement api call that accepts an unsigned .pkpass and verifies and signs it
+- [ ] provide JSON schema for passes
+    for apple one json schema for each pass type 

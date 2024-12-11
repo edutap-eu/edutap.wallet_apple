@@ -1,11 +1,6 @@
-from typing import Protocol, runtime_checkable, Any
 
-
-PushToken = str
-DeviceTypeIdentifier = str
-SerialNumbers = list[str]
-
-PassData = dict[str, Any]
+from typing import Protocol, runtime_checkable
+from .models import handlers
 
 
 @runtime_checkable
@@ -16,12 +11,12 @@ class PassRegistration(Protocol):
     
     """
 
-    def register_pass(self, pass_id: str, push_token: PushToken) -> None:
+    async def register_pass(self, device_id: str, pass_type_id: str, serial_number:str, push_token: handlers.PushToken) -> None:
         """
         see https://developer.apple.com/documentation/walletpasses/register-a-pass-for-update-notifications
         """
 
-    def unregister_pass(self, pass_id: str, push_token: PushToken) -> None: 
+    async def unregister_pass(self,device_id: str, pass_type_id: str, serial_umber: str) -> None: 
         """
         see https://developer.apple.com/documentation/walletpasses/unregister-a-pass-for-update-notifications
         """
@@ -33,18 +28,23 @@ class PassDataAcquisition(Protocol):
     Protocol definition for an injectable PassDataAcquisition handler
     """
 
-    def fetch_pass_creation_data(self, pass_id: str) -> PassData: 
+    async def get_pass_data(self, pass_id: str) -> handlers.PassData: 
         """
         Fetches pass creation data from the database
+        is called by the Edutap Apple Provider upon creation of a new pass
+        
+        TODO: specify the parameters
         """
 
-    def get_push_token(self, device_type_id: str, pass_type_id: str) -> PushToken:
+    async def get_push_tokens(self, device_type_id: str | None, pass_type_id: str, serial_number: str) -> list[PushToken]:
         """
+        called during pass update,
         returns a push token
         see https://developer.apple.com/documentation/walletpasses/pushtoken
+        and https://developer.apple.com/documentation/usernotifications/sending-notification-requests-to-apns
         """
 
-    def get_update_serial_numbers(
+    async def aget_update_serial_numbers(
         self, device_type_id: str, pass_type_id: str, last_updated: str
     ) -> SerialNumbers: 
         """
@@ -52,8 +52,8 @@ class PassDataAcquisition(Protocol):
         see https://developer.apple.com/documentation/walletpasses/get-the-list-of-updatable-passes
         """
 
-    def get_pass_data(self, device_type_id: str, pass_type_id: str, serial_number: str) -> PassData: 
+    async def get_pass_data(self, device_type_id: str, pass_type_id: str, serial_number: str) -> PassData: 
         """
-        retrieves the pass data necessary for pass creation
+        retrieves the pass data necessary for pass update for a sinngle pass
         """
-        
+   

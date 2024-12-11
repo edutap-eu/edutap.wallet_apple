@@ -1,6 +1,6 @@
 from common import create_shell_pass
-from edutap.wallet_apple import models
-from edutap.wallet_apple.models import BarcodeFormat
+from edutap.wallet_apple.models import passes
+from edutap.wallet_apple.models.passes import BarcodeFormat
 
 import common
 import json
@@ -8,9 +8,9 @@ import pytest
 
 
 def test_model():
-    pass1 = models.PassInformation(
+    pass1 = passes.PassInformation(
         headerFields=[
-            models.Field(key="header1", value="header1", label="header1"),
+            passes.Field(key="header1", value="header1", label="header1"),
         ]
     )
 
@@ -19,20 +19,20 @@ def test_model():
 
 def test_load_minimal_storecard():
     buf = open(common.jsons / "minimal_storecard.json").read()
-    pass1 = models.Pass.model_validate_json(buf)
+    pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.storeCard is not None
-    assert pass1.passInformation.__class__ == models.StoreCard
+    assert pass1.passInformation.__class__ == passes.StoreCard
     assert pass1.nfc is None
     print(pass1.model_dump(exclude_none=True))
 
 
 def test_load_storecard_nfc():
     buf = open(common.jsons / "storecard_with_nfc.json").read()
-    pass1 = models.Pass.model_validate_json(buf)
+    pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.storeCard is not None
-    assert pass1.passInformation.__class__ == models.StoreCard
+    assert pass1.passInformation.__class__ == passes.StoreCard
 
     assert pass1.nfc is not None
     print(pass1.model_dump(exclude_none=True))
@@ -40,50 +40,50 @@ def test_load_storecard_nfc():
 
 def test_load_minimal_generic_pass():
     buf = open(common.jsons / "minimal_generic_pass.json").read()
-    pass1 = models.Pass.model_validate_json(buf)
+    pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.generic is not None
-    assert pass1.passInformation.__class__ == models.Generic
+    assert pass1.passInformation.__class__ == passes.Generic
     json_ = pass1.model_dump(exclude_none=True)
     assert json_
 
 
 def test_load_generic_pass():
     buf = open(common.jsons / "generic_pass.json").read()
-    pass1 = models.Pass.model_validate_json(buf)
+    pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.generic is not None
-    assert pass1.passInformation.__class__ == models.Generic
+    assert pass1.passInformation.__class__ == passes.Generic
     json_ = pass1.model_dump(exclude_none=True)
     assert json_
 
 
 def test_load_boarding_pass():
     buf = open(common.jsons / "boarding_pass.json").read()
-    pass1 = models.Pass.model_validate_json(buf)
+    pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.boardingPass is not None
-    assert pass1.passInformation.__class__ == models.BoardingPass
+    assert pass1.passInformation.__class__ == passes.BoardingPass
     json_ = pass1.model_dump(exclude_none=True)
     assert json_
 
 
 def test_load_event_pass():
     buf = open(common.jsons / "event_ticket.json").read()
-    pass1 = models.Pass.model_validate_json(buf)
+    pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.eventTicket is not None
-    assert pass1.passInformation.__class__ == models.EventTicket
+    assert pass1.passInformation.__class__ == passes.EventTicket
     json_ = pass1.model_dump(exclude_none=True)
     assert json_
 
 
 def test_load_coupon():
     buf = open(common.jsons / "coupon.json").read()
-    pass1 = models.Pass.model_validate_json(buf)
+    pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.coupon is not None
-    assert pass1.passInformation.__class__ == models.Coupon
+    assert pass1.passInformation.__class__ == passes.Coupon
     json_ = pass1.model_dump(exclude_none=True)
     assert json_
 
