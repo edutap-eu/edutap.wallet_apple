@@ -1,10 +1,18 @@
+from ..settings import AppleWalletSettings
 from edutap.wallet_apple.webservice.models import LogEntries
 from edutap.wallet_apple.webservice.models import PushToken
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import Header
 from fastapi import Request
 from fastapi.concurrency import asynccontextmanager
 from typing import Annotated
+
+
+def get_settings():
+    """
+    TODO
+    """
 
 
 @asynccontextmanager
@@ -37,7 +45,7 @@ async def register_pass(
     authorization: Annotated[str | None, Header()] = None,
     data: PushToken | None = None,
     # *,
-    settings: AppleWalletWebServiceSettings = Depends(get_settings),
+    settings: AppleWalletSettings = Depends(get_settings),
 ):
     """
     Registration: register a device to receive push notifications for a pass.
@@ -89,7 +97,7 @@ async def unregister_pass(
     serialNumber: str,
     authorization: Annotated[str | None, Header()] = None,
     # *,
-    settings: AppleWalletWebServiceSettings = Depends(get_settings),
+    settings: AppleWalletSettings = Depends(get_settings),
 ):
     """
     Unregister
@@ -113,7 +121,7 @@ async def device_log(
     request: Request,
     data: LogEntries,
     # *,
-    # settings: AppleWalletWebServiceSettings = Depends(get_settings),
+    # settings: AppleWalletSettings = Depends(get_settings),
 ):
     """
     Logging/Debugging from the device, called by the handheld device
@@ -134,7 +142,7 @@ async def get_pass(
     serialNumber: str,
     authorization: Annotated[str | None, Header()] = None,
     # *,
-    settings: AppleWalletWebServiceSettings = Depends(get_settings),
+    settings: AppleWalletSettings = Depends(get_settings),
 ):
     """
     Pass delivery
@@ -154,24 +162,6 @@ async def get_pass(
 # ------------------------
 
 
-@router.post("/passes/{passTypeIdentifier}/{serialNumber}")
-async def get_pass(
-    request: Request,
-    passTypeIdentifier: str,
-    serialNumber: str,
-    authorization: Annotated[str | None, Header()] = None,
-    # *,
-    settings: AppleWalletWebServiceSettings = Depends(get_settings),
-):
-    """
-    not covered by Apple's documentation, so it is a custom implementation
-
-    Attention: check for correct authentication token, do not allow it to be called
-    anonymously
-
-    """
-
-
 @router.get(
     "/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}?passesUpdatedSince={previousLastUpdated}"
 )
@@ -182,7 +172,7 @@ async def list_updatable_passes(
     previousLastUpdated: str,
     authorization: Annotated[str | None, Header()] = None,
     # *,
-    settings: AppleWalletWebServiceSettings = Depends(get_settings),
+    settings: AppleWalletSettings = Depends(get_settings),
 ):
     """
     not covered by Apple's documentation, so it is a custom implementation

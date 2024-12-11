@@ -4,7 +4,6 @@ from edutap.wallet_apple.models.passes import BarcodeFormat
 
 import common
 import json
-import pytest
 
 
 def test_model():

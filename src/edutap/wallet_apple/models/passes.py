@@ -1,22 +1,18 @@
 from edutap.wallet_apple import crypto
 from enum import Enum
 from io import BytesIO
-from pathlib import Path
 from pydantic import BaseModel
 from pydantic import computed_field
 from pydantic import Field as PydanticField
 from pydantic.fields import FieldInfo
-from typing import Any
 from typing import Dict
 from typing import Optional
-from typing import Union
 from typing_extensions import deprecated
 
 import base64
 import functools
 import hashlib
 import json
-import os
 import typing
 import zipfile
 
@@ -46,8 +42,8 @@ class BarcodeFormat(Enum):
     CODE128 = "PKBarcodeFormatCode128"
 
 
+# Barcode formats that are supported by iOS 6 and 7
 legacy_barcode_formats = [BarcodeFormat.PDF417, BarcodeFormat.QR, BarcodeFormat.AZTEC]
-"""Barcode formats that are supported by iOS 6 and 7"""
 
 
 class TransitType(Enum):
@@ -186,10 +182,8 @@ class PassInformation(BaseModel):
         )
 
 
+# this registry identifies the different apple pass types by their name
 pass_model_registry: Dict[str, PassInformation] = {}
-"""
-this registry identifies the different apple pass types by their name
-"""
 
 
 def passmodel(name: str):
