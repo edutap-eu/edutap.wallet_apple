@@ -342,7 +342,7 @@ class Pass(BaseModel):
     nfc: NFC | None = None
     """Optional. Information used for Value Added Service Protocol transactions."""
 
-    # convenience stuff -> exract into api
+    # TODO: convenience stuff -> exract into api
     @property
     def files_uuencoded(self) -> dict[str, str]:
         """
@@ -437,6 +437,18 @@ class Pass(BaseModel):
                 zf.writestr("signature", signature)
             for filename, filedata in self.files.items():
                 zf.writestr(filename, filedata)
+
+
+class PkPass(BaseModel):
+    """
+    represents a PkPass file containing 
+    - a Pass object (results in pass.json)
+    - all binary pass files (images)
+    - manifest
+    - signature (after signing)
+    """
+
+    # TODO: move stuff from Pass class
 
 
 # hack in an optional field for each passmodel(passtype) since these are not known at compile time
