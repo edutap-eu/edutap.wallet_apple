@@ -156,11 +156,11 @@ Displaying the pass works only under OSX since the passbook viewer is part of it
 
 # Notification
 
-TODO
+TODO document it
 
 ## Create a certificate for push notifications
 
-TODO
+TODO document it
 
 ## Further readings
 
@@ -172,8 +172,6 @@ TODO
 
 
 ## Documentation
-
-TODO
 
 Read the [complete `edutap.wallet_apple` documentation](https://docs.edutap.eu/packages/edutap_wallet_apple/index.html) to get started.
 
