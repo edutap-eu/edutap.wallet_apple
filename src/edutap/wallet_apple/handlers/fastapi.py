@@ -1,8 +1,10 @@
-from typing import Annotated
-from fastapi import APIRouter, Header, Request
+from edutap.wallet_apple.webservice.models import LogEntries
+from edutap.wallet_apple.webservice.models import PushToken
+from fastapi import APIRouter
+from fastapi import Header
+from fastapi import Request
 from fastapi.concurrency import asynccontextmanager
-
-from edutap.wallet_apple.webservice.models import LogEntries, PushToken
+from typing import Annotated
 
 
 @asynccontextmanager
@@ -73,9 +75,9 @@ async def register_pass(
 
     :return:
     """
-    
+
     raise NotImplementedError
-    
+
 
 @router.delete(
     "/devices/{deviceLibraryIdentitfier}/registrations/{passTypeIdentifier}/{serialNumber}"
@@ -86,7 +88,7 @@ async def unregister_pass(
     passTypeIdentifier: str,
     serialNumber: str,
     authorization: Annotated[str | None, Header()] = None,
-        # *,
+    # *,
     settings: AppleWalletWebServiceSettings = Depends(get_settings),
 ):
     """
@@ -104,7 +106,7 @@ async def unregister_pass(
 
     """
     raise NotImplementedError
-    
+
 
 @router.post("/log")
 async def device_log(
@@ -123,8 +125,8 @@ async def device_log(
     server response: 200
     """
     raise NotImplementedError
-    
-    
+
+
 @router.get("/passes/{passTypeIdentifier}/{serialNumber}")
 async def get_pass(
     request: Request,
@@ -145,11 +147,12 @@ async def get_pass(
     --> if auth token is incorrect: 401
     """
     raise NotImplementedError
-    
-    
-#------------------------
+
+
+# ------------------------
 # Neuland
-#------------------------
+# ------------------------
+
 
 @router.post("/passes/{passTypeIdentifier}/{serialNumber}")
 async def get_pass(
@@ -162,14 +165,16 @@ async def get_pass(
 ):
     """
     not covered by Apple's documentation, so it is a custom implementation
-    
-    Attention: check for correct authentication token, do not allow it to be called 
+
+    Attention: check for correct authentication token, do not allow it to be called
     anonymously
-    
+
     """
-    
-    
-@router.get("/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}?passesUpdatedSince={previousLastUpdated}")
+
+
+@router.get(
+    "/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}?passesUpdatedSince={previousLastUpdated}"
+)
 async def list_updatable_passes(
     request: Request,
     deviceLibraryIdentifier: str,
@@ -181,8 +186,7 @@ async def list_updatable_passes(
 ):
     """
     not covered by Apple's documentation, so it is a custom implementation
-    
-    Attention: check for correct authentication token, do not allow it to be called 
+
+    Attention: check for correct authentication token, do not allow it to be called
     anonymously
     """
-    

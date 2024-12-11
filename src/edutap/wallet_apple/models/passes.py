@@ -1,25 +1,25 @@
+from edutap.wallet_apple import crypto
 from enum import Enum
 from io import BytesIO
-import os
 from pathlib import Path
-
-from typing import Any, Dict, Optional, Union
-from typing_extensions import deprecated
-
 from pydantic import BaseModel
 from pydantic import computed_field
 from pydantic import Field as PydanticField
 from pydantic.fields import FieldInfo
-
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Union
+from typing_extensions import deprecated
 
 import base64
 import functools
 import hashlib
 import json
+import os
 import typing
 import zipfile
 
-from edutap.wallet_apple import crypto
 
 def bytearray_to_base64(bytearr):
     encoded_data = base64.b64encode(bytearr)
@@ -196,6 +196,7 @@ def passmodel(name: str):
     """
     decorator function for registering a pass type
     """
+
     @functools.wraps(passmodel)
     def inner(cls):
         pass_model_registry[name] = cls
@@ -210,6 +211,7 @@ class BoardingPass(PassInformation):
     """
     see https://developer.apple.com/documentation/walletpasses/pass/boardingpass-data.dictionary
     """
+
     transitType: TransitType = TransitType.AIR
 
 
@@ -426,8 +428,6 @@ class Pass(BaseModel):
         self._createZip(manifest, signature, zip_file=zip_file)
         return zip_file
 
-
-
     def _createZip(self, manifest, signature=None, zip_file=None):
         pass_json = self.pass_json
         with zipfile.ZipFile(zip_file or "pass.pkpass", "w") as zf:
@@ -441,7 +441,7 @@ class Pass(BaseModel):
 
 class PkPass(BaseModel):
     """
-    represents a PkPass file containing 
+    represents a PkPass file containing
     - a Pass object (results in pass.json)
     - all binary pass files (images)
     - manifest

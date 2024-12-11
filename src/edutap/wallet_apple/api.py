@@ -1,11 +1,9 @@
-from typing import Optional, BinaryIO
 from .models import passes
+from typing import BinaryIO
+from typing import Optional
 
 
-def new(
-    data: Optional[dict]=None,
-    file: Optional[BinaryIO]=None
-) -> passes.PkPass:
+def new(data: Optional[dict] = None, file: Optional[BinaryIO] = None) -> passes.PkPass:
     """
     Create pass model.
 
@@ -14,5 +12,3 @@ def new(
     :return: PkPass model instance.
     """
     ...
-
-

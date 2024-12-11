@@ -1,6 +1,7 @@
 # pylint: disable=too-few-public-methods
+from pydantic import BaseModel
+from pydantic import ConfigDict
 from typing import BinaryIO
-from pydantic import BaseModel, ConfigDict
 
 
 DeviceTypeIdentifier = str
@@ -14,7 +15,7 @@ class PushToken(BaseModel):
     see: https://developer.apple.com/documentation/walletpasses/pushtoken
     """
 
-    model_config = ConfigDict( # control if instances can have extra attributes
+    model_config = ConfigDict(  # control if instances can have extra attributes
         extra="forbid",
         # extra="ignore",
         # extra="allow",
@@ -33,7 +34,6 @@ class SerialNumbers(BaseModel):
     lastUpdated: str
     """A developer-defined string that contains a tag that indicates the modification time for the returned passes."""
 
-     
 
 class LogEntries(BaseModel):
     """
@@ -42,7 +42,7 @@ class LogEntries(BaseModel):
     see: https://developer.apple.com/documentation/walletpasses/logentries
     """
 
-    model_config = ConfigDict( # control if instances can have extra attributes
+    model_config = ConfigDict(  # control if instances can have extra attributes
         # extra="forbid",
         # extra="ignore",
         extra="allow",

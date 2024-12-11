@@ -1,13 +1,13 @@
-from typing import Protocol, runtime_checkable
 from .models import handlers
+from typing import Protocol
+from typing import runtime_checkable
 
 
 @runtime_checkable
 class PassRegistration(Protocol):
     """
     Protocol definition for an injectable PassRegistration handler.
-    It will be used by the webservice to handle pass registration
-
+    It will be used by the webservice to handle pass registration.
     """
 
     async def register_pass(
@@ -53,17 +53,10 @@ class PassDataAcquisition(Protocol):
         and https://developer.apple.com/documentation/usernotifications/sending-notification-requests-to-apns
         """
 
-    async def aget_update_serial_numbers(
+    async def get_update_serial_numbers(
         self, device_type_id: str, pass_type_id: str, last_updated: str
     ) -> handlers.SerialNumbers:
         """
         Fetches the serial numbers of the passes that have been updated since the last update
         see https://developer.apple.com/documentation/walletpasses/get-the-list-of-updatable-passes
-        """
-
-    async def get_pass_data(
-        self, device_type_id: str, pass_type_id: str, serial_number: str
-    ) -> PassData:
-        """
-        retrieves the pass data necessary for pass update for a sinngle pass
         """

@@ -1,27 +1,30 @@
-import os
-from pathlib import Path
-from typing import Optional, Union
-import cryptography
-from cryptography.x509 import load_pem_x509_certificate
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.primitives.serialization import Encoding
-from cryptography.hazmat.primitives.serialization.pkcs7 import (
-    PKCS7SignatureBuilder, PKCS7Options
-)
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.primitives.serialization.pkcs7 import PKCS7Options
+from cryptography.hazmat.primitives.serialization.pkcs7 import PKCS7SignatureBuilder
+from cryptography.x509 import load_pem_x509_certificate
+from pathlib import Path
+from typing import Optional
+from typing import Union
+
+import cryptography
+import os
+
 
 class VerificationError(Exception):
     """
-    backend-independent 
+    backend-independent
     """
+
 
 def sign_manifest(
     manifest: str,
     certificate_path: Union[str, Path],
     private_key_path: Union[str, Path],
     wwdr_certificate_path: Union[str, Path],
-    password: Optional[bytes]=None,
+    password: Optional[bytes] = None,
 ) -> bytes:
     """
     :param manifest: contains the manifest content as json string
@@ -105,7 +108,9 @@ def verify_manifest(manifest: str, signature: bytes):
     the `cryptography` library to support the verification of the PKCS#7 signatures
     therefore we filed a [Pull request](https://github.com/pyca/cryptography/pull/12116)
     """
-    from cryptography.hazmat.bindings._rust import test_support # this is preliminary hence the local import
+    from cryptography.hazmat.bindings._rust import (
+        test_support,  # this is preliminary hence the local import
+    )
 
     # if cert_pem:
     #     with  open(cert_pem, "rb") as fh:
@@ -118,7 +123,7 @@ def verify_manifest(manifest: str, signature: bytes):
             Encoding.DER,
             signature,
             manifest.encode("utf-8"),
-            [], #
+            [],  #
             [PKCS7Options.NoVerify],
         )
     except cryptography.exceptions.InternalError as ex:

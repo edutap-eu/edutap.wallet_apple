@@ -80,4 +80,3 @@ ignore = [
     ".flake8",
     "mx.ini",
 ]
-

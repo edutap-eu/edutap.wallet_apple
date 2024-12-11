@@ -7,8 +7,8 @@ This package provides
 - [x] an API and models for the creation of apple pass files (.pkpass)
 - [x] infrastructure to sign pass files with an Apples certificate.
 - [ ] Initial pass delivery with save link creation and a matching FastAPI endpoint.
-- [ ] Support for the update process of passes 
-    - using apple push notifications and 
+- [ ] Support for the update process of passes
+    - using apple push notifications and
     - providing an update information endpoint (FastAPI)
     - providing an pass delivery endpoint for fetching updated passes.
 - [ ] abstract/pluggable data providers are defined to fetch data on pass-delivery or -update.
@@ -50,8 +50,8 @@ pytest -m "not integration"
 
 PKPASS is a file format, used for storage and exchange of digital passes, developed by Apple for its Wallet application (Formerly known as PassBook until iOS 9)
 
-For signing the .pkpass files we need certificate and key files that need to be created. 
-Please follow exactly the steps described below. 
+For signing the .pkpass files we need certificate and key files that need to be created.
+Please follow exactly the steps described below.
 You need an Apple developer account to obtain the certificate for the pass identifier.
 
 To run integration tests a private key, a certificate and the Apple root certificate needs to be prepared.
@@ -84,14 +84,14 @@ flowchart TD
 2. Create a certificate signing request (CSR) with the private key
 
    Name and email do not necessarily have to match with the account data of your apple developer account.
-   
+
    ```shell
    openssl req -new -key private.key -out request.csr -subj="/emailAddress=[your email addr],CN=[your full name],C=[your country ISO code]"
    ```
 
 ### Get a Pass Type ID and Certificate from Apple
 
-You need a developer account at Apple to get a pass type ID and a certificate for signing passes. 
+You need a developer account at Apple to get a pass type ID and a certificate for signing passes.
 You can get a free developer account at [developer.apple.com](https://developer.apple.com/programs/)
 
 To get the certificate:
@@ -141,16 +141,16 @@ In case the OS provided certificate is expired, copy the certificate to the OS c
 ## Running the Integration Tests
 
 ⚠️ **Attention:**
- To run integration tests, the above mentioned files (`certificate.pem`, `private.key` and `wwdr_certificate.pem`) have to be located at `tests/data/certs/private`. 
+ To run integration tests, the above mentioned files (`certificate.pem`, `private.key` and `wwdr_certificate.pem`) have to be located at `tests/data/certs/private`.
 Create the folder if it is missing, do *never* add/commit them it to Git!
 
 ```shell
 pytest -m integration
 ```
 
-the test "test_passbook_creation_integration" will create a passbook file and display it with the passbook viewer. 
+the test "test_passbook_creation_integration" will create a passbook file and display it with the passbook viewer.
 
-The test case `test_passbook_creation_integration` will create some pkpass-files. 
+The test case `test_passbook_creation_integration` will create some pkpass-files.
 Those are located under tests/data/genererated_passes.
 Displaying the pass works only under OSX since the passbook viewer is part of it.
 
@@ -207,4 +207,4 @@ It is licensed under the [EUROPEAN UNION PUBLIC LICENCE v. 1.2](https://opensour
 - [ ] pass verification following [apple instructions for building passes](https://developer.apple.com/documentation/walletpasses/building-a-pass)
 - [ ] implement api call that accepts an unsigned .pkpass and verifies and signs it
 - [ ] provide JSON schema for passes
-    for apple one json schema for each pass type 
+    for apple one json schema for each pass type

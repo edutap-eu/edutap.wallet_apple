@@ -1,0 +1,7 @@
+[project]
+name = "test_wallet_apple_plugins"
+version = "1.0"
+
+[project.entry-points.'edutap.wallet_apple.plugins']
+PassRegistration = 'plugins:TestPassRegistration'
+PassDataAcquisition = 'plugins:TestPassDataAcquisition'

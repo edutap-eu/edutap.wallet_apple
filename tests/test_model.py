@@ -199,5 +199,3 @@ def test_files():
     manifest_json = passfile._createManifest()
     manifest = json.loads(manifest_json)
     assert "170eed23019542b0a2890a0bf753effea0db181a" == manifest["logo.png"]
-
-
