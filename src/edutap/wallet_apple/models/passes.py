@@ -336,7 +336,7 @@ class Pass(BaseModel):
 
     @property
     def passInformation(self):
-        """Returns the pass information object by checkin all passmodel entries using all()"""
+        """Returns the pass information object by checking all passmodel entries using all()"""
         return next(
             filter(
                 lambda x: x is not None,
@@ -414,14 +414,14 @@ class PkPass(BaseModel):
         certificate: str,
         key: str,
         wwdr_certificate: str,
-        password: Optional[str] = None,
+        password: Optional[bytes] = None,
         zip_file: typing.BinaryIO | BytesIO | None = None,
         sign: bool = True,
     ) -> typing.BinaryIO | BytesIO:
         """
         creates and signs the .pkpass file as a BytesIO object
 
-        following the apple guidlines at https://developer.apple.com/documentation/walletpasses/building-a-pass#Sign-the-Pass-and-Create-the-Bundle
+        following the apple guidelines at https://developer.apple.com/documentation/walletpasses/building-a-pass#Sign-the-Pass-and-Create-the-Bundle
 
         """
         manifest = self._createManifest()
@@ -454,8 +454,8 @@ class PkPass(BaseModel):
 # because for each pass type the PassInformation is stored in a different field of which only one is used
 for jsonname, klass in pass_model_registry.items():
     Pass.model_fields[jsonname] = FieldInfo(
-        annotation=klass, required=False, default=None, exclude_none=True
+        annotation=klass, required=False, default=None, exclude_none=True  # type: ignore
     )
 
-# add mutually exclusive valdator so that only one variant can be defined
+# add mutually exclusive validator so that only one variant can be defined
 Pass.model_rebuild(force=True)

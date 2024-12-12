@@ -1,5 +1,7 @@
 from edutap.wallet_apple.models import handlers
 
+import io
+
 
 class TestPassRegistration:
     """
@@ -25,7 +27,7 @@ class TestPassDataAcquisition:
     """
 
     async def get_pass_data(self, pass_id: str) -> handlers.PassData:
-        return handlers.PassData()
+        return io.BytesIO()
 
     async def get_push_tokens(
         self, device_type_id: str | None, pass_type_id: str, serial_number: str

@@ -49,24 +49,38 @@ develop = [
 ]
 
 [build-system]
-requires = ["setuptools>=61"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/edutap"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = [
     "tests",
 ]
+markers = [
+    "integration: Test are running against the real Apple Wallet API, needs account configuration. (deselect with '-m \"not integration\"')",
+]
+
+[tool.mypy]
+mypy_path = "./src:./tests"
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = [
+    "cryptography.*",
+]
+ignore_missing_imports = true
 
 [tool.isort]
 profile = "plone"
+src_paths = ["src", "tests"]
 
 [tool.black]
 target-version = ["py310"]
-include = "src"
+include = "src,tests"
 
 [tool.codespell]
 ignore-words-list = "discreet,"
@@ -76,7 +90,5 @@ ignore = [
     ".editorconfig",
     ".pre-commit-config.yaml",
     "tox.ini",
-    "mypy.ini",
     ".flake8",
-    "mx.ini",
 ]
