@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from pydantic import computed_field
 from pydantic import Field as PydanticField
 from pydantic.fields import FieldInfo
-from typing import Dict
+from typing import Any, Dict
 from typing import Optional
 from typing_extensions import deprecated
 
@@ -355,7 +355,7 @@ class PkPass(BaseModel):
     """
 
     # TODO: move stuff from Pass class
-    pass_object: Pass
+    pass_object: Pass | None = None
 
     files: dict = PydanticField(default_factory=dict, exclude=True)
     """# Holds the files to include in the .pkpass"""
@@ -382,11 +382,11 @@ class PkPass(BaseModel):
         self.files = {k: base64_to_bytearray(v) for k, v in files.items()}
 
     @property
-    def pass_dict(self):
+    def pass_dict(self) -> dict[str, Any]:
         return self.pass_object.model_dump(exclude_none=True, round_trip=True)
 
     @property
-    def pass_json(self):
+    def pass_json(self) -> str:
         return self.pass_object.model_dump_json(exclude_none=True, indent=4)
 
     def addFile(self, name: str, fd: typing.BinaryIO):
@@ -448,6 +448,21 @@ class PkPass(BaseModel):
                 zf.writestr("signature", signature)
             for filename, filedata in self.files.items():
                 zf.writestr(filename, filedata)
+
+    @classmethod
+    def from_zip(cls, zip_file: typing.BinaryIO) -> "PkPass":
+        """
+        loads a .pkpass file from a zip file
+        """
+        with zipfile.ZipFile(zip_file) as zf:
+            pass_json = zf.read("pass.json")
+            # pass_dict = json.loads(pass_json)
+            pass_object = Pass.model_validate_json(pass_json)
+            files = {name: zf.read(name) for name in zf.namelist()}
+            res = cls.from_pass(pass_object)
+            res.files = files
+
+            return res
 
 
 # hack in an optional field for each passmodel(passtype) since these are not known at compile time
