@@ -238,10 +238,6 @@ class StoreCard(PassInformation):
 
 
 class Pass(BaseModel):
-    files: dict = PydanticField(default_factory=dict, exclude=True)
-    """# Holds the files to include in the .pkpass"""
-    hashes: dict = PydanticField(default_factory=dict, exclude=True)
-    """# Holds the hashes to include in the .pkpass as manifest.json"""
 
     # standard keys
     teamIdentifier: str
@@ -338,7 +334,38 @@ class Pass(BaseModel):
     nfc: NFC | None = None
     """Optional. Information used for Value Added Service Protocol transactions."""
 
-    # TODO: convenience stuff -> exract into api
+    @property
+    def passInformation(self):
+        """Returns the pass information object by checkin all passmodel entries using all()"""
+        return next(
+            filter(
+                lambda x: x is not None,
+                (map(lambda x: getattr(self, x), pass_model_registry)),
+            )
+        ) 
+
+
+class PkPass(BaseModel):
+    """
+    represents a PkPass file containing
+    - a Pass object (results in pass.json)
+    - all binary pass files (images)
+    - manifest
+    - signature (after signing)
+    """
+
+    # TODO: move stuff from Pass class
+    pass_object: Pass
+
+    files: dict = PydanticField(default_factory=dict, exclude=True)
+    """# Holds the files to include in the .pkpass"""
+    hashes: dict = PydanticField(default_factory=dict, exclude=True)
+    """# Holds the hashes to include in the .pkpass as manifest.json"""
+
+    @classmethod
+    def from_pass(cls, pass_object: Pass):
+        return cls(pass_object=pass_object)
+
     @property
     def files_uuencoded(self) -> dict[str, str]:
         """
@@ -356,21 +383,11 @@ class Pass(BaseModel):
 
     @property
     def pass_dict(self):
-        return self.model_dump(exclude_none=True, round_trip=True)
+        return self.pass_object.model_dump(exclude_none=True, round_trip=True)
 
     @property
     def pass_json(self):
-        return self.model_dump_json(exclude_none=True, indent=4)
-
-    @property
-    def passInformation(self):
-        """Returns the pass information object by checkinf all passmodel entries using all()"""
-        return next(
-            filter(
-                lambda x: x is not None,
-                (map(lambda x: getattr(self, x), pass_model_registry)),
-            )
-        )
+        return self.pass_object.model_dump_json(exclude_none=True, indent=4)
 
     def addFile(self, name: str, fd: typing.BinaryIO):
         """Adds a file to the pass. The file is stored in the files dict and the hash is stored in the hashes dict"""
@@ -433,23 +450,11 @@ class Pass(BaseModel):
                 zf.writestr(filename, filedata)
 
 
-class PkPass(BaseModel):
-    """
-    represents a PkPass file containing
-    - a Pass object (results in pass.json)
-    - all binary pass files (images)
-    - manifest
-    - signature (after signing)
-    """
-
-    # TODO: move stuff from Pass class
-
-
 # hack in an optional field for each passmodel(passtype) since these are not known at compile time
 # because for each pass type the PassInformation is stored in a different field of which only one is used
-for jsonname, cls in pass_model_registry.items():
+for jsonname, klass in pass_model_registry.items():
     Pass.model_fields[jsonname] = FieldInfo(
-        annotation=cls, required=False, default=None, exclude_none=True
+        annotation=klass, required=False, default=None, exclude_none=True
     )
 
 # add mutually exclusive valdator so that only one variant can be defined

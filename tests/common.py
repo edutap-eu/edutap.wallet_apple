@@ -1,7 +1,7 @@
 from edutap.wallet_apple.models.passes import Barcode
 from edutap.wallet_apple.models.passes import BarcodeFormat
 from edutap.wallet_apple.models.passes import Coupon
-from edutap.wallet_apple.models.passes import Pass
+from edutap.wallet_apple.models.passes import Pass, PkPass
 from edutap.wallet_apple.models.passes import StoreCard
 from pathlib import Path
 
@@ -31,7 +31,7 @@ def create_shell_pass(
     stdBarcode = Barcode(
         message="test barcode", format=barcodeFormat, altText="alternate text"
     )
-    passfile = Pass(
+    pass_object = Pass(
         storeCard=cardInfo,
         organizationName="Org Name",
         passTypeIdentifier=passTypeIdentifier,
@@ -39,8 +39,9 @@ def create_shell_pass(
         serialNumber="1234567",
         description="A Sample Pass",
     )
-    passfile.barcode = stdBarcode
-    return passfile
+    pass_object.barcode = stdBarcode
+    pkpass=PkPass(pass_object=pass_object)
+    return pkpass
 
 
 def create_shell_pass_loyalty(

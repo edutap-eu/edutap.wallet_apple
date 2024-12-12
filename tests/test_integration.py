@@ -4,7 +4,7 @@ from common import create_shell_pass
 from common import data
 from common import resources
 from edutap.wallet_apple import crypto
-from edutap.wallet_apple.models.passes import Barcode
+from edutap.wallet_apple.models.passes import Barcode, PkPass
 from edutap.wallet_apple.models.passes import BarcodeFormat
 from edutap.wallet_apple.models.passes import EventTicket
 from edutap.wallet_apple.models.passes import NFC
@@ -59,11 +59,6 @@ def test_passbook_creation():
     them to git. Store them in the files indicated below, they are ignored
     by git.
     """
-    # try:
-    #     with open(common.password_file) as file_:
-    #         password = file_.read().strip()
-    # except OSError:
-    #     password = None
 
     passfile = create_shell_pass()
     passfile.addFile("icon.png", open(common.resources / "white_square.png", "rb"))
@@ -124,7 +119,7 @@ def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
     # if name:
     #     cardInfo.addSecondaryField("name", name, "")
     stdBarcode = Barcode(message=sn, format=BarcodeFormat.CODE128, altText=sn)
-    passfile = Pass(
+    passobject = Pass(
         storeCard=cardInfo,
         organizationName="eduTAP",
         passTypeIdentifier="pass.demo.lmu.de",
@@ -133,7 +128,9 @@ def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
         description="edutap Sample Pass",
     )
 
-    passfile.barcode = stdBarcode
+    passobject.barcode = stdBarcode
+
+    passfile = PkPass(pass_object=passobject)
 
     passfile.addFile("icon.png", open(resources / "edutap.png", "rb"))
     passfile.addFile("icon@2x.png", open(resources / "edutap.png", "rb"))
@@ -142,8 +139,8 @@ def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
     passfile.addFile("logo@2x.png", open(resources / "edutap.png", "rb"))
     passfile.addFile("strip.png", open(resources / "eaie-hero.jpg", "rb"))
 
-    passfile.backgroundColor = "#fa511e"
-    passfile.nfc = NFC(
+    passobject.backgroundColor = "#fa511e"
+    passobject.nfc = NFC(
         message="Hello NFC",
         encryptionPublicKey="MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACWpF1zC3h+dCh+eWyqV8unVddh2LQaUoV8LQrgb3BKkM=",
         # "MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgAC0utmUaTA6mrvZoALBTpaKI0xIoQxHXtWj37OtiSttY4="
@@ -183,7 +180,7 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
         message="test barcode", format=BarcodeFormat.CODE128, altText="alternate text"
     )
     sn = uuid.uuid4().hex
-    passfile = Pass(
+    passobject = Pass(
         eventTicket=cardInfo,
         organizationName="eduTAP",
         passTypeIdentifier="pass.demo.lmu.de",
@@ -194,7 +191,8 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
         authenticationToken="0123456789012345",  # must be 16 characters
     )
 
-    passfile.barcode = stdBarcode
+    passobject.barcode = stdBarcode
+    passfile = PkPass(pass_object=passobject)
 
     passfile.addFile("icon.png", open(resources / "edutap.png", "rb"))
     passfile.addFile("iconx2.png", open(resources / "edutap.png", "rb"))
@@ -203,7 +201,7 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
     passfile.addFile("strip.png", open(resources / "eaie-hero.jpg", "rb"))
     # passfile.addFile("background.png", open(resources / "eaie-hero.jpg", "rb"))
 
-    passfile.backgroundColor = "#fa511e"
+    passobject.backgroundColor = "#fa511e"
     zipfile = passfile.create(
         certs / "private" / "certificate.pem",
         certs / "private" / "private.key",

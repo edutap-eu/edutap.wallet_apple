@@ -88,15 +88,16 @@ def test_load_coupon():
 
 
 def test_basic_pass():
-    passfile = create_shell_pass()
-    assert passfile.formatVersion == 1
-    assert passfile.barcodes[0].format == BarcodeFormat.CODE128
+    pkpass = create_shell_pass()
+    passobject = pkpass.pass_object
+    assert passobject.formatVersion == 1
+    assert passobject.barcodes[0].format == BarcodeFormat.CODE128
     # barcode is a legacy field, it should be the same as the first barcode, but in the legacy format
     # if the barcode format is not in the legacy list, it should be PDF417
-    assert passfile.barcode.format == BarcodeFormat.PDF417
-    assert len(passfile.files) == 0
+    assert passobject.barcode.format == BarcodeFormat.PDF417
+    assert len(pkpass.files) == 0
 
-    passfile_json = passfile.model_dump(exclude_none=True)
+    passfile_json = passobject.model_dump(exclude_none=True)
     assert passfile_json is not None
     assert passfile_json["suppressStripShine"] is False
     assert passfile_json["formatVersion"] == 1
@@ -115,38 +116,38 @@ def test_manifest_creation():
 
 
 def test_header_fields():
-    passfile = create_shell_pass()
-    passfile.passInformation.addHeaderField("header", "VIP Store Card", "Famous Inc.")
-    pass_json = passfile.model_dump(exclude_none=True)
+    passobject = create_shell_pass().pass_object
+    passobject.passInformation.addHeaderField("header", "VIP Store Card", "Famous Inc.")
+    pass_json = passobject.model_dump(exclude_none=True)
     assert pass_json["storeCard"]["headerFields"][0]["key"] == "header"
     assert pass_json["storeCard"]["headerFields"][0]["value"] == "VIP Store Card"
     assert pass_json["storeCard"]["headerFields"][0]["label"] == "Famous Inc."
 
 
 def test_secondary_fields():
-    passfile = create_shell_pass()
-    passfile.passInformation.addSecondaryField(
+    passobject = create_shell_pass().pass_object
+    passobject.passInformation.addSecondaryField(
         "secondary", "VIP Store Card", "Famous Inc."
     )
-    pass_json = passfile.model_dump()
+    pass_json = passobject.model_dump()
     assert pass_json["storeCard"]["secondaryFields"][0]["key"] == "secondary"
     assert pass_json["storeCard"]["secondaryFields"][0]["value"] == "VIP Store Card"
     assert pass_json["storeCard"]["secondaryFields"][0]["label"] == "Famous Inc."
 
 
 def test_back_fields():
-    passfile = create_shell_pass()
-    passfile.passInformation.addBackField("back1", "VIP Store Card", "Famous Inc.")
-    pass_json = passfile.model_dump()
+    passobject = create_shell_pass().pass_object
+    passobject.passInformation.addBackField("back1", "VIP Store Card", "Famous Inc.")
+    pass_json = passobject.model_dump()
     assert pass_json["storeCard"]["backFields"][0]["key"] == "back1"
     assert pass_json["storeCard"]["backFields"][0]["value"] == "VIP Store Card"
     assert pass_json["storeCard"]["backFields"][0]["label"] == "Famous Inc."
 
 
 def test_auxiliary_fields():
-    passfile = create_shell_pass()
-    passfile.passInformation.addAuxiliaryField("aux1", "VIP Store Card", "Famous Inc.")
-    pass_json = passfile.model_dump()
+    passobject = create_shell_pass().pass_object
+    passobject.passInformation.addAuxiliaryField("aux1", "VIP Store Card", "Famous Inc.")
+    pass_json = passobject.model_dump()
     assert pass_json["storeCard"]["auxiliaryFields"][0]["key"] == "aux1"
     assert pass_json["storeCard"]["auxiliaryFields"][0]["value"] == "VIP Store Card"
     assert pass_json["storeCard"]["auxiliaryFields"][0]["label"] == "Famous Inc."
@@ -158,9 +159,9 @@ def test_code128_pass():
     freezes it to json, then reparses it and validates it defaults
     the legacy barcode correctly
     """
-    passfile = create_shell_pass(barcodeFormat=BarcodeFormat.CODE128)
-    assert passfile.barcode.format == BarcodeFormat.PDF417
-    jsonData = passfile.model_dump_json()
+    passobject = create_shell_pass(barcodeFormat=BarcodeFormat.CODE128).pass_object
+    assert passobject.barcode.format == BarcodeFormat.PDF417
+    jsonData = passobject.model_dump_json()
     thawedJson = json.loads(jsonData)
 
     # the legacy barcode field should be converted to PDF417 because CODE128 is not
@@ -174,8 +175,8 @@ def test_pdf_417_pass():
     This test is to create a pass with a barcode that is valid
     in both past and present versions of IOS
     """
-    passfile = create_shell_pass(BarcodeFormat.PDF417)
-    jsonData = passfile.model_dump_json()
+    passobject = create_shell_pass(BarcodeFormat.PDF417).pass_object
+    jsonData = passobject.model_dump_json()
     thawedJson = json.loads(jsonData)
     assert thawedJson["barcode"]["format"] == BarcodeFormat.PDF417.value
     assert thawedJson["barcodes"][0]["format"] == BarcodeFormat.PDF417.value
