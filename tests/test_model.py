@@ -146,7 +146,9 @@ def test_back_fields():
 
 def test_auxiliary_fields():
     passobject = create_shell_pass().pass_object
-    passobject.passInformation.addAuxiliaryField("aux1", "VIP Store Card", "Famous Inc.")
+    passobject.passInformation.addAuxiliaryField(
+        "aux1", "VIP Store Card", "Famous Inc."
+    )
     pass_json = passobject.model_dump()
     assert pass_json["storeCard"]["auxiliaryFields"][0]["key"] == "aux1"
     assert pass_json["storeCard"]["auxiliaryFields"][0]["value"] == "VIP Store Card"

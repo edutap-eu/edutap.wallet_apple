@@ -342,7 +342,7 @@ class Pass(BaseModel):
                 lambda x: x is not None,
                 (map(lambda x: getattr(self, x), pass_model_registry)),
             )
-        ) 
+        )
 
 
 class PkPass(BaseModel):
