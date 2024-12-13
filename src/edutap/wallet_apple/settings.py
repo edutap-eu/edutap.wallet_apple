@@ -1,20 +1,36 @@
 from pathlib import Path
-from pydantic_settings import BaseSettings
+from pydantic import Field
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource
 from pydantic_settings import SettingsConfigDict
 
 
-ROOT_DIR = Path(__file__).parent.parent.parent.parent.resolve()
+ROOT_DIR = Path(__file__).parents[3].resolve()
 
+class SettingsSource(PydanticBaseSettingsSource):
+    ...
 
-class AppleWalletSettings(BaseSettings):
+class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="edutap_wallet_apple_",
+        env_prefix="EDUTAP_WALLET_APPLE_",
         case_sensitive=False,
-        extra="ignore",
+        # env_file=".env",
+        # env_file_encoding="utf-8",
+        extra="allow",
     )
-    key: Path = ROOT_DIR / "private.key"
-    certificate: Path = ROOT_DIR / "certificate.pem"
-    wwdr_certificate: Path = ROOT_DIR / "wwdr_certificate.pem"
+    root_dir: Path = Field(default_factory=lambda dd: dd.get("root_dir", ROOT_DIR))
+    cert_dir_relative: str = "certs"
+    """Relative path to the root directory, canbe overridden
+    by `cert_dir`"""
+    cert_dir: Path = Field(
+        default_factory=lambda dd: dd["root_dir"] / dd["cert_dir_relative"]
+    )
+    key: Path = Field(default_factory=lambda dd: dd["cert_dir"] / "private.key")
+    certificate: Path = Field(
+        default_factory=lambda dd: dd["cert_dir"] / "certificate.pem"
+    )
+    wwdr_certificate: Path = Field(
+        default_factory=lambda dd: dd["cert_dir"] / "wwdr_certificate.pem"
+    )
     password: str | None = None
 
     pass_type_identifier: str | None = None
