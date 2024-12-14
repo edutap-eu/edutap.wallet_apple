@@ -25,6 +25,12 @@ def generated_passes_dir():
     return target
 
 
+@pytest.fixture
+def apple_passes_dir():
+    target = data / "apple_passes"
+    # os.makedirs(target, exist_ok=True)
+    return target
+
 @pytest.mark.integration
 def test_signing():
     """
@@ -215,6 +221,28 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
     with open(pass_file_name, "wb") as fh:
         fh.write(passfile.as_zip().getvalue())
         os.system("open " + str(pass_file_name))
+
+
+def test_open_pkpass_and_sign_again(apple_passes_dir, generated_passes_dir):
+    fn=apple_passes_dir / "BoardingPass.pkpass"
+    with open(fn, "rb") as fh:
+        pkpass = PkPass.from_zip(fn)
+        assert pkpass
+        
+    newname = "BoardingPass_signed.pkpass"
+
+    with open(generated_passes_dir / newname, "wb") as fh:
+        pkpass.sign(
+            common.certs / "private" / "private.key",
+            common.certs / "private" / "certificate.pem",
+            common.certs / "private" / "wwdr_certificate.pem",
+        )
+        fh.write(pkpass.as_zip().getvalue())
+        
+    os.system("open " + str(generated_passes_dir / newname))
+
+
+
 
 
 @pytest.mark.integration
