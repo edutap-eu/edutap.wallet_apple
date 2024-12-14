@@ -21,9 +21,9 @@ class VerificationError(Exception):
 
 def sign_manifest(
     manifest: str,
-    certificate_path: Union[str, Path],
-    private_key_path: Union[str, Path],
-    wwdr_certificate_path: Union[str, Path],
+    private_key: bytes,
+    certificate: bytes,
+    wwdr_certificate: bytes,
     password: Optional[bytes] = None,
 ) -> bytes:
     """
@@ -31,27 +31,10 @@ def sign_manifest(
     :param certificate: path to certificate
     :param key: path to private key
     :wwdr_certificate: path to wwdr_certificate
-    :return: signature as bytes
+    :return: pkcs7 signature as bytes
     """
 
     # PKCS7: see https://www.youtube.com/watch?v=3YJ0by1r3qE
-    with open(certificate_path, "rb") as fh:
-        certificate_data = fh.read()
-    with open(private_key_path, "rb") as fh:
-        private_key_data = fh.read()
-    with open(wwdr_certificate_path, "rb") as fh:
-        wwdr_certificate_data = fh.read()
-
-    certificate = load_pem_x509_certificate(certificate_data, default_backend())
-    private_key = load_pem_private_key(
-        private_key_data, password=password, backend=default_backend()
-    )
-    # if not isinstance(private_key, (RSAPrivateKey, EllipticCurvePrivateKey)):
-    #     raise TypeError("Private key must be an RSAPrivateKey or EllipticCurvePrivateKey")
-    wwdr_certificate = load_pem_x509_certificate(
-        wwdr_certificate_data, default_backend()
-    )
-
     signature_builder = (
         PKCS7SignatureBuilder()
         .set_data(manifest.encode("utf-8"))
@@ -63,16 +46,53 @@ def sign_manifest(
     return pkcs7_signature
 
 
+def load_key_files(
+    private_key_path: Union[str, Path],
+    certificate_path: Union[str, Path],
+    wwdr_certificate_path: Union[str, Path],
+    password: Optional[bytes] = None,
+) -> tuple[bytes, bytes, bytes]:
+    """
+    :param private_key_path: path to private key
+    :param certificate_path: path to Apple certificate
+    :param wwdr_certificate_path: path to Apple WWDR certificate
+    :return: tuple of private key, certificate and wwdr_certificate as bytes
+
+    all certs are expected to be in PEM format
+    """
+    with open(private_key_path, "rb") as fh:
+        private_key_data = fh.read()
+    with open(certificate_path, "rb") as fh:
+        certificate_data = fh.read()
+    with open(wwdr_certificate_path, "rb") as fh:
+        wwdr_certificate_data = fh.read()
+
+    certificate = load_pem_x509_certificate(certificate_data, default_backend())
+    private_key = load_pem_private_key(private_key_data, password=password, backend=default_backend())
+    # if not isinstance(private_key, (RSAPrivateKey, EllipticCurvePrivateKey)):
+    #     raise TypeError("Private key must be an RSAPrivateKey or EllipticCurvePrivateKey")
+    wwdr_certificate = load_pem_x509_certificate(
+        wwdr_certificate_data, default_backend()
+    )
+
+    return private_key, certificate, wwdr_certificate
+
+
 def create_signature(
     manifest: str,
-    certificate_path: Union[str, Path],
     private_key_path: Union[str, Path],
+    certificate_path: Union[str, Path],
     wwdr_certificate_path: Union[str, Path],
     password: Optional[bytes] = None,
 ) -> bytes:
     """
-    Creates the signature for the pass file.
-    """
+    :param manifest: contains the manifest content as json string
+    :param private_key_path: path to private key
+    :param certificate_path: path to Apple certificate
+    :param wwdr_certificate_path: path to Apple WWDR certificate
+    :return: tuple of private key, certificate and wwdr_certificate as bytes
+
+    all certs are expected to be in PEM format    """
 
     # check for cert file existence
     if not os.path.exists(private_key_path):
@@ -84,11 +104,17 @@ def create_signature(
             f"WWDR Certificate file {wwdr_certificate_path} not found"
         )
 
+    private_key, certificate, wwdr_certificate = load_key_files(
+        private_key_path,
+        certificate_path,
+        wwdr_certificate_path,
+    )
+
     pk7 = sign_manifest(
         manifest,
-        certificate_path,
-        private_key_path,
-        wwdr_certificate_path,
+        private_key,
+        certificate,
+        wwdr_certificate,
         password,
     )
 

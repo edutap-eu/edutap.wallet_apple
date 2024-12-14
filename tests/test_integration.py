@@ -35,13 +35,14 @@ def test_signing():
     """
 
     passfile = create_shell_pass()
-    manifest_json = passfile._createManifest()
+    manifest_json = passfile.create_manifest()
 
+    key, cert, wwdr_cert = crypto.load_key_files(common.key_file, common.cert_file, common.wwdr_file)
     signature = crypto.sign_manifest(
         manifest_json,
-        common.cert_file,
-        common.key_file,
-        common.wwdr_file,
+        key,
+        cert,
+        wwdr_cert,
     )
 
     crypto.verify_manifest(manifest_json, signature)
@@ -62,8 +63,10 @@ def test_passbook_creation():
     """
 
     passfile = create_shell_pass()
-    passfile.addFile("icon.png", open(common.resources / "white_square.png", "rb"))
-    zipfile = passfile.create(common.cert_file, common.key_file, common.wwdr_file, None)
+    passfile.add_file("icon.png", open(common.resources / "white_square.png", "rb"))
+    passfile.sign(common.key_file, common.cert_file, common.wwdr_file)
+    zipfile = passfile.as_zip()
+    # zipfile = passfile.create(common.cert_file, common.key_file, common.wwdr_file, None)
     assert zipfile
 
 
@@ -85,16 +88,17 @@ def test_passbook_creation_integration(generated_passes_dir):
     passfile = create_shell_pass(
         passTypeIdentifier="pass.demo.lmu.de", teamIdentifier="JG943677ZY"
     )
-    passfile.addFile("icon.png", open(resources / "white_square.png", "rb"))
+    passfile.add_file("icon.png", open(resources / "white_square.png", "rb"))
 
-    zipfile = passfile.create(
-        certs / "private" / "certificate.pem",
+    passfile.sign(
         certs / "private" / "private.key",
+        certs / "private" / "certificate.pem",
         certs / "private" / "wwdr_certificate.pem",
     )
 
+
     with open(pass_file_name, "wb") as fh:
-        fh.write(zipfile.getvalue())
+        fh.write(passfile.as_zip().getvalue())
     os.system("open " + str(pass_file_name))
 
 
@@ -133,12 +137,12 @@ def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
 
     passfile = PkPass(pass_object=passobject)
 
-    passfile.addFile("icon.png", open(resources / "edutap.png", "rb"))
-    passfile.addFile("icon@2x.png", open(resources / "edutap.png", "rb"))
-    passfile.addFile("icon@3x.png", open(resources / "edutap.png", "rb"))
-    passfile.addFile("logo.png", open(resources / "edutap.png", "rb"))
-    passfile.addFile("logo@2x.png", open(resources / "edutap.png", "rb"))
-    passfile.addFile("strip.png", open(resources / "eaie-hero.jpg", "rb"))
+    passfile.add_file("icon.png", open(resources / "edutap.png", "rb"))
+    passfile.add_file("icon@2x.png", open(resources / "edutap.png", "rb"))
+    passfile.add_file("icon@3x.png", open(resources / "edutap.png", "rb"))
+    passfile.add_file("logo.png", open(resources / "edutap.png", "rb"))
+    passfile.add_file("logo@2x.png", open(resources / "edutap.png", "rb"))
+    passfile.add_file("strip.png", open(resources / "eaie-hero.jpg", "rb"))
 
     passobject.backgroundColor = "#fa511e"
     passobject.nfc = NFC(
@@ -148,14 +152,13 @@ def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
         requiresAuthentication=False,
     )
 
-    zipfile = passfile.create(
-        certs / "private" / "certificate.pem",
+    passfile.sign(
         certs / "private" / "private.key",
+        certs / "private" / "certificate.pem",
         certs / "private" / "wwdr_certificate.pem",
-        None,
     )
     with open(pass_file_name, "wb") as fh:
-        fh.write(zipfile.getvalue())
+        fh.write(passfile.as_zip().getvalue())
         os.system("open " + str(pass_file_name))
 
 
@@ -195,23 +198,22 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
     passobject.barcode = stdBarcode
     passfile = PkPass(pass_object=passobject)
 
-    passfile.addFile("icon.png", open(resources / "edutap.png", "rb"))
-    passfile.addFile("iconx2.png", open(resources / "edutap.png", "rb"))
-    passfile.addFile("logo.png", open(resources / "edutap.png", "rb"))
-    passfile.addFile("logox2.png", open(resources / "edutap.png", "rb"))
-    passfile.addFile("strip.png", open(resources / "eaie-hero.jpg", "rb"))
+    passfile.add_file("icon.png", open(resources / "edutap.png", "rb"))
+    passfile.add_file("iconx2.png", open(resources / "edutap.png", "rb"))
+    passfile.add_file("logo.png", open(resources / "edutap.png", "rb"))
+    passfile.add_file("logox2.png", open(resources / "edutap.png", "rb"))
+    passfile.add_file("strip.png", open(resources / "eaie-hero.jpg", "rb"))
     # passfile.addFile("background.png", open(resources / "eaie-hero.jpg", "rb"))
 
     passobject.backgroundColor = "#fa511e"
-    zipfile = passfile.create(
-        certs / "private" / "certificate.pem",
+    passfile.sign(
         certs / "private" / "private.key",
+        certs / "private" / "certificate.pem",
         certs / "private" / "wwdr_certificate.pem",
-        None,
     )
 
     with open(pass_file_name, "wb") as fh:
-        fh.write(zipfile.getvalue())
+        fh.write(passfile.as_zip().getvalue())
         os.system("open " + str(pass_file_name))
 
 

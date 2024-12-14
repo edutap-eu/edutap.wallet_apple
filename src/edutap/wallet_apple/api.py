@@ -1,3 +1,4 @@
+from edutap.wallet_apple.settings import Settings
 from .models import passes
 from typing import Any, BinaryIO
 from typing import Optional
@@ -28,3 +29,14 @@ def new(data: Optional[dict[str, Any]] = None, file: Optional[BinaryIO] = None) 
     
 
     return pkpass
+
+
+def sign(pkpass: passes.PkPass, settings: Settings|None):
+    """
+    Sign the pass.
+
+    :param pkpass: PkPass model instance.
+    :param settings: Settings model instance. if not given it will be loaded from the environment.
+    works inplace, the pkpass will be signed.
+    """
+    pkpass.sign(settings)

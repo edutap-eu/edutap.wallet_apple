@@ -1,3 +1,4 @@
+from pathlib import Path
 from edutap.wallet_apple import crypto
 from enum import Enum
 from io import BytesIO
@@ -73,9 +74,7 @@ class Field(BaseModel):
     key: str  # Required. The key must be unique within the scope
     value: str | int | float  # Required. Value of the field. For example, 42
     label: str = ""  # Optional. Label text for the field.
-    changeMessage: str = (
-        ""  # Optional. Format string for the alert text that is displayed when the pass is updated
-    )
+    changeMessage: str = ""  # Optional. Format string for the alert text that is displayed when the pass is updated
     # textAlignment: Alignment = Alignment.LEFT
     textAlignment: Alignment | None = None
     # Optional. Alignment for the field’s contents
@@ -110,12 +109,8 @@ class Location(BaseModel):
     latitude: float = 0.0  # Required. Latitude, in degrees, of the location
     longitude: float = 0.0  # Required. Longitude, in degrees, of the location
     altitude: float = 0  # Optional. Altitude, in meters, of the location
-    distance: float = (
-        0  # Optional. Maximum distance, in meters, from the location that the pass is relevant
-    )
-    relevantText: str = (
-        ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
-    )
+    distance: float = 0  # Optional. Maximum distance, in meters, from the location that the pass is relevant
+    relevantText: str = ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
 
 
 class IBeacon(BaseModel):
@@ -124,9 +119,7 @@ class IBeacon(BaseModel):
     )
     major: int  # Required. Major identifier of a Bluetooth Low Energy location beacon
     minor: int  # Required. Minor identifier of a Bluetooth Low Energy location beacon
-    relevantText: str = (
-        ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
-    )
+    relevantText: str = ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
 
 
 class NFC(BaseModel):
@@ -134,9 +127,7 @@ class NFC(BaseModel):
     encryptionPublicKey: (
         str  # Required. Public encryption key used by the Value Added Services protocol
     )
-    requiresAuthentication: bool = (
-        False  # Optional. Indicates that the pass is not valid unless it contains a valid signature
-    )
+    requiresAuthentication: bool = False  # Optional. Indicates that the pass is not valid unless it contains a valid signature
 
 
 class PassInformation(BaseModel):
@@ -238,7 +229,6 @@ class StoreCard(PassInformation):
 
 
 class Pass(BaseModel):
-
     # standard keys
     teamIdentifier: str
     """
@@ -354,13 +344,10 @@ class PkPass(BaseModel):
     - signature (after signing)
     """
 
-    # TODO: move stuff from Pass class
     pass_object: Pass | None = None
 
     files: dict = PydanticField(default_factory=dict, exclude=True)
     """# Holds the files to include in the .pkpass"""
-    hashes: dict = PydanticField(default_factory=dict, exclude=True)
-    """# Holds the hashes to include in the .pkpass as manifest.json"""
 
     @classmethod
     def from_pass(cls, pass_object: Pass):
@@ -389,7 +376,7 @@ class PkPass(BaseModel):
     def pass_json(self) -> str:
         return self.pass_object.model_dump_json(exclude_none=True, indent=4)
 
-    def addFile(self, name: str, fd: typing.BinaryIO):
+    def add_file(self, name: str, fd: typing.BinaryIO):
         """Adds a file to the pass. The file is stored in the files dict and the hash is stored in the hashes dict"""
         self.files[name] = fd.read()
 
@@ -399,15 +386,60 @@ class PkPass(BaseModel):
         """
         self.files = {k: base64_to_bytearray(v) for k, v in files.items()}
 
-    def _createManifest(self):
+    def create_manifest(self):
         """
         Creates the hashes for all the files included in the pass file.
         """
+        excluded_files = ["signature", "manifest.json"]
         pass_json = self.pass_json
-        self.hashes["pass.json"] = hashlib.sha1(pass_json.encode("utf-8")).hexdigest()
+        hashes = {}
+        hashes["pass.json"] = hashlib.sha1(pass_json.encode("utf-8")).hexdigest()
         for filename, filedata in self.files.items():
-            self.hashes[filename] = hashlib.sha1(filedata).hexdigest()
-        return json.dumps(self.hashes)
+            if filename not in excluded_files:
+                hashes[filename] = hashlib.sha1(filedata).hexdigest()
+        return json.dumps(hashes)
+
+    def sign(
+        self,
+        private_key_path: str | Path,
+        certificate_path: str | Path,
+        wwdr_certificate_path: str | Path,
+    ):
+        private_key, certificate, wwdr_certificate = crypto.load_key_files(
+            private_key_path, certificate_path, wwdr_certificate_path
+        )
+        manifest = self.create_manifest()
+        signature = crypto.sign_manifest(
+            manifest,
+            private_key,
+            certificate,
+            wwdr_certificate,
+        )
+
+        self.files["pass.json"] = self.pass_json.encode("utf-8")
+        self.add_file("manifest.json", BytesIO(manifest.encode("utf-8")))
+        self.add_file("signature", BytesIO(signature))
+
+    def build_zip(self, fh: typing.BinaryIO | None=None) -> zipfile.ZipFile:
+        """
+        builds a zip file from file content and returns the zipfile object
+        if a file handle is given it writes the zip file to the file handle
+        """
+        if fh is None:
+            fh = BytesIO()
+        with zipfile.ZipFile(fh, "w") as zf:
+            for filename, filedata in self.files.items():
+                zf.writestr(filename, filedata)
+
+            return zf
+        
+    def as_zip(self) -> BytesIO:
+        """
+        creates a zip file and gives it back as a BytesIO object
+        """
+        res = BytesIO()
+        self.build_zip(res)
+        return res
 
     def create(
         self,
@@ -420,26 +452,24 @@ class PkPass(BaseModel):
     ) -> typing.BinaryIO | BytesIO:
         """
         creates and signs the .pkpass file as a BytesIO object
-
         following the apple guidelines at https://developer.apple.com/documentation/walletpasses/building-a-pass#Sign-the-Pass-and-Create-the-Bundle
-
         """
-        manifest = self._createManifest()
+        manifest = self.create_manifest()
         signature: Optional[bytes] = None
         if sign:
             signature = crypto.create_signature(
                 manifest,
-                certificate,
                 key,
+                certificate,
                 wwdr_certificate,
                 password,
             )
         if not zip_file:
             zip_file = BytesIO()
-        self._createZip(manifest, signature, zip_file=zip_file)
+        self.create_zip(manifest, signature, zip_file=zip_file)
         return zip_file
 
-    def _createZip(self, manifest, signature=None, zip_file=None):
+    def create_zip(self, manifest, signature=None, zip_file=None):
         pass_json = self.pass_json
         with zipfile.ZipFile(zip_file or "pass.pkpass", "w") as zf:
             zf.writestr("pass.json", pass_json)
@@ -449,6 +479,8 @@ class PkPass(BaseModel):
             for filename, filedata in self.files.items():
                 zf.writestr(filename, filedata)
 
+        return zip_file
+    
     @classmethod
     def from_zip(cls, zip_file: typing.BinaryIO) -> "PkPass":
         """
@@ -469,7 +501,10 @@ class PkPass(BaseModel):
 # because for each pass type the PassInformation is stored in a different field of which only one is used
 for jsonname, klass in pass_model_registry.items():
     Pass.model_fields[jsonname] = FieldInfo(
-        annotation=klass, required=False, default=None, exclude_none=True  # type: ignore
+        annotation=klass,
+        required=False,
+        default=None,
+        exclude_none=True,  # type: ignore
     )
 
 # add mutually exclusive validator so that only one variant can be defined
