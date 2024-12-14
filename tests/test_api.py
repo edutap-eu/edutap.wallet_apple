@@ -28,3 +28,4 @@ def test_load_pass_with_data_and_file_must_fail():
 
 def test_new_pass_empty():
     pkpass = api.new()
+

@@ -29,15 +29,6 @@ source .venv/bin/activate
 pip install -e .[test]
 ```
 
-### OSX
-
-If you have problems installing M2Crypto on an Apple Silicon or Intel, you need to use `LDFALGS` and `CFLAGS`:
-
-```console
-LDFLAGS="-L$(brew --prefix openssl)/lib" CFLAGS="-I$(brew --prefix openssl)/include" SWIG_FEATURES="-I$(brew --prefix openssl)/include" pip install m2crypto
-```
-
-
 ## Running the Unittests
 
 The unit tests can be run without the cert files:
@@ -153,6 +144,27 @@ the test "test_passbook_creation_integration" will create a passbook file and di
 The test case `test_passbook_creation_integration` will create some pkpass-files.
 Those are located under tests/data/genererated_passes.
 Displaying the pass works only under OSX since the passbook viewer is part of it.
+
+# PkPass creation
+
+The `edutap.wallet_apple` package provides a Python API to create Apple Wallet Passes.
+The followig diagram shows the process of creating a signed pass file.
+
+```mermaid
+flowchart TD
+    CreatePass[create pass object]
+    CreatePass --> PassJson[pass.json]
+    CreatePass --> |add files| Files[files]
+    PassJson --> Manifest[create manifest]
+    Files --> |create with file hashes| Manifest[manifest]
+    Manifest --> Signature[sigature file]
+    Certificate --> Signature
+    WWDRCertificate --> Signature
+    PrivateKey --> Signature
+    Signature --> PassFile[pass.pkpass ]
+    Files --> PassFile
+    Manifest --> PassFile
+```
 
 # Notification
 
