@@ -27,6 +27,7 @@ dependencies = [
     "cryptography",
     "typing_extensions",
     "pydantic-settings>=2.6.1",
+    "pyyaml",
 ]
 
 [project.urls]
