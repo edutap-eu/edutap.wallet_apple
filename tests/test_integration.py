@@ -224,11 +224,18 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
 
 
 def test_open_pkpass_and_sign_again(apple_passes_dir, generated_passes_dir):
+    """
+    tests an existing pass not created by this library and signs it again
+    this pass comes as demo from apple and the pass.json contains
+    trailing commas which are not allowed in json, but apple accepts
+    them, so we have to tolerate them as well
+    """
     fn=apple_passes_dir / "BoardingPass.pkpass"
     with open(fn, "rb") as fh:
         pkpass = PkPass.from_zip(fn)
         assert pkpass
         
+    pkpass.pass_object.passInformation.secondaryFields[0].value = "John Doe"
     newname = "BoardingPass_signed.pkpass"
 
     with open(generated_passes_dir / newname, "wb") as fh:

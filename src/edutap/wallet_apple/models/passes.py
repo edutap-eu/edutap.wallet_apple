@@ -334,6 +334,21 @@ class Pass(BaseModel):
             )
         )
 
+    @classmethod
+    def from_json(cls, json_str: str|bytes) -> "Pass":
+        """
+        validates a pass json string and returns a Pass object
+        """
+        try:
+            data = json.loads(json_str)
+        except json.JSONDecodeError as e:
+            # in case of for example trailing commas, we use yaml
+            # to parse the json string which swallows trailing commas
+            # apple passes are allowed to have trailing commas, so we 
+            # have to tolerate it too
+            import yaml
+            data = yaml.safe_load(json_str)
+        return cls.model_validate(data)
 
 class PkPass(BaseModel):
     """
@@ -489,7 +504,7 @@ class PkPass(BaseModel):
         with zipfile.ZipFile(zip_file) as zf:
             pass_json = zf.read("pass.json")
             # pass_dict = json.loads(pass_json)
-            pass_object = Pass.model_validate_json(pass_json)
+            pass_object = Pass.from_json(pass_json)
             files = {name: zf.read(name) for name in zf.namelist()}
             res = cls.from_pass(pass_object)
             res.files = files
