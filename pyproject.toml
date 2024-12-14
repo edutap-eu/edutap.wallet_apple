@@ -22,7 +22,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pydantic[email,dotenv]>=2.10.3",
+    "pydantic[email]>=2.10.3",
     "python-dotenv",
     "cryptography",
     "typing_extensions",
