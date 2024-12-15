@@ -121,7 +121,7 @@ def create_signature(
     return pk7
 
 
-def verify_manifest(manifest: str, signature: bytes):
+def verify_manifest(manifest: str|bytes, signature: bytes):
     """
     Verifies the manifest against the signature.
     Currently no check against the cert supported, only the
@@ -143,12 +143,15 @@ def verify_manifest(manifest: str, signature: bytes):
     #         cert = load_pem_x509_certificate(fh.read(), default_backend())
     # else:
     #     cert = None
+    
+    if isinstance(manifest, str):
+        manifest = manifest.encode("utf-8")
 
     try:
         test_support.pkcs7_verify(
             Encoding.DER,
             signature,
-            manifest.encode("utf-8"),
+            manifest,
             [],  #
             [PKCS7Options.NoVerify],
         )

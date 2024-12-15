@@ -408,8 +408,10 @@ class PkPass(BaseModel):
         excluded_files = ["signature", "manifest.json"]
         pass_json = self.pass_json
         hashes = {}
-        hashes["pass.json"] = hashlib.sha1(pass_json.encode("utf-8")).hexdigest()
-        for filename, filedata in self.files.items():
+    
+        self.files["pass.json"] = pass_json.encode("utf-8")
+        # hashes["pass.json"] = hashlib.sha1(pass_json.encode("utf-8")).hexdigest()
+        for filename, filedata in sorted(self.files.items()):
             if filename not in excluded_files:
                 hashes[filename] = hashlib.sha1(filedata).hexdigest()
         return json.dumps(hashes)
@@ -423,7 +425,11 @@ class PkPass(BaseModel):
         private_key, certificate, wwdr_certificate = crypto.load_key_files(
             private_key_path, certificate_path, wwdr_certificate_path
         )
+        self.files["pass.json"] = self.pass_json.encode("utf-8")
+ 
         manifest = self.create_manifest()
+        # manifest = self.files["manifest.json"].decode("utf-8")
+        self.files["manifest.json"] = manifest.encode("utf-8")
         signature = crypto.sign_manifest(
             manifest,
             private_key,
@@ -431,9 +437,9 @@ class PkPass(BaseModel):
             wwdr_certificate,
         )
 
-        self.files["pass.json"] = self.pass_json.encode("utf-8")
-        self.add_file("manifest.json", BytesIO(manifest.encode("utf-8")))
-        self.add_file("signature", BytesIO(signature))
+        self.files["signature"] = signature
+        # self.add_file("manifest.json", BytesIO(manifest.encode("utf-8")))
+        # self.add_file("signature", BytesIO(signature))
 
     def build_zip(self, fh: typing.BinaryIO | None=None) -> zipfile.ZipFile:
         """

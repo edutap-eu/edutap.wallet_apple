@@ -195,7 +195,6 @@ def test_files():
     assert "170eed23019542b0a2890a0bf753effea0db181a" == manifest["icon.png"]
 
     passfile.add_file("logo.png", open(common.resources / "white_square.png", "rb"))
-    assert len(passfile.files) == 2
     assert "logo.png" in passfile.files
 
     manifest_json = passfile.create_manifest()

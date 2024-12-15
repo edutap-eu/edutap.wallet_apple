@@ -4,6 +4,7 @@ from common import create_shell_pass
 from common import data
 from common import resources
 from edutap.wallet_apple import crypto
+from edutap.wallet_apple.models import passes
 from edutap.wallet_apple.models.passes import Barcode
 from edutap.wallet_apple.models.passes import BarcodeFormat
 from edutap.wallet_apple.models.passes import EventTicket
@@ -31,6 +32,7 @@ def apple_passes_dir():
     # os.makedirs(target, exist_ok=True)
     return target
 
+
 @pytest.mark.integration
 def test_signing():
     """
@@ -43,7 +45,9 @@ def test_signing():
     passfile = create_shell_pass()
     manifest_json = passfile.create_manifest()
 
-    key, cert, wwdr_cert = crypto.load_key_files(common.key_file, common.cert_file, common.wwdr_file)
+    key, cert, wwdr_cert = crypto.load_key_files(
+        common.key_file, common.cert_file, common.wwdr_file
+    )
     signature = crypto.sign_manifest(
         manifest_json,
         key,
@@ -101,7 +105,6 @@ def test_passbook_creation_integration(generated_passes_dir):
         certs / "private" / "certificate.pem",
         certs / "private" / "wwdr_certificate.pem",
     )
-
 
     with open(pass_file_name, "wb") as fh:
         fh.write(passfile.as_zip().getvalue())
@@ -223,6 +226,7 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
         os.system("open " + str(pass_file_name))
 
 
+@pytest.mark.integration
 def test_open_pkpass_and_sign_again(apple_passes_dir, generated_passes_dir):
     """
     tests an existing pass not created by this library and signs it again
@@ -230,14 +234,21 @@ def test_open_pkpass_and_sign_again(apple_passes_dir, generated_passes_dir):
     trailing commas which are not allowed in json, but apple accepts
     them, so we have to tolerate them as well
     """
-    fn=apple_passes_dir / "BoardingPass.pkpass"
+    fn = apple_passes_dir / "BoardingPass.pkpass"
     with open(fn, "rb") as fh:
         pkpass = PkPass.from_zip(fn)
+
         assert pkpass
-        
+
+    crypto.verify_manifest(pkpass.files["manifest.json"], pkpass.files["signature"])
     pkpass.pass_object.passInformation.secondaryFields[0].value = "John Doe"
     newname = "BoardingPass_signed.pkpass"
-
+    
+    # the following 2 lines are crucial for us being able to sign the pass
+    # the passTypeIdentifier and teamIdentifier must match with the certificate
+    pkpass.pass_object.passTypeIdentifier = "pass.demo.lmu.de"
+    pkpass.pass_object.teamIdentifier = "JG943677ZY"
+    
     with open(generated_passes_dir / newname, "wb") as fh:
         pkpass.sign(
             common.certs / "private" / "private.key",
@@ -245,11 +256,10 @@ def test_open_pkpass_and_sign_again(apple_passes_dir, generated_passes_dir):
             common.certs / "private" / "wwdr_certificate.pem",
         )
         fh.write(pkpass.as_zip().getvalue())
-        
+
+    crypto.verify_manifest(pkpass.files["manifest.json"], pkpass.files["signature"])
+
     os.system("open " + str(generated_passes_dir / newname))
-
-
-
 
 
 @pytest.mark.integration
