@@ -50,11 +50,13 @@ def test_sign_existing_pass(
         pkpass = api.new(file=fh)
         pkpass.pass_object.passTypeIdentifier = settings_test.pass_type_identifier
         pkpass.pass_object.teamIdentifier = settings_test.team_identifier
+        pkpass.pass_object.passInformation.secondaryFields[0].value = "Doald Duck"
+
         api.sign(pkpass, settings=settings_test)
         assert pkpass.is_signed
 
         
-        ofile = generated_passes_dir / "BoardingPass-signed.pkpass"
+        ofile = generated_passes_dir / "BoardingPass-signed1.pkpass"
         with api.pkpass(pkpass) as zip_fh:
             with open(ofile, "wb") as fh:
                 fh.write(zip_fh.getvalue())

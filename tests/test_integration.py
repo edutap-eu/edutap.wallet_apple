@@ -286,6 +286,7 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
         os.system("open " + str(pass_file_name))
 
 
+@only_test_if_crypto_supports_verification
 @pytest.mark.integration
 def test_open_pkpass_and_sign_again(apple_passes_dir, generated_passes_dir):
     """
