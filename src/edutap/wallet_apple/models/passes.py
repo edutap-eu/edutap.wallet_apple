@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from pathlib import Path
 from edutap.wallet_apple import crypto
 from enum import Enum
@@ -401,19 +402,38 @@ class PkPass(BaseModel):
         """
         self.files = {k: base64_to_bytearray(v) for k, v in files.items()}
 
+    @property
+    def manifest(self):
+        return self.files.get("manifest.json")
+
+
     def create_manifest(self):
         """
         Creates the hashes for all the files included in the pass file.
         """
         excluded_files = ["signature", "manifest.json"]
         pass_json = self.pass_json
-        hashes = {}
-    
+
+        # if there is a manifest we want to keep the order of the files
+        old_manifest = self.manifest
+        if old_manifest:
+            old_manifest_json = json.loads(old_manifest, object_pairs_hook=OrderedDict)
+
+        # renew pass.json
         self.files["pass.json"] = pass_json.encode("utf-8")
-        # hashes["pass.json"] = hashlib.sha1(pass_json.encode("utf-8")).hexdigest()
+        hashes = {}
         for filename, filedata in sorted(self.files.items()):
             if filename not in excluded_files:
                 hashes[filename] = hashlib.sha1(filedata).hexdigest()
+
+        if old_manifest:
+            # keep order of old manifest, remove unused files there and update new ones from hashes
+            for filename in list(old_manifest_json.keys()):
+                if filename not in hashes:
+                    del old_manifest_json[filename]
+
+            old_manifest_json.update(hashes)
+            return json.dumps(old_manifest_json)
         return json.dumps(hashes)
 
     def sign(
@@ -516,6 +536,30 @@ class PkPass(BaseModel):
             res.files = files
 
             return res
+
+
+    @property
+    def is_signed(self):
+        return self.files.get("signature") is not None
+
+
+    def verify(self, recompute_manifest=True):
+        """
+        verifies the signature of the pass
+        :param: recompute_manifest: if True the manifest is recomputed before verifying
+        """
+        if not self.is_signed:
+            raise ValueError("Pass is not signed")
+        
+        if recompute_manifest:
+            manifest = self.create_manifest()
+        else:
+            manifest = self.manifest
+
+        signature = self.files["signature"]
+
+        return crypto.verify_manifest(manifest, signature)
+    
 
 
 # hack in an optional field for each passmodel(passtype) since these are not known at compile time

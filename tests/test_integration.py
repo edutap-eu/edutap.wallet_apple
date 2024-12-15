@@ -1,8 +1,9 @@
 # pylint: disable=redefined-outer-name
-from common import certs
+from common import certs, only_test_if_crypto_supports_verification
 from common import create_shell_pass
 from common import data
 from common import resources
+from common import generated_passes_dir, apple_passes_dir
 from edutap.wallet_apple import crypto
 from edutap.wallet_apple.models import passes
 from edutap.wallet_apple.models.passes import Barcode
@@ -18,19 +19,6 @@ import os
 import pytest
 import uuid
 
-
-@pytest.fixture
-def generated_passes_dir():
-    target = data / "generated_passes"
-    os.makedirs(target, exist_ok=True)
-    return target
-
-
-@pytest.fixture
-def apple_passes_dir():
-    target = data / "apple_passes"
-    # os.makedirs(target, exist_ok=True)
-    return target
 
 
 @pytest.mark.integration
@@ -61,6 +49,78 @@ def test_signing():
     # Verification MUST fail!
     with pytest.raises(crypto.VerificationError):
         crypto.verify_manifest(tampered_manifest, signature)
+
+
+@pytest.mark.integration
+def test_signing1():
+    """
+    This test can only run locally if you provide your personal Apple Wallet
+    certificates, private key and password. It would not be wise to add
+    them to git. Store them in the files indicated below, they are ignored
+    by git.
+    """
+
+    passfile = create_shell_pass()
+    manifest_json = passfile.create_manifest()
+
+    key, cert, wwdr_cert = crypto.load_key_files(
+        common.key_file, common.cert_file, common.wwdr_file
+    )
+    signature = crypto.sign_manifest(
+        manifest_json,
+        key,
+        cert,
+        wwdr_cert,
+    )
+
+    crypto.verify_manifest(manifest_json, signature)
+    #tamper manifest by changing an attribute
+    passfile.pass_object.organizationName = "new organization"
+    tampered_manifest = passfile.create_manifest()
+
+    # Verification MUST fail!
+    with pytest.raises(crypto.VerificationError):
+        crypto.verify_manifest(tampered_manifest, signature)
+
+    passfile = create_shell_pass()
+    passfile.add_file("icon.png", open(common.resources / "white_square.png", "rb"))
+    passfile.sign(common.key_file, common.cert_file, common.wwdr_file)
+    
+    zipfile = passfile.as_zip()
+
+
+@only_test_if_crypto_supports_verification
+@pytest.mark.integration
+def test_verification():
+    """
+    This test can only run locally if you provide your personal Apple Wallet
+    certificates, private key and password. It would not be wise to add
+    them to git. Store them in the files indicated below, they are ignored
+    by git.
+    """
+
+    passfile = create_shell_pass()
+    passfile.add_file("icon.png", open(common.resources / "white_square.png", "rb"))
+    passfile.sign(common.key_file, common.cert_file, common.wwdr_file)
+    manifest = passfile.create_manifest()
+    signature = passfile.files["signature"]
+    crypto.verify_manifest(manifest, signature)
+    passfile.verify()
+
+    # change something
+    passfile.pass_object.organizationName = "new organization"
+
+    with pytest.raises(crypto.VerificationError):
+        passfile.verify()
+
+    #now sign it, so verification should pass now
+    passfile.sign(common.key_file, common.cert_file, common.wwdr_file)
+    passfile.verify()
+
+    zipfile = passfile.as_zip()
+    assert zipfile
+
+    crypto.verify_manifest(passfile.files["manifest.json"], passfile.files["signature"])
 
 
 @pytest.mark.integration

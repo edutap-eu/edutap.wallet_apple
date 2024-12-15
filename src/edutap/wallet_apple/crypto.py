@@ -157,3 +157,18 @@ def verify_manifest(manifest: str|bytes, signature: bytes):
         )
     except cryptography.exceptions.InternalError as ex:
         raise VerificationError(ex)
+
+
+def supports_verification():
+    """
+    Checks if the current version of the `cryptography` library supports
+    the verification of PKCS#7 signatures
+
+    since support for verification depends on [Pull request](https://github.com/pyca/cryptography/pull/12116)
+    this can be checked here
+    """
+    from cryptography.hazmat.bindings._rust import (
+        test_support,  # this is preliminary hence the local import
+    )
+
+    return hasattr(PKCS7Options, "NoVerify")

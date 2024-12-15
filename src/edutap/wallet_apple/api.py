@@ -1,3 +1,4 @@
+from edutap.wallet_apple import crypto
 from edutap.wallet_apple.settings import Settings
 from .models import passes
 from typing import Any, BinaryIO
@@ -27,8 +28,17 @@ def new(data: Optional[dict[str, Any]] = None, file: Optional[BinaryIO] = None) 
     else:
         pkpass = passes.PkPass()
     
-
     return pkpass
+
+
+def verify(pkpass: passes.PkPass,recompute_manifest=True, settings: Settings|None=None):
+    """
+    Verify the pass.
+
+    :param pkpass: PkPass model instance.
+    :return: True if the pass is valid, False otherwise.
+    """
+    pkpass.verify(recompute_manifest=recompute_manifest)
 
 
 def sign(pkpass: passes.PkPass, settings: Settings|None):
@@ -39,4 +49,7 @@ def sign(pkpass: passes.PkPass, settings: Settings|None):
     :param settings: Settings model instance. if not given it will be loaded from the environment.
     works inplace, the pkpass will be signed.
     """
-    pkpass.sign(settings)
+    if settings is None:
+        settings = Settings()
+
+    pkpass.sign(settings.private_key, settings.certificate, settings.wwdr_certificate)

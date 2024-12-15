@@ -1,3 +1,6 @@
+import os
+import pytest
+from edutap.wallet_apple import crypto
 from edutap.wallet_apple.models.passes import Barcode
 from edutap.wallet_apple.models.passes import BarcodeFormat
 from edutap.wallet_apple.models.passes import Coupon
@@ -7,6 +10,8 @@ from edutap.wallet_apple.models.passes import StoreCard
 from pathlib import Path
 
 import uuid
+
+from edutap.wallet_apple.settings import Settings
 
 
 cwd = Path(__file__).parent
@@ -21,6 +26,36 @@ wwdr_file = certs / "private" / "wwdr_certificate.pem"
 
 PASS_TYPE_IDENTIFIER = "pass.demo.lmu.de"
 
+
+@pytest.fixture
+def generated_passes_dir():
+    target = data / "generated_passes"
+    os.makedirs(target, exist_ok=True)
+    return target
+
+
+@pytest.fixture
+def apple_passes_dir():
+    target = data / "apple_passes"
+    # os.makedirs(target, exist_ok=True)
+    return target
+
+@pytest.fixture
+def settings_test():
+    settings = Settings(
+        root_dir=cwd / "data",
+        cert_dir_relative="certs/private",
+        pass_type_identifier="pass.demo.lmu.de",
+        team_identifier="JG943677ZY",
+    )
+
+    return settings
+
+def only_test_if_crypto_supports_verification(func):
+    """decorator to skip tests if cryptography is not installed"""
+    if crypto.supports_verification():
+        return func
+    return pytest.mark.skip("pycryptography support for verification missing")(func)
 
 def create_shell_pass(
     barcodeFormat=BarcodeFormat.CODE128,

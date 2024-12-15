@@ -23,7 +23,7 @@ class Settings(BaseSettings):
         default_factory=lambda dd: dd["root_dir"] / dd["cert_dir_relative"]
     )
     """directory where the certificates and keys are stored"""
-    key: Path = Field(default_factory=lambda dd: dd["cert_dir"] / "private.key")
+    private_key: Path = Field(default_factory=lambda dd: dd["cert_dir"] / "private.key")
     """Path to the private key file in PEM format"""
     certificate: Path = Field(
         default_factory=lambda dd: dd["cert_dir"] / "certificate.pem"

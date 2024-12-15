@@ -23,7 +23,7 @@ def test_settings_via_env_dict(monkeypatch):
     settings = Settings()
     assert settings.root_dir == common.cwd / "data"
     assert settings.cert_dir == common.cwd / "data" / "certs/private"
-    assert settings.key == common.cwd / "data" / "certs/private" / "private.key"
+    assert settings.private_key == common.cwd / "data" / "certs/private" / "private.key"
     assert settings.certificate == common.cwd / "data" / "certs/private" / "certificate.pem"
     assert settings.wwdr_certificate == common.cwd / "data" / "certs/private" / "wwdr_certificate.pem"
     
@@ -37,7 +37,7 @@ def test_settings_via_env_dict(monkeypatch):
     settings = Settings()
     assert settings.root_dir == common.cwd / "data"
     assert settings.cert_dir == Path("/certificates")
-    assert settings.key == Path("/certificates/private.key")
+    assert settings.private_key == Path("/certificates/private.key")
 
 
 def test_settings_via_env_file():
