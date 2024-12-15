@@ -472,6 +472,7 @@ class PkPass(BaseModel):
             for filename, filedata in self.files.items():
                 zf.writestr(filename, filedata)
 
+            zf.close()
             return zf
         
     def as_zip(self) -> BytesIO:

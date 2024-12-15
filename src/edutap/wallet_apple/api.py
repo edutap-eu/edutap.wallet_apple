@@ -53,3 +53,12 @@ def sign(pkpass: passes.PkPass, settings: Settings|None):
         settings = Settings()
 
     pkpass.sign(settings.private_key, settings.certificate, settings.wwdr_certificate)
+
+def pkpass(pkpass: passes.PkPass) -> BinaryIO:
+    """
+    Save the pass to a file.
+
+    :param pkpass: PkPass model instance.
+    :param file: Binary IO file object.
+    """
+    return pkpass.as_zip()
