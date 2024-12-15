@@ -481,6 +481,7 @@ class PkPass(BaseModel):
         """
         res = BytesIO()
         self.build_zip(res)
+        res.seek(0)
         return res
 
     def create(

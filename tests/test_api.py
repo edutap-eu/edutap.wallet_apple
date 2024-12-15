@@ -59,7 +59,7 @@ def test_sign_existing_pass(
         ofile = generated_passes_dir / "BoardingPass-signed1.pkpass"
         with api.pkpass(pkpass) as zip_fh:
             with open(ofile, "wb") as fh:
-                fh.write(zip_fh.getvalue())
+                fh.write(zip_fh.read())
                 
         os.system(f"open {ofile}")
 
