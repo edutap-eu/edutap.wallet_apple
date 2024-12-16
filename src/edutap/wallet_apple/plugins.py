@@ -6,6 +6,8 @@ from importlib.metadata import entry_points
 def get_pass_registrations() -> list[PassRegistration]:
     eps = entry_points(group="edutap.wallet_apple.plugins")
     plugins = [ep.load() for ep in eps if ep.name == "PassRegistration"]
+    if not plugins:
+        raise NotImplementedError("No pass registration plug-in found")
     for plugin in plugins:
         if not isinstance(plugin, PassRegistration):
             raise ValueError(f"{plugin} not implements PassRegistration")
@@ -15,6 +17,8 @@ def get_pass_registrations() -> list[PassRegistration]:
 def get_pass_data_acquisitions() -> list[PassDataAcquisition]:
     eps = entry_points(group="edutap.wallet_apple.plugins")
     plugins = [ep.load() for ep in eps if ep.name == "PassDataAcquisition"]
+    if not plugins:
+        raise NotImplementedError("No pass data acquisition plug-in found")
     for plugin in plugins:
         if not isinstance(plugin, PassDataAcquisition):
             raise ValueError(f"{plugin} not implements PassDataAcquisition")
