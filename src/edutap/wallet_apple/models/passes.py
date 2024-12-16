@@ -336,7 +336,7 @@ class Pass(BaseModel):
         )
 
     @classmethod
-    def from_json(cls, json_str: str|bytes) -> "Pass":
+    def from_json(cls, json_str: str | bytes) -> "Pass":
         """
         validates a pass json string and returns a Pass object
         """
@@ -345,13 +345,15 @@ class Pass(BaseModel):
         except json.JSONDecodeError as e:
             # in case of for example trailing commas, we use yaml
             # to parse the json string which swallows trailing commas
-            # apple passes are allowed to have trailing commas, so we 
+            # apple passes are allowed to have trailing commas, so we
             # have to tolerate it too
             import yaml
+
             data = yaml.safe_load(json_str)
         return cls.model_validate(data)
 
-class PkPass(BaseModel):
+
+class PkPass:
     """
     represents a PkPass file containing
     - a Pass object (results in pass.json)
@@ -360,29 +362,18 @@ class PkPass(BaseModel):
     - signature (after signing)
     """
 
+    def __init__(self, pass_object: Pass | None = None):
+        self.pass_object = pass_object
+        self.files = {}
+
     pass_object: Pass | None = None
 
-    files: dict = PydanticField(default_factory=dict, exclude=True)
+    files: dict
     """# Holds the files to include in the .pkpass"""
 
     @classmethod
     def from_pass(cls, pass_object: Pass):
         return cls(pass_object=pass_object)
-
-    @property
-    def files_uuencoded(self) -> dict[str, str]:
-        """
-        Returns the files dict with the values uuencoded so that they can
-        be stored in a JSON dict (e.g. for a REST API or a database)
-        """
-        return {k: bytearray_to_base64(v) for k, v in self.files.items()}
-
-    @files_uuencoded.setter
-    def files_uuencoded(self, files: dict[str, str]):
-        """
-        Loads the files from a dict that has been uuencoded
-        """
-        self.files = {k: base64_to_bytearray(v) for k, v in files.items()}
 
     @property
     def pass_dict(self) -> dict[str, Any]:
@@ -396,16 +387,9 @@ class PkPass(BaseModel):
         """Adds a file to the pass. The file is stored in the files dict and the hash is stored in the hashes dict"""
         self.files[name] = fd.read()
 
-    def files_from_json_dict(self, files: dict[str, str]):
-        """
-        Loads the files from a dict that has been uuencoded
-        """
-        self.files = {k: base64_to_bytearray(v) for k, v in files.items()}
-
     @property
     def manifest(self):
         return self.files.get("manifest.json")
-
 
     def create_manifest(self):
         """
@@ -446,7 +430,7 @@ class PkPass(BaseModel):
             private_key_path, certificate_path, wwdr_certificate_path
         )
         self.files["pass.json"] = self.pass_json.encode("utf-8")
- 
+
         manifest = self.create_manifest()
         # manifest = self.files["manifest.json"].decode("utf-8")
         self.files["manifest.json"] = manifest.encode("utf-8")
@@ -458,10 +442,8 @@ class PkPass(BaseModel):
         )
 
         self.files["signature"] = signature
-        # self.add_file("manifest.json", BytesIO(manifest.encode("utf-8")))
-        # self.add_file("signature", BytesIO(signature))
 
-    def build_zip(self, fh: typing.BinaryIO | None=None) -> zipfile.ZipFile:
+    def build_zip(self, fh: typing.BinaryIO | None = None) -> zipfile.ZipFile:
         """
         builds a zip file from file content and returns the zipfile object
         if a file handle is given it writes the zip file to the file handle
@@ -474,7 +456,7 @@ class PkPass(BaseModel):
 
             zf.close()
             return zf
-        
+
     def as_zip(self) -> BytesIO:
         """
         creates a zip file and gives it back as a BytesIO object
@@ -484,46 +466,6 @@ class PkPass(BaseModel):
         res.seek(0)
         return res
 
-    def create(
-        self,
-        certificate: str,
-        key: str,
-        wwdr_certificate: str,
-        password: Optional[bytes] = None,
-        zip_file: typing.BinaryIO | BytesIO | None = None,
-        sign: bool = True,
-    ) -> typing.BinaryIO | BytesIO:
-        """
-        creates and signs the .pkpass file as a BytesIO object
-        following the apple guidelines at https://developer.apple.com/documentation/walletpasses/building-a-pass#Sign-the-Pass-and-Create-the-Bundle
-        """
-        manifest = self.create_manifest()
-        signature: Optional[bytes] = None
-        if sign:
-            signature = crypto.create_signature(
-                manifest,
-                key,
-                certificate,
-                wwdr_certificate,
-                password,
-            )
-        if not zip_file:
-            zip_file = BytesIO()
-        self.create_zip(manifest, signature, zip_file=zip_file)
-        return zip_file
-
-    def create_zip(self, manifest, signature=None, zip_file=None):
-        pass_json = self.pass_json
-        with zipfile.ZipFile(zip_file or "pass.pkpass", "w") as zf:
-            zf.writestr("pass.json", pass_json)
-            zf.writestr("manifest.json", manifest)
-            if signature:
-                zf.writestr("signature", signature)
-            for filename, filedata in self.files.items():
-                zf.writestr(filename, filedata)
-
-        return zip_file
-    
     @classmethod
     def from_zip(cls, zip_file: typing.BinaryIO) -> "PkPass":
         """
@@ -539,11 +481,9 @@ class PkPass(BaseModel):
 
             return res
 
-
     @property
     def is_signed(self):
         return self.files.get("signature") is not None
-
 
     def verify(self, recompute_manifest=True):
         """
@@ -552,7 +492,7 @@ class PkPass(BaseModel):
         """
         if not self.is_signed:
             raise ValueError("Pass is not signed")
-        
+
         if recompute_manifest:
             manifest = self.create_manifest()
         else:
@@ -561,7 +501,6 @@ class PkPass(BaseModel):
         signature = self.files["signature"]
 
         return crypto.verify_manifest(manifest, signature)
-    
 
 
 # hack in an optional field for each passmodel(passtype) since these are not known at compile time
