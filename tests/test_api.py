@@ -6,6 +6,7 @@ import common
 from common import (
     generated_passes_dir,
     apple_passes_dir,
+    key_files_exist,
     only_test_if_crypto_supports_verification,
     settings_test,
 )
@@ -44,6 +45,7 @@ def test_new_pass_empty():
     assert pkpass is not None
 
 
+@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 def test_sign_existing_pass(
     apple_passes_dir, generated_passes_dir, settings_test: Settings
 ):
@@ -66,19 +68,29 @@ def test_sign_existing_pass(
 
 
 @only_test_if_crypto_supports_verification
+@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_sign_and_verify_pass(apple_passes_dir, settings_test: Settings):
     with open(apple_passes_dir / "BoardingPass.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
+        # this pass has not been created and signed by us, so we verify
+        # it without recomputing the manifest
         api.verify(pkpass, recompute_manifest=False)
+
+        # when we change the pass, the verification should fail
         pkpass.pass_object.passInformation.secondaryFields[0].value = "John Doe"
+
+        # we have to change the passTypeIdentifier and teamIdentifier
+        # so that we can sign it with our key and certificate        
         pkpass.pass_object.passTypeIdentifier = settings_test.pass_type_identifier
         pkpass.pass_object.teamIdentifier = settings_test.team_identifier
 
+        # now of course the verification should fail
         with pytest.raises(VerificationError) as ex:
             api.verify(pkpass)
             assert "pass is not verified" in str(ex)
 
+        # now we sign the pass and the verification should pass
         api.sign(pkpass, settings=settings_test)
         api.verify(pkpass, settings=settings_test)
-        # assert pkpass.is_signed()
+        assert pkpass.is_signed

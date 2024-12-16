@@ -110,7 +110,7 @@ def test_basic_pass():
 
 def test_manifest_creation():
     passfile = create_shell_pass()
-    manifest_json = passfile.create_manifest()
+    manifest_json = passfile._create_manifest()
     manifest = json.loads(manifest_json)
     assert "pass.json" in manifest
 
@@ -186,17 +186,17 @@ def test_pdf_417_pass():
 
 def test_files():
     passfile = create_shell_pass()
-    passfile.add_file("icon.png", open(common.resources / "white_square.png", "rb"))
+    passfile._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
     assert len(passfile.files) == 1
     assert "icon.png" in passfile.files
 
-    manifest_json = passfile.create_manifest()
+    manifest_json = passfile._create_manifest()
     manifest = json.loads(manifest_json)
     assert "170eed23019542b0a2890a0bf753effea0db181a" == manifest["icon.png"]
 
-    passfile.add_file("logo.png", open(common.resources / "white_square.png", "rb"))
+    passfile._add_file("logo.png", open(common.resources / "white_square.png", "rb"))
     assert "logo.png" in passfile.files
 
-    manifest_json = passfile.create_manifest()
+    manifest_json = passfile._create_manifest()
     manifest = json.loads(manifest_json)
     assert "170eed23019542b0a2890a0bf753effea0db181a" == manifest["logo.png"]

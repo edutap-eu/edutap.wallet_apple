@@ -3,7 +3,7 @@ from pathlib import Path
 from edutap.wallet_apple import crypto
 from enum import Enum
 from io import BytesIO
-from pydantic import BaseModel
+from pydantic import BaseModel, model_serializer
 from pydantic import computed_field
 from pydantic import Field as PydanticField
 from pydantic.fields import FieldInfo
@@ -376,30 +376,43 @@ class PkPass:
         return cls(pass_object=pass_object)
 
     @property
-    def pass_dict(self) -> dict[str, Any]:
+    def is_signed(self):
+        return self.files.get("signature") is not None
+
+    def _as_zip(self) -> BytesIO:
+        """
+        creates a zip file and gives it back as a BytesIO object
+        """
+        res = BytesIO()
+        self._build_zip(res)
+        res.seek(0)
+        return res
+
+    @property
+    def _pass_dict(self) -> dict[str, Any]:
         return self.pass_object.model_dump(exclude_none=True, round_trip=True)
 
     @property
-    def pass_json(self) -> str:
+    def _pass_json(self) -> str:
         return self.pass_object.model_dump_json(exclude_none=True, indent=4)
 
-    def add_file(self, name: str, fd: typing.BinaryIO):
+    def _add_file(self, name: str, fd: typing.BinaryIO):
         """Adds a file to the pass. The file is stored in the files dict and the hash is stored in the hashes dict"""
         self.files[name] = fd.read()
 
     @property
-    def manifest(self):
+    def _manifest(self):
         return self.files.get("manifest.json")
 
-    def create_manifest(self):
+    def _create_manifest(self):
         """
         Creates the hashes for all the files included in the pass file.
         """
         excluded_files = ["signature", "manifest.json"]
-        pass_json = self.pass_json
+        pass_json = self._pass_json
 
         # if there is a manifest we want to keep the order of the files
-        old_manifest = self.manifest
+        old_manifest = self._manifest
         if old_manifest:
             old_manifest_json = json.loads(old_manifest, object_pairs_hook=OrderedDict)
 
@@ -420,7 +433,7 @@ class PkPass:
             return json.dumps(old_manifest_json)
         return json.dumps(hashes)
 
-    def sign(
+    def _sign(
         self,
         private_key_path: str | Path,
         certificate_path: str | Path,
@@ -429,9 +442,9 @@ class PkPass:
         private_key, certificate, wwdr_certificate = crypto.load_key_files(
             private_key_path, certificate_path, wwdr_certificate_path
         )
-        self.files["pass.json"] = self.pass_json.encode("utf-8")
+        self.files["pass.json"] = self._pass_json.encode("utf-8")
 
-        manifest = self.create_manifest()
+        manifest = self._create_manifest()
         # manifest = self.files["manifest.json"].decode("utf-8")
         self.files["manifest.json"] = manifest.encode("utf-8")
         signature = crypto.sign_manifest(
@@ -443,7 +456,7 @@ class PkPass:
 
         self.files["signature"] = signature
 
-    def build_zip(self, fh: typing.BinaryIO | None = None) -> zipfile.ZipFile:
+    def _build_zip(self, fh: typing.BinaryIO | None = None) -> zipfile.ZipFile:
         """
         builds a zip file from file content and returns the zipfile object
         if a file handle is given it writes the zip file to the file handle
@@ -457,14 +470,6 @@ class PkPass:
             zf.close()
             return zf
 
-    def as_zip(self) -> BytesIO:
-        """
-        creates a zip file and gives it back as a BytesIO object
-        """
-        res = BytesIO()
-        self.build_zip(res)
-        res.seek(0)
-        return res
 
     @classmethod
     def from_zip(cls, zip_file: typing.BinaryIO) -> "PkPass":
@@ -481,10 +486,6 @@ class PkPass:
 
             return res
 
-    @property
-    def is_signed(self):
-        return self.files.get("signature") is not None
-
     def verify(self, recompute_manifest=True):
         """
         verifies the signature of the pass
@@ -494,9 +495,9 @@ class PkPass:
             raise ValueError("Pass is not signed")
 
         if recompute_manifest:
-            manifest = self.create_manifest()
+            manifest = self._create_manifest()
         else:
-            manifest = self.manifest
+            manifest = self._manifest
 
         signature = self.files["signature"]
 

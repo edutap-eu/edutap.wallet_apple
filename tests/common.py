@@ -51,6 +51,23 @@ def settings_test():
 
     return settings
 
+def key_files_exist():
+    """
+    utility function to check if the key files exist
+    called by pytest.skipif for the integration tests
+    """
+    settings = Settings(
+        root_dir=cwd / "data",
+        cert_dir_relative="certs/private",
+        pass_type_identifier="pass.demo.lmu.de",
+        team_identifier="JG943677ZY",
+    )
+
+    return os.path.exists(settings.private_key) \
+        and os.path.exists(settings.certificate) \
+        and os.path.exists(settings.wwdr_certificate)
+
+
 def only_test_if_crypto_supports_verification(func):
     """decorator to skip tests if cryptography is not installed"""
     if crypto.supports_verification():

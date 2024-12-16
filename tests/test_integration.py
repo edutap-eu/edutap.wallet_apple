@@ -1,5 +1,5 @@
 # pylint: disable=redefined-outer-name
-from common import certs, only_test_if_crypto_supports_verification
+from common import certs, key_files_exist, only_test_if_crypto_supports_verification
 from common import create_shell_pass
 from common import data
 from common import resources
@@ -21,6 +21,7 @@ import uuid
 
 
 
+@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_signing():
     """
@@ -31,7 +32,7 @@ def test_signing():
     """
 
     passfile = create_shell_pass()
-    manifest_json = passfile.create_manifest()
+    manifest_json = passfile._create_manifest()
 
     key, cert, wwdr_cert = crypto.load_key_files(
         common.key_file, common.cert_file, common.wwdr_file
@@ -51,6 +52,7 @@ def test_signing():
         crypto.verify_manifest(tampered_manifest, signature)
 
 
+@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_signing1():
     """
@@ -61,7 +63,7 @@ def test_signing1():
     """
 
     passfile = create_shell_pass()
-    manifest_json = passfile.create_manifest()
+    manifest_json = passfile._create_manifest()
 
     key, cert, wwdr_cert = crypto.load_key_files(
         common.key_file, common.cert_file, common.wwdr_file
@@ -76,19 +78,20 @@ def test_signing1():
     crypto.verify_manifest(manifest_json, signature)
     #tamper manifest by changing an attribute
     passfile.pass_object.organizationName = "new organization"
-    tampered_manifest = passfile.create_manifest()
+    tampered_manifest = passfile._create_manifest()
 
     # Verification MUST fail!
     with pytest.raises(crypto.VerificationError):
         crypto.verify_manifest(tampered_manifest, signature)
 
     passfile = create_shell_pass()
-    passfile.add_file("icon.png", open(common.resources / "white_square.png", "rb"))
-    passfile.sign(common.key_file, common.cert_file, common.wwdr_file)
+    passfile._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
+    passfile._sign(common.key_file, common.cert_file, common.wwdr_file)
     
-    zipfile = passfile.as_zip()
+    zipfile = passfile._as_zip()
 
 
+@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @only_test_if_crypto_supports_verification
 @pytest.mark.integration
 def test_verification():
@@ -100,9 +103,9 @@ def test_verification():
     """
 
     passfile = create_shell_pass()
-    passfile.add_file("icon.png", open(common.resources / "white_square.png", "rb"))
-    passfile.sign(common.key_file, common.cert_file, common.wwdr_file)
-    manifest = passfile.create_manifest()
+    passfile._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
+    passfile._sign(common.key_file, common.cert_file, common.wwdr_file)
+    manifest = passfile._create_manifest()
     signature = passfile.files["signature"]
     crypto.verify_manifest(manifest, signature)
     passfile.verify()
@@ -114,15 +117,16 @@ def test_verification():
         passfile.verify()
 
     #now sign it, so verification should pass now
-    passfile.sign(common.key_file, common.cert_file, common.wwdr_file)
+    passfile._sign(common.key_file, common.cert_file, common.wwdr_file)
     passfile.verify()
 
-    zipfile = passfile.as_zip()
+    zipfile = passfile._as_zip()
     assert zipfile
 
     crypto.verify_manifest(passfile.files["manifest.json"], passfile.files["signature"])
 
 
+@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_passbook_creation():
     """
@@ -133,13 +137,14 @@ def test_passbook_creation():
     """
 
     passfile = create_shell_pass()
-    passfile.add_file("icon.png", open(common.resources / "white_square.png", "rb"))
-    passfile.sign(common.key_file, common.cert_file, common.wwdr_file)
-    zipfile = passfile.as_zip()
+    passfile._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
+    passfile._sign(common.key_file, common.cert_file, common.wwdr_file)
+    zipfile = passfile._as_zip()
     # zipfile = passfile.create(common.cert_file, common.key_file, common.wwdr_file, None)
     assert zipfile
 
 
+@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_passbook_creation_integration(generated_passes_dir):
     """
@@ -158,19 +163,20 @@ def test_passbook_creation_integration(generated_passes_dir):
     passfile = create_shell_pass(
         passTypeIdentifier="pass.demo.lmu.de", teamIdentifier="JG943677ZY"
     )
-    passfile.add_file("icon.png", open(resources / "white_square.png", "rb"))
+    passfile._add_file("icon.png", open(resources / "white_square.png", "rb"))
 
-    passfile.sign(
+    passfile._sign(
         certs / "private" / "private.key",
         certs / "private" / "certificate.pem",
         certs / "private" / "wwdr_certificate.pem",
     )
 
     with open(pass_file_name, "wb") as fh:
-        fh.write(passfile.as_zip().getvalue())
+        fh.write(passfile._as_zip().getvalue())
     os.system("open " + str(pass_file_name))
 
 
+@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
     """
@@ -206,12 +212,12 @@ def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
 
     passfile = PkPass(pass_object=passobject)
 
-    passfile.add_file("icon.png", open(resources / "edutap.png", "rb"))
-    passfile.add_file("icon@2x.png", open(resources / "edutap.png", "rb"))
-    passfile.add_file("icon@3x.png", open(resources / "edutap.png", "rb"))
-    passfile.add_file("logo.png", open(resources / "edutap.png", "rb"))
-    passfile.add_file("logo@2x.png", open(resources / "edutap.png", "rb"))
-    passfile.add_file("strip.png", open(resources / "eaie-hero.jpg", "rb"))
+    passfile._add_file("icon.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("icon@2x.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("icon@3x.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("logo.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("logo@2x.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("strip.png", open(resources / "eaie-hero.jpg", "rb"))
 
     passobject.backgroundColor = "#fa511e"
     passobject.nfc = NFC(
@@ -221,16 +227,17 @@ def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
         requiresAuthentication=False,
     )
 
-    passfile.sign(
+    passfile._sign(
         certs / "private" / "private.key",
         certs / "private" / "certificate.pem",
         certs / "private" / "wwdr_certificate.pem",
     )
     with open(pass_file_name, "wb") as fh:
-        fh.write(passfile.as_zip().getvalue())
+        fh.write(passfile._as_zip().getvalue())
         os.system("open " + str(pass_file_name))
 
 
+@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_passbook_creation_integration_eventticket(generated_passes_dir):
     """
@@ -267,26 +274,27 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
     passobject.barcode = stdBarcode
     passfile = PkPass(pass_object=passobject)
 
-    passfile.add_file("icon.png", open(resources / "edutap.png", "rb"))
-    passfile.add_file("iconx2.png", open(resources / "edutap.png", "rb"))
-    passfile.add_file("logo.png", open(resources / "edutap.png", "rb"))
-    passfile.add_file("logox2.png", open(resources / "edutap.png", "rb"))
-    passfile.add_file("strip.png", open(resources / "eaie-hero.jpg", "rb"))
+    passfile._add_file("icon.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("iconx2.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("logo.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("logox2.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("strip.png", open(resources / "eaie-hero.jpg", "rb"))
     # passfile.addFile("background.png", open(resources / "eaie-hero.jpg", "rb"))
 
     passobject.backgroundColor = "#fa511e"
-    passfile.sign(
+    passfile._sign(
         certs / "private" / "private.key",
         certs / "private" / "certificate.pem",
         certs / "private" / "wwdr_certificate.pem",
     )
 
     with open(pass_file_name, "wb") as fh:
-        fh.write(passfile.as_zip().getvalue())
+        fh.write(passfile._as_zip().getvalue())
         os.system("open " + str(pass_file_name))
 
 
 @only_test_if_crypto_supports_verification
+@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_open_pkpass_and_sign_again(apple_passes_dir, generated_passes_dir):
     """
@@ -311,12 +319,12 @@ def test_open_pkpass_and_sign_again(apple_passes_dir, generated_passes_dir):
     pkpass.pass_object.teamIdentifier = "JG943677ZY"
     
     with open(generated_passes_dir / newname, "wb") as fh:
-        pkpass.sign(
+        pkpass._sign(
             common.certs / "private" / "private.key",
             common.certs / "private" / "certificate.pem",
             common.certs / "private" / "wwdr_certificate.pem",
         )
-        fh.write(pkpass.as_zip().getvalue())
+        fh.write(pkpass._as_zip().getvalue())
 
     crypto.verify_manifest(pkpass.files["manifest.json"], pkpass.files["signature"])
 
