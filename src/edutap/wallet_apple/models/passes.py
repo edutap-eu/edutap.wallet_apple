@@ -1,13 +1,15 @@
 from collections import OrderedDict
-from pathlib import Path
 from edutap.wallet_apple import crypto
 from enum import Enum
 from io import BytesIO
-from pydantic import BaseModel, model_serializer
+from pathlib import Path
+from pydantic import BaseModel
 from pydantic import computed_field
 from pydantic import Field as PydanticField
+from pydantic import model_serializer
 from pydantic.fields import FieldInfo
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 from typing import Optional
 from typing_extensions import deprecated
 
@@ -75,7 +77,9 @@ class Field(BaseModel):
     key: str  # Required. The key must be unique within the scope
     value: str | int | float  # Required. Value of the field. For example, 42
     label: str = ""  # Optional. Label text for the field.
-    changeMessage: str = ""  # Optional. Format string for the alert text that is displayed when the pass is updated
+    changeMessage: str = (
+        ""  # Optional. Format string for the alert text that is displayed when the pass is updated
+    )
     # textAlignment: Alignment = Alignment.LEFT
     textAlignment: Alignment | None = None
     # Optional. Alignment for the field’s contents
@@ -110,8 +114,12 @@ class Location(BaseModel):
     latitude: float = 0.0  # Required. Latitude, in degrees, of the location
     longitude: float = 0.0  # Required. Longitude, in degrees, of the location
     altitude: float = 0  # Optional. Altitude, in meters, of the location
-    distance: float = 0  # Optional. Maximum distance, in meters, from the location that the pass is relevant
-    relevantText: str = ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
+    distance: float = (
+        0  # Optional. Maximum distance, in meters, from the location that the pass is relevant
+    )
+    relevantText: str = (
+        ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
+    )
 
 
 class IBeacon(BaseModel):
@@ -120,7 +128,9 @@ class IBeacon(BaseModel):
     )
     major: int  # Required. Major identifier of a Bluetooth Low Energy location beacon
     minor: int  # Required. Minor identifier of a Bluetooth Low Energy location beacon
-    relevantText: str = ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
+    relevantText: str = (
+        ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
+    )
 
 
 class NFC(BaseModel):
@@ -128,7 +138,9 @@ class NFC(BaseModel):
     encryptionPublicKey: (
         str  # Required. Public encryption key used by the Value Added Services protocol
     )
-    requiresAuthentication: bool = False  # Optional. Indicates that the pass is not valid unless it contains a valid signature
+    requiresAuthentication: bool = (
+        False  # Optional. Indicates that the pass is not valid unless it contains a valid signature
+    )
 
 
 class PassInformation(BaseModel):
@@ -469,7 +481,6 @@ class PkPass:
 
             zf.close()
             return zf
-
 
     @classmethod
     def from_zip(cls, zip_file: typing.BinaryIO) -> "PkPass":

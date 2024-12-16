@@ -1,9 +1,12 @@
 # pylint: disable=redefined-outer-name
-from common import certs, key_files_exist, only_test_if_crypto_supports_verification
+from common import apple_passes_dir
+from common import certs
 from common import create_shell_pass
 from common import data
+from common import generated_passes_dir
+from common import key_files_exist
+from common import only_test_if_crypto_supports_verification
 from common import resources
-from common import generated_passes_dir, apple_passes_dir
 from edutap.wallet_apple import crypto
 from edutap.wallet_apple.models import passes
 from edutap.wallet_apple.models.passes import Barcode
@@ -18,7 +21,6 @@ import common
 import os
 import pytest
 import uuid
-
 
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
@@ -76,7 +78,7 @@ def test_signing1():
     )
 
     crypto.verify_manifest(manifest_json, signature)
-    #tamper manifest by changing an attribute
+    # tamper manifest by changing an attribute
     passfile.pass_object.organizationName = "new organization"
     tampered_manifest = passfile._create_manifest()
 
@@ -87,7 +89,7 @@ def test_signing1():
     passfile = create_shell_pass()
     passfile._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
     passfile._sign(common.key_file, common.cert_file, common.wwdr_file)
-    
+
     zipfile = passfile._as_zip()
 
 
@@ -116,7 +118,7 @@ def test_verification():
     with pytest.raises(crypto.VerificationError):
         passfile.verify()
 
-    #now sign it, so verification should pass now
+    # now sign it, so verification should pass now
     passfile._sign(common.key_file, common.cert_file, common.wwdr_file)
     passfile.verify()
 
@@ -312,12 +314,12 @@ def test_open_pkpass_and_sign_again(apple_passes_dir, generated_passes_dir):
     crypto.verify_manifest(pkpass.files["manifest.json"], pkpass.files["signature"])
     pkpass.pass_object.passInformation.secondaryFields[0].value = "John Doe"
     newname = "BoardingPass_signed.pkpass"
-    
+
     # the following 2 lines are crucial for us being able to sign the pass
     # the passTypeIdentifier and teamIdentifier must match with the certificate
     pkpass.pass_object.passTypeIdentifier = "pass.demo.lmu.de"
     pkpass.pass_object.teamIdentifier = "JG943677ZY"
-    
+
     with open(generated_passes_dir / newname, "wb") as fh:
         pkpass._sign(
             common.certs / "private" / "private.key",

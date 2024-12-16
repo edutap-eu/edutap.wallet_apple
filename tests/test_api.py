@@ -1,17 +1,16 @@
 # pylint: disable=redefined-outer-name
-import os
-import pytest
+from common import apple_passes_dir
+from common import generated_passes_dir
+from common import key_files_exist
+from common import only_test_if_crypto_supports_verification
+from common import settings_test
 from edutap.wallet_apple import api
-import common
-from common import (
-    generated_passes_dir,
-    apple_passes_dir,
-    key_files_exist,
-    only_test_if_crypto_supports_verification,
-    settings_test,
-)
 from edutap.wallet_apple.crypto import VerificationError
 from edutap.wallet_apple.settings import Settings
+
+import common
+import os
+import pytest
 
 
 def test_load_pass_from_json():
@@ -58,12 +57,11 @@ def test_sign_existing_pass(
         api.sign(pkpass, settings=settings_test)
         assert pkpass.is_signed
 
-        
         ofile = generated_passes_dir / "BoardingPass-signed1.pkpass"
         with api.pkpass(pkpass) as zip_fh:
             with open(ofile, "wb") as fh:
                 fh.write(zip_fh.read())
-                
+
         os.system(f"open {ofile}")
 
 
@@ -81,7 +79,7 @@ def test_sign_and_verify_pass(apple_passes_dir, settings_test: Settings):
         pkpass.pass_object.passInformation.secondaryFields[0].value = "John Doe"
 
         # we have to change the passTypeIdentifier and teamIdentifier
-        # so that we can sign it with our key and certificate        
+        # so that we can sign it with our key and certificate
         pkpass.pass_object.passTypeIdentifier = settings_test.pass_type_identifier
         pkpass.pass_object.teamIdentifier = settings_test.team_identifier
 

@@ -1,5 +1,3 @@
-import os
-import pytest
 from edutap.wallet_apple import crypto
 from edutap.wallet_apple.models.passes import Barcode
 from edutap.wallet_apple.models.passes import BarcodeFormat
@@ -7,11 +5,12 @@ from edutap.wallet_apple.models.passes import Coupon
 from edutap.wallet_apple.models.passes import Pass
 from edutap.wallet_apple.models.passes import PkPass
 from edutap.wallet_apple.models.passes import StoreCard
+from edutap.wallet_apple.settings import Settings
 from pathlib import Path
 
+import os
+import pytest
 import uuid
-
-from edutap.wallet_apple.settings import Settings
 
 
 cwd = Path(__file__).parent
@@ -40,6 +39,7 @@ def apple_passes_dir():
     # os.makedirs(target, exist_ok=True)
     return target
 
+
 @pytest.fixture
 def settings_test():
     settings = Settings(
@@ -50,6 +50,7 @@ def settings_test():
     )
 
     return settings
+
 
 def key_files_exist():
     """
@@ -63,9 +64,11 @@ def key_files_exist():
         team_identifier="JG943677ZY",
     )
 
-    return os.path.exists(settings.private_key) \
-        and os.path.exists(settings.certificate) \
+    return (
+        os.path.exists(settings.private_key)
+        and os.path.exists(settings.certificate)
         and os.path.exists(settings.wwdr_certificate)
+    )
 
 
 def only_test_if_crypto_supports_verification(func):
@@ -73,6 +76,7 @@ def only_test_if_crypto_supports_verification(func):
     if crypto.supports_verification():
         return func
     return pytest.mark.skip("pycryptography support for verification missing")(func)
+
 
 def create_shell_pass(
     barcodeFormat=BarcodeFormat.CODE128,

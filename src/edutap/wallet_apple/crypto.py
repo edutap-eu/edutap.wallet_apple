@@ -68,7 +68,9 @@ def load_key_files(
         wwdr_certificate_data = fh.read()
 
     certificate = load_pem_x509_certificate(certificate_data, default_backend())
-    private_key = load_pem_private_key(private_key_data, password=password, backend=default_backend())
+    private_key = load_pem_private_key(
+        private_key_data, password=password, backend=default_backend()
+    )
     # if not isinstance(private_key, (RSAPrivateKey, EllipticCurvePrivateKey)):
     #     raise TypeError("Private key must be an RSAPrivateKey or EllipticCurvePrivateKey")
     wwdr_certificate = load_pem_x509_certificate(
@@ -92,7 +94,7 @@ def create_signature(
     :param wwdr_certificate_path: path to Apple WWDR certificate
     :return: tuple of private key, certificate and wwdr_certificate as bytes
 
-    all certs are expected to be in PEM format    """
+    all certs are expected to be in PEM format"""
 
     # check for cert file existence
     if not os.path.exists(private_key_path):
@@ -121,7 +123,7 @@ def create_signature(
     return pk7
 
 
-def verify_manifest(manifest: str|bytes, signature: bytes):
+def verify_manifest(manifest: str | bytes, signature: bytes):
     """
     Verifies the manifest against the signature.
     Currently no check against the cert supported, only the
@@ -143,7 +145,7 @@ def verify_manifest(manifest: str|bytes, signature: bytes):
     #         cert = load_pem_x509_certificate(fh.read(), default_backend())
     # else:
     #     cert = None
-    
+
     if isinstance(manifest, str):
         manifest = manifest.encode("utf-8")
 

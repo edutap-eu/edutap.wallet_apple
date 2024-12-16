@@ -1,11 +1,14 @@
+from .models import passes
 from edutap.wallet_apple import crypto
 from edutap.wallet_apple.settings import Settings
-from .models import passes
-from typing import Any, BinaryIO
+from typing import Any
+from typing import BinaryIO
 from typing import Optional
 
 
-def new(data: Optional[dict[str, Any]] = None, file: Optional[BinaryIO] = None) -> passes.PkPass:
+def new(
+    data: Optional[dict[str, Any]] = None, file: Optional[BinaryIO] = None
+) -> passes.PkPass:
     """
     Create pass model.
 
@@ -18,7 +21,7 @@ def new(data: Optional[dict[str, Any]] = None, file: Optional[BinaryIO] = None) 
     if data is not None and file is not None:
         raise ValueError(
             "only either 'data' or 'file' may be provided, both is not allowed"
-        )        
+        )
 
     if data is not None:
         pass_object = passes.Pass.model_validate_json(data)
@@ -27,11 +30,13 @@ def new(data: Optional[dict[str, Any]] = None, file: Optional[BinaryIO] = None) 
         pkpass = passes.PkPass.from_zip(file)
     else:
         pkpass = passes.PkPass()
-    
+
     return pkpass
 
 
-def verify(pkpass: passes.PkPass,recompute_manifest=True, settings: Settings|None=None):
+def verify(
+    pkpass: passes.PkPass, recompute_manifest=True, settings: Settings | None = None
+):
     """
     Verify the pass.
 
@@ -41,7 +46,7 @@ def verify(pkpass: passes.PkPass,recompute_manifest=True, settings: Settings|Non
     pkpass.verify(recompute_manifest=recompute_manifest)
 
 
-def sign(pkpass: passes.PkPass, settings: Settings|None):
+def sign(pkpass: passes.PkPass, settings: Settings | None):
     """
     Sign the pass.
 
@@ -53,6 +58,7 @@ def sign(pkpass: passes.PkPass, settings: Settings|None):
         settings = Settings()
 
     pkpass._sign(settings.private_key, settings.certificate, settings.wwdr_certificate)
+
 
 def pkpass(pkpass: passes.PkPass) -> BinaryIO:
     """
