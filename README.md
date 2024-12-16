@@ -142,13 +142,13 @@ pytest -m integration
 the test "test_passbook_creation_integration" will create a passbook file and display it with the passbook viewer.
 
 The test case `test_passbook_creation_integration` will create some pkpass-files.
-Those are located under tests/data/genererated_passes.
+Those are located under tests/data/generated_passes.
 Displaying the pass works only under OSX since the passbook viewer is part of it.
 
 # PkPass creation
 
 The `edutap.wallet_apple` package provides a Python API to create Apple Wallet Passes.
-The followig diagram shows the process of creating a signed pass file.
+The following diagram shows the process of creating a signed pass file.
 
 ```mermaid
 flowchart TD
@@ -157,7 +157,7 @@ flowchart TD
     CreatePass --> |add files| Files[files]
     PassJson --> Manifest[create manifest]
     Files --> |create with file hashes| Manifest[manifest]
-    Manifest --> Signature[sigature file]
+    Manifest --> Signature[signature file]
     Certificate --> Signature
     WWDRCertificate --> Signature
     PrivateKey --> Signature
