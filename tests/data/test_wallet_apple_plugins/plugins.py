@@ -17,7 +17,7 @@ class TestPassRegistration:
     ) -> None: ...
 
     async def unregister_pass(
-        self, device_id: str, pass_type_id: str, serial_umber: str
+        self, device_id: str, pass_type_id: str, serial_number: str
     ) -> None: ...
 
 

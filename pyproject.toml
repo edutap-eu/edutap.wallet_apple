@@ -8,6 +8,7 @@ authors = [
     {name = "Philipp Auersperg-Castell", email = "phil@bluedynamics.com"},
     {name = "Alexander Loechel", email = "Alexander.Loechel@lmu.de"},
     {name = "Jens Klein", email = "jk@kleinundpartner.at"},
+    {name = "Robert Niederreiter", email = "rnix@squarewave.at"},
 ]
 requires-python = ">=3.10"
 license = { text = "EUPL 1.2" }
