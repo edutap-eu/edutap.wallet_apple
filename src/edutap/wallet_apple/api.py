@@ -24,7 +24,7 @@ def new(
         )
 
     if data is not None:
-        pass_object = passes.Pass.model_validate_json(data)
+        pass_object = passes.Pass.model_validate(data)
         pkpass = passes.PkPass.from_pass(pass_object)
     elif file is not None:
         pkpass = passes.PkPass.from_zip(file)
@@ -67,4 +67,4 @@ def pkpass(pkpass: passes.PkPass) -> BinaryIO:
     :param pkpass: PkPass model instance.
     :param file: Binary IO file object.
     """
-    return pkpass._as_zip()
+    return pkpass._as_zip_bytesio()

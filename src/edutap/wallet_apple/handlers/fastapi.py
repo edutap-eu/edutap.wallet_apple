@@ -1,4 +1,4 @@
-from ..settings import AppleWalletSettings
+from ..settings import AppleWalletSettings, Settings
 from edutap.wallet_apple.models.handlers import LogEntries
 from edutap.wallet_apple.models.handlers import PushToken
 from fastapi import APIRouter
@@ -9,10 +9,13 @@ from fastapi.concurrency import asynccontextmanager
 from typing import Annotated
 
 
-def get_settings():
+def get_settings() -> Settings:
     """
     TODO
     """
+    res = Settings()
+
+    return res
 
 
 @asynccontextmanager
@@ -45,7 +48,7 @@ async def register_pass(
     authorization: Annotated[str | None, Header()] = None,
     data: PushToken | None = None,
     # *,
-    settings: AppleWalletSettings = Depends(get_settings),
+    settings: Settings = Depends(get_settings),
 ):
     """
     Registration: register a device to receive push notifications for a pass.

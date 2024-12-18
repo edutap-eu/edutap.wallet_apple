@@ -23,6 +23,7 @@ import pytest
 import uuid
 
 
+@only_test_if_crypto_supports_verification
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_signing():
@@ -53,7 +54,7 @@ def test_signing():
     with pytest.raises(crypto.VerificationError):
         crypto.verify_manifest(tampered_manifest, signature)
 
-
+@only_test_if_crypto_supports_verification
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_signing1():
@@ -90,7 +91,7 @@ def test_signing1():
     passfile._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
     passfile._sign(common.key_file, common.cert_file, common.wwdr_file)
 
-    zipfile = passfile._as_zip()
+    zipfile = passfile._as_zip_bytesio()
 
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
@@ -122,7 +123,7 @@ def test_verification():
     passfile._sign(common.key_file, common.cert_file, common.wwdr_file)
     passfile.verify()
 
-    zipfile = passfile._as_zip()
+    zipfile = passfile._as_zip_bytesio()
     assert zipfile
 
     crypto.verify_manifest(passfile.files["manifest.json"], passfile.files["signature"])
@@ -141,7 +142,7 @@ def test_passbook_creation():
     passfile = create_shell_pass()
     passfile._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
     passfile._sign(common.key_file, common.cert_file, common.wwdr_file)
-    zipfile = passfile._as_zip()
+    zipfile = passfile._as_zip_bytesio()
     # zipfile = passfile.create(common.cert_file, common.key_file, common.wwdr_file, None)
     assert zipfile
 
@@ -174,7 +175,7 @@ def test_passbook_creation_integration(generated_passes_dir):
     )
 
     with open(pass_file_name, "wb") as fh:
-        fh.write(passfile._as_zip().getvalue())
+        fh.write(passfile._as_zip_bytesio().getvalue())
     os.system("open " + str(pass_file_name))
 
 
@@ -235,7 +236,7 @@ def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
         certs / "private" / "wwdr_certificate.pem",
     )
     with open(pass_file_name, "wb") as fh:
-        fh.write(passfile._as_zip().getvalue())
+        fh.write(passfile._as_zip_bytesio().getvalue())
         os.system("open " + str(pass_file_name))
 
 
@@ -291,7 +292,7 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
     )
 
     with open(pass_file_name, "wb") as fh:
-        fh.write(passfile._as_zip().getvalue())
+        fh.write(passfile._as_zip_bytesio().getvalue())
         os.system("open " + str(pass_file_name))
 
 
@@ -326,7 +327,7 @@ def test_open_pkpass_and_sign_again(apple_passes_dir, generated_passes_dir):
             common.certs / "private" / "certificate.pem",
             common.certs / "private" / "wwdr_certificate.pem",
         )
-        fh.write(pkpass._as_zip().getvalue())
+        fh.write(pkpass._as_zip_bytesio().getvalue())
 
     crypto.verify_manifest(pkpass.files["manifest.json"], pkpass.files["signature"])
 

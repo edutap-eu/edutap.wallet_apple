@@ -3,7 +3,7 @@ from edutap.wallet_apple import crypto
 from enum import Enum
 from io import BytesIO
 from pathlib import Path
-from pydantic import BaseModel
+from pydantic import BaseModel, SerializationInfo
 from pydantic import computed_field
 from pydantic import Field as PydanticField
 from pydantic import model_serializer
@@ -77,9 +77,7 @@ class Field(BaseModel):
     key: str  # Required. The key must be unique within the scope
     value: str | int | float  # Required. Value of the field. For example, 42
     label: str = ""  # Optional. Label text for the field.
-    changeMessage: str = (
-        ""  # Optional. Format string for the alert text that is displayed when the pass is updated
-    )
+    changeMessage: str = ""  # Optional. Format string for the alert text that is displayed when the pass is updated
     # textAlignment: Alignment = Alignment.LEFT
     textAlignment: Alignment | None = None
     # Optional. Alignment for the field’s contents
@@ -114,12 +112,8 @@ class Location(BaseModel):
     latitude: float = 0.0  # Required. Latitude, in degrees, of the location
     longitude: float = 0.0  # Required. Longitude, in degrees, of the location
     altitude: float = 0  # Optional. Altitude, in meters, of the location
-    distance: float = (
-        0  # Optional. Maximum distance, in meters, from the location that the pass is relevant
-    )
-    relevantText: str = (
-        ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
-    )
+    distance: float = 0  # Optional. Maximum distance, in meters, from the location that the pass is relevant
+    relevantText: str = ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
 
 
 class IBeacon(BaseModel):
@@ -128,9 +122,7 @@ class IBeacon(BaseModel):
     )
     major: int  # Required. Major identifier of a Bluetooth Low Energy location beacon
     minor: int  # Required. Minor identifier of a Bluetooth Low Energy location beacon
-    relevantText: str = (
-        ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
-    )
+    relevantText: str = ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
 
 
 class NFC(BaseModel):
@@ -138,9 +130,7 @@ class NFC(BaseModel):
     encryptionPublicKey: (
         str  # Required. Public encryption key used by the Value Added Services protocol
     )
-    requiresAuthentication: bool = (
-        False  # Optional. Indicates that the pass is not valid unless it contains a valid signature
-    )
+    requiresAuthentication: bool = False  # Optional. Indicates that the pass is not valid unless it contains a valid signature
 
 
 class PassInformation(BaseModel):
@@ -365,7 +355,7 @@ class Pass(BaseModel):
         return cls.model_validate(data)
 
 
-class PkPass:
+class PkPass(BaseModel):
     """
     represents a PkPass file containing
     - a Pass object (results in pass.json)
@@ -374,13 +364,13 @@ class PkPass:
     - signature (after signing)
     """
 
-    def __init__(self, pass_object: Pass | None = None):
-        self.pass_object = pass_object
-        self.files = {}
+    # def __init__(self, pass_object: Pass | None = None):
+    #     self.pass_object = pass_object
+    #     self.files = {}
 
     pass_object: Pass | None = None
 
-    files: dict
+    files: dict = PydanticField(default_factory=dict, exclude=True)
     """# Holds the files to include in the .pkpass"""
 
     @classmethod
@@ -391,7 +381,45 @@ class PkPass:
     def is_signed(self):
         return self.files.get("signature") is not None
 
-    def _as_zip(self) -> BytesIO:
+    class Config:
+        arbitrary_types_allowed = True
+        # necessary for the model_serializer can have return type other than str|dict
+        # TODO: check if this is correct
+
+    @model_serializer
+    def dump(
+        self, info: SerializationInfo
+    ) -> dict[str, Any] | zipfile.ZipFile | BytesIO | str:
+        """
+        dumps the pass to a zip file or a dict
+
+        this function is work in progress since there is a strange behavior 
+        in pydantic concerning serialization of file objects: 
+        https://github.com/pydantic/pydantic/issues/8907#issuecomment-2550673061.
+
+        When it is fixed, it will work like:
+        ```pkpass.model_dump(mode="BytesIO")```
+        currently it returns a SerializationIterator object which is not what we want
+
+        what already works is:
+        ```pkpass.model_dump(mode="zip")``` which returns a zipfile.ZipFile object
+
+        """
+        res: Any
+        if info.mode == "zip":
+            res = self._build_zip()
+        elif info.mode == "python":
+            res = self.pass_object.model_dump() if self.pass_object else {}
+        elif info.mode == "json":
+            res = self.pass_object.model_dump_json(exclude_none=True, indent=4) if self.pass_object else {}
+        elif info.mode == "BytesIO":
+            res = self._as_zip_bytesio()
+        else:
+            raise ValueError(f"Unsupported mode {info.mode}")
+
+        return res
+    
+    def _as_zip_bytesio(self) -> BytesIO:
         """
         creates a zip file and gives it back as a BytesIO object
         """
@@ -475,6 +503,9 @@ class PkPass:
         """
         if fh is None:
             fh = BytesIO()
+
+        if "pass.json" not in self.files:
+            self.files["pass.json"] = self._pass_json.encode("utf-8")
         with zipfile.ZipFile(fh, "w") as zf:
             for filename, filedata in self.files.items():
                 zf.writestr(filename, filedata)
