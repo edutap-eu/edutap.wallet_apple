@@ -9,7 +9,6 @@ from common import key_files_exist
 from common import only_test_if_crypto_supports_verification
 from common import resources
 from edutap.wallet_apple import crypto
-# from edutap.wallet_apple.models import passes
 from edutap.wallet_apple.models.passes import Barcode
 from edutap.wallet_apple.models.passes import BarcodeFormat
 from edutap.wallet_apple.models.passes import EventTicket
