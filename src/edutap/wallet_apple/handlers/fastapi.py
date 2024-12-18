@@ -1,4 +1,5 @@
-from ..settings import AppleWalletSettings, Settings
+from ..settings import AppleWalletSettings
+from ..settings import Settings
 from edutap.wallet_apple.models.handlers import LogEntries
 from edutap.wallet_apple.models.handlers import PushToken
 from fastapi import APIRouter

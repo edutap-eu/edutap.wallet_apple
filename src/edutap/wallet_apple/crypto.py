@@ -1,3 +1,4 @@
+# pylint: disable=import-outside-toplevel
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
@@ -166,11 +167,9 @@ def supports_verification():
     Checks if the current version of the `cryptography` library supports
     the verification of PKCS#7 signatures
 
-    since support for verification depends on [Pull request](https://github.com/pyca/cryptography/pull/12116)
+    since support for verification depends on 
+    [Pull request](https://github.com/pyca/cryptography/pull/12116)
     this can be checked here
     """
-    from cryptography.hazmat.bindings._rust import (
-        test_support,  # this is preliminary hence the local import
-    )
 
     return hasattr(PKCS7Options, "NoVerify")

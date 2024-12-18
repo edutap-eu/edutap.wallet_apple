@@ -1,16 +1,21 @@
+# pylint: disable=missing-function-docstring
+# pylint: disable=missing-class-docstring
+# pylint: disable=too-few-public-methods
+# pylint: disable=invalid-name
+# pylint: disable=fixme
 from collections import OrderedDict
 from edutap.wallet_apple import crypto
 from enum import Enum
 from io import BytesIO
 from pathlib import Path
-from pydantic import BaseModel, SerializationInfo
+from pydantic import BaseModel
 from pydantic import computed_field
 from pydantic import Field as PydanticField
 from pydantic import model_serializer
+from pydantic import SerializationInfo
 from pydantic.fields import FieldInfo
 from typing import Any
 from typing import Dict
-from typing import Optional
 from typing_extensions import deprecated
 
 import base64
@@ -18,6 +23,7 @@ import functools
 import hashlib
 import json
 import typing
+import yaml
 import zipfile
 
 
@@ -77,7 +83,9 @@ class Field(BaseModel):
     key: str  # Required. The key must be unique within the scope
     value: str | int | float  # Required. Value of the field. For example, 42
     label: str = ""  # Optional. Label text for the field.
-    changeMessage: str = ""  # Optional. Format string for the alert text that is displayed when the pass is updated
+    changeMessage: str = (
+        ""  # Optional. Format string for the alert text that is displayed when the pass is updated
+    )
     # textAlignment: Alignment = Alignment.LEFT
     textAlignment: Alignment | None = None
     # Optional. Alignment for the field’s contents
@@ -112,8 +120,12 @@ class Location(BaseModel):
     latitude: float = 0.0  # Required. Latitude, in degrees, of the location
     longitude: float = 0.0  # Required. Longitude, in degrees, of the location
     altitude: float = 0  # Optional. Altitude, in meters, of the location
-    distance: float = 0  # Optional. Maximum distance, in meters, from the location that the pass is relevant
-    relevantText: str = ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
+    distance: float = (
+        0  # Optional. Maximum distance, in meters, from the location that the pass is relevant
+    )
+    relevantText: str = (
+        ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
+    )
 
 
 class IBeacon(BaseModel):
@@ -122,7 +134,9 @@ class IBeacon(BaseModel):
     )
     major: int  # Required. Major identifier of a Bluetooth Low Energy location beacon
     minor: int  # Required. Minor identifier of a Bluetooth Low Energy location beacon
-    relevantText: str = ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
+    relevantText: str = (
+        ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
+    )
 
 
 class NFC(BaseModel):
@@ -130,7 +144,9 @@ class NFC(BaseModel):
     encryptionPublicKey: (
         str  # Required. Public encryption key used by the Value Added Services protocol
     )
-    requiresAuthentication: bool = False  # Optional. Indicates that the pass is not valid unless it contains a valid signature
+    requiresAuthentication: bool = (
+        False  # Optional. Indicates that the pass is not valid unless it contains a valid signature
+    )
 
 
 class PassInformation(BaseModel):
@@ -188,7 +204,7 @@ def passmodel(name: str):
     @functools.wraps(passmodel)
     def inner(cls):
         pass_model_registry[name] = cls
-        cls._jsonname = name
+        cls.jsonname = name
         return cls
 
     return inner
@@ -299,7 +315,8 @@ class Pass(BaseModel):
 
     # Web Service Keys
     webServiceURL: str | None = None
-    """Optional. The URL of a web service that conforms to the API described in PassKit Web Service Reference.
+    """Optional. The URL of a web service that conforms to the API described
+    in PassKit Web Service Reference.
     Must not be changed after creation"""
     authenticationToken: str | None = None
     """Optional. The authentication token to use with the web service.
@@ -320,7 +337,8 @@ class Pass(BaseModel):
     """Optional. A URL to be passed to the associated app when launching it."""
     userInfo: dict | None = None
     """Optional. Custom information for the pass."""
-    expirationDate: str | DateField | None = None  # TODO: check if this is correct
+    # TODO: check if this is correct
+    expirationDate: str | DateField | None = None
     """Optional. Date and time when the pass expires."""
     voided: bool = False
 
@@ -328,7 +346,7 @@ class Pass(BaseModel):
     """Optional. Information used for Value Added Service Protocol transactions."""
 
     @property
-    def passInformation(self):
+    def pass_information(self):
         """Returns the pass information object by checking all passmodel entries using all()"""
         return next(
             filter(
@@ -344,13 +362,11 @@ class Pass(BaseModel):
         """
         try:
             data = json.loads(json_str)
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
             # in case of for example trailing commas, we use yaml
             # to parse the json string which swallows trailing commas
             # apple passes are allowed to have trailing commas, so we
             # have to tolerate it too
-            import yaml
-
             data = yaml.safe_load(json_str)
         return cls.model_validate(data)
 
@@ -364,11 +380,13 @@ class PkPass(BaseModel):
     - signature (after signing)
     """
 
-    # def __init__(self, pass_object: Pass | None = None):
-    #     self.pass_object = pass_object
-    #     self.files = {}
-
     pass_object: Pass | None = None
+
+    @property
+    def pass_object_safe(self):
+        if self.pass_object is None:
+            raise ValueError("Pass object is not set")
+        return self.pass_object
 
     files: dict = PydanticField(default_factory=dict, exclude=True)
     """# Holds the files to include in the .pkpass"""
@@ -382,6 +400,10 @@ class PkPass(BaseModel):
         return self.files.get("signature") is not None
 
     class Config:
+        """
+        Configuration for PkPass model.
+        """
+
         arbitrary_types_allowed = True
         # necessary for the model_serializer can have return type other than str|dict
         # TODO: check if this is correct
@@ -393,8 +415,8 @@ class PkPass(BaseModel):
         """
         dumps the pass to a zip file or a dict
 
-        this function is work in progress since there is a strange behavior 
-        in pydantic concerning serialization of file objects: 
+        this function is work in progress since there is a strange behavior
+        in pydantic concerning serialization of file objects:
         https://github.com/pydantic/pydantic/issues/8907#issuecomment-2550673061.
 
         When it is fixed, it will work like:
@@ -411,15 +433,19 @@ class PkPass(BaseModel):
         elif info.mode == "python":
             res = self.pass_object.model_dump() if self.pass_object else {}
         elif info.mode == "json":
-            res = self.pass_object.model_dump_json(exclude_none=True, indent=4) if self.pass_object else {}
+            res = (
+                self.pass_object.model_dump_json(exclude_none=True, indent=4)
+                if self.pass_object
+                else {}
+            )
         elif info.mode == "BytesIO":
-            res = self._as_zip_bytesio()
+            res = self.as_zip_bytesio()
         else:
             raise ValueError(f"Unsupported mode {info.mode}")
 
         return res
-    
-    def _as_zip_bytesio(self) -> BytesIO:
+
+    def as_zip_bytesio(self) -> BytesIO:
         """
         creates a zip file and gives it back as a BytesIO object
         """
@@ -430,10 +456,14 @@ class PkPass(BaseModel):
 
     @property
     def _pass_dict(self) -> dict[str, Any]:
+        if self.pass_object is None:
+            raise ValueError("Pass object is not set")
         return self.pass_object.model_dump(exclude_none=True, round_trip=True)
 
     @property
     def _pass_json(self) -> str:
+        if self.pass_object is None:
+            raise ValueError("Pass object is not set")
         return self.pass_object.model_dump_json(exclude_none=True, indent=4)
 
     def _add_file(self, name: str, fd: typing.BinaryIO):
@@ -473,7 +503,7 @@ class PkPass(BaseModel):
             return json.dumps(old_manifest_json)
         return json.dumps(hashes)
 
-    def _sign(
+    def sign(
         self,
         private_key_path: str | Path,
         certificate_path: str | Path,

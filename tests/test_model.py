@@ -21,7 +21,7 @@ def test_load_minimal_storecard():
     pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.storeCard is not None
-    assert pass1.passInformation.__class__ == passes.StoreCard
+    assert pass1.pass_information.__class__ == passes.StoreCard
     assert pass1.nfc is None
     print(pass1.model_dump(exclude_none=True))
 
@@ -31,7 +31,7 @@ def test_load_storecard_nfc():
     pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.storeCard is not None
-    assert pass1.passInformation.__class__ == passes.StoreCard
+    assert pass1.pass_information.__class__ == passes.StoreCard
 
     assert pass1.nfc is not None
     print(pass1.model_dump(exclude_none=True))
@@ -42,7 +42,7 @@ def test_load_minimal_generic_pass():
     pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.generic is not None
-    assert pass1.passInformation.__class__ == passes.Generic
+    assert pass1.pass_information.__class__ == passes.Generic
     json_ = pass1.model_dump(exclude_none=True)
     assert json_
 
@@ -52,7 +52,7 @@ def test_load_generic_pass():
     pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.generic is not None
-    assert pass1.passInformation.__class__ == passes.Generic
+    assert pass1.pass_information.__class__ == passes.Generic
     json_ = pass1.model_dump(exclude_none=True)
     assert json_
 
@@ -62,7 +62,7 @@ def test_load_boarding_pass():
     pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.boardingPass is not None
-    assert pass1.passInformation.__class__ == passes.BoardingPass
+    assert pass1.pass_information.__class__ == passes.BoardingPass
     json_ = pass1.model_dump(exclude_none=True)
     assert json_
 
@@ -72,7 +72,7 @@ def test_load_event_pass():
     pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.eventTicket is not None
-    assert pass1.passInformation.__class__ == passes.EventTicket
+    assert pass1.pass_information.__class__ == passes.EventTicket
     json_ = pass1.model_dump(exclude_none=True)
     assert json_
 
@@ -82,7 +82,7 @@ def test_load_coupon():
     pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.coupon is not None
-    assert pass1.passInformation.__class__ == passes.Coupon
+    assert pass1.pass_information.__class__ == passes.Coupon
     json_ = pass1.model_dump(exclude_none=True)
     assert json_
 
@@ -117,7 +117,9 @@ def test_manifest_creation():
 
 def test_header_fields():
     passobject = create_shell_pass().pass_object
-    passobject.passInformation.addHeaderField("header", "VIP Store Card", "Famous Inc.")
+    passobject.pass_information.addHeaderField(
+        "header", "VIP Store Card", "Famous Inc."
+    )
     pass_json = passobject.model_dump(exclude_none=True)
     assert pass_json["storeCard"]["headerFields"][0]["key"] == "header"
     assert pass_json["storeCard"]["headerFields"][0]["value"] == "VIP Store Card"
@@ -126,7 +128,7 @@ def test_header_fields():
 
 def test_secondary_fields():
     passobject = create_shell_pass().pass_object
-    passobject.passInformation.addSecondaryField(
+    passobject.pass_information.addSecondaryField(
         "secondary", "VIP Store Card", "Famous Inc."
     )
     pass_json = passobject.model_dump()
@@ -137,7 +139,7 @@ def test_secondary_fields():
 
 def test_back_fields():
     passobject = create_shell_pass().pass_object
-    passobject.passInformation.addBackField("back1", "VIP Store Card", "Famous Inc.")
+    passobject.pass_information.addBackField("back1", "VIP Store Card", "Famous Inc.")
     pass_json = passobject.model_dump()
     assert pass_json["storeCard"]["backFields"][0]["key"] == "back1"
     assert pass_json["storeCard"]["backFields"][0]["value"] == "VIP Store Card"
@@ -146,7 +148,7 @@ def test_back_fields():
 
 def test_auxiliary_fields():
     passobject = create_shell_pass().pass_object
-    passobject.passInformation.addAuxiliaryField(
+    passobject.pass_information.addAuxiliaryField(
         "aux1", "VIP Store Card", "Famous Inc."
     )
     pass_json = passobject.model_dump()

@@ -1,5 +1,4 @@
 from .models import passes
-from edutap.wallet_apple import crypto
 from edutap.wallet_apple.settings import Settings
 from typing import Any
 from typing import BinaryIO
@@ -57,7 +56,7 @@ def sign(pkpass: passes.PkPass, settings: Settings | None):
     if settings is None:
         settings = Settings()
 
-    pkpass._sign(settings.private_key, settings.certificate, settings.wwdr_certificate)
+    pkpass.sign(settings.private_key, settings.certificate, settings.wwdr_certificate)
 
 
 def pkpass(pkpass: passes.PkPass) -> BinaryIO:
@@ -67,4 +66,4 @@ def pkpass(pkpass: passes.PkPass) -> BinaryIO:
     :param pkpass: PkPass model instance.
     :param file: Binary IO file object.
     """
-    return pkpass._as_zip_bytesio()
+    return pkpass.as_zip_bytesio()
