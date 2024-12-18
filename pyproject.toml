@@ -29,6 +29,7 @@ dependencies = [
     "typing_extensions",
     "pydantic-settings>=2.6.1",
     "pyyaml",
+    "types-PyYAML"
 ]
 
 [project.urls]
