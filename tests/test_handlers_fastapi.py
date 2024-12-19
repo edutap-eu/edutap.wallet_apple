@@ -3,20 +3,20 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
-from importlib.metadata import EntryPoint
-from importlib import metadata
-import json
-import os
-from pathlib import Path
-from typing import Callable
-from pydantic import Field
-import pytest
-
+from common import apple_passes_dir
+from common import generated_passes_dir
 from edutap.wallet_apple import api
 from edutap.wallet_apple.models import handlers
 from edutap.wallet_apple.settings import Settings
+from importlib import metadata
+from importlib.metadata import EntryPoint
+from pathlib import Path
+from pydantic import Field
+from typing import Callable
 
-from common import generated_passes_dir, apple_passes_dir
+import json
+import os
+import pytest
 
 
 try:
@@ -33,8 +33,12 @@ except ImportError:
 class SettingsTest(Settings):
     data_dir: Path = Field(default_factory=lambda dd: dd["root_dir"] / "tests" / "data")
     """directory where the test data is stored"""
-    unsigned_passes_dir: Path = Field(default_factory=lambda dd: dd["data_dir"] / "unsigned-passes")
-    signed_passes_dir: Path = Field(default_factory=lambda dd: dd["data_dir"] / "signed-passes")
+    unsigned_passes_dir: Path = Field(
+        default_factory=lambda dd: dd["data_dir"] / "unsigned-passes"
+    )
+    signed_passes_dir: Path = Field(
+        default_factory=lambda dd: dd["data_dir"] / "signed-passes"
+    )
     jsons_dir: Path = Field(default_factory=lambda dd: dd["data_dir"] / "jsons")
     initial_pass_serialnumber: str = "1234"
     resources_dir: Path = Field(default_factory=lambda dd: dd["data_dir"] / "resources")
@@ -47,11 +51,10 @@ class SettingsTest(Settings):
         self.unsigned_passes_dir.mkdir(parents=True, exist_ok=True)
         self.signed_passes_dir.mkdir(parents=True, exist_ok=True)
         self.cert_dir = self.data_dir / "certs" / "private"
-        prefix = self.model_config['env_prefix']
+        prefix = self.model_config["env_prefix"]
         os.environ[prefix + "ROOT_DIR"] = str(self.root_dir)
         os.environ[prefix + "DATA_DIR"] = str(self.data_dir)
         os.environ[prefix + "CERT_DIR"] = str(self.cert_dir)
-
 
 
 @pytest.fixture
@@ -65,6 +68,7 @@ class TestPassRegistration:
     works on a local directory and does not need a real device.
 
     """
+
     async def register_pass(
         self,
         device_id: str,
@@ -83,6 +87,7 @@ class TestPassDataAcquisition:
      test plugin implementation for the `PassDataAcquisition` protocol
     works on a local directory and does not need a real device.
     """
+
     async def get_pass_data(self, pass_id: str) -> handlers.PassData:
         settings = SettingsTest()
         pass_path = settings.unsigned_passes_dir / f"{pass_id}.pkpass"
@@ -90,9 +95,6 @@ class TestPassDataAcquisition:
         with open(pass_path, "rb") as fh:
             pass1 = api.new(file=fh)
             return api.pkpass(pass1)
-        
-
-
 
     async def get_push_tokens(
         self, device_type_id: str | None, pass_type_id: str, serial_number: str
@@ -140,6 +142,7 @@ def entrypoints_testing(monkeypatch) -> Callable:
         return eps.get(group, [])
 
     from edutap.wallet_apple import plugins
+
     monkeypatch.setattr(metadata, "entry_points", mock_entry_points)
     monkeypatch.setattr(plugins, "entry_points", mock_entry_points)
     return mock_entry_points
@@ -163,7 +166,9 @@ def initial_unsigned_pass(generated_passes_dir) -> Path:
     needed for testing `TestPassDataAcquisition.get_pass_data()`
     """
     settings = SettingsTest()
-    pass_path = settings.unsigned_passes_dir / f"{settings.initial_pass_serialnumber}.pkpass"
+    pass_path = (
+        settings.unsigned_passes_dir / f"{settings.initial_pass_serialnumber}.pkpass"
+    )
 
     buf = open(settings.jsons_dir / "storecard_with_nfc.json").read()
     jdict = json.loads(buf)
@@ -180,10 +185,8 @@ def initial_unsigned_pass(generated_passes_dir) -> Path:
 
 
 def test_entrypoints(entrypoints_testing):
-    from edutap.wallet_apple.plugins import (
-        get_pass_registrations,
-        get_pass_data_acquisitions,
-    )
+    from edutap.wallet_apple.plugins import get_pass_data_acquisitions
+    from edutap.wallet_apple.plugins import get_pass_registrations
 
     pr = get_pass_registrations()
     pd = get_pass_data_acquisitions()
@@ -194,11 +197,13 @@ def test_entrypoints(entrypoints_testing):
 
 
 def test_initial_unsigned_pass(initial_unsigned_pass):
-    assert initial_unsigned_pass.exists()   
+    assert initial_unsigned_pass.exists()
+
 
 ################################################
 # Here come the real tests
 ################################################
+
 
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
 def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi):

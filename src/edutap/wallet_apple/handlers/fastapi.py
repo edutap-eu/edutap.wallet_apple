@@ -1,16 +1,18 @@
-from fastapi.responses import StreamingResponse
-from edutap.wallet_apple import api
 from ..settings import Settings
+from edutap.wallet_apple import api
 from edutap.wallet_apple.models.handlers import LogEntries
 from edutap.wallet_apple.models.handlers import PushToken
+from edutap.wallet_apple.plugins import get_pass_data_acquisitions
+from edutap.wallet_apple.plugins import get_pass_registrations
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Header
 from fastapi import Request
 from fastapi.concurrency import asynccontextmanager
+from fastapi.responses import StreamingResponse
 from typing import Annotated
 
-from edutap.wallet_apple.plugins import get_pass_registrations, get_pass_data_acquisitions
+
 def get_settings() -> Settings:
     """
     TODO
@@ -172,12 +174,13 @@ async def get_pass(
         api.sign(pass1)
         fh = api.pkpass(pass1)
         headers = {
-            'Content-Disposition': 'attachment; filename="blurb.pkpass"',
-            'Content-Type': 'application/octet-stream'
+            "Content-Disposition": 'attachment; filename="blurb.pkpass"',
+            "Content-Type": "application/octet-stream",
         }
 
         # Erstelle eine StreamingResponse mit dem BytesIO-Objekt
         return StreamingResponse(fh, headers=headers)
+
 
 # ------------------------
 # Neuland

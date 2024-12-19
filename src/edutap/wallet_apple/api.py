@@ -45,7 +45,7 @@ def verify(
     pkpass.verify(recompute_manifest=recompute_manifest)
 
 
-def sign(pkpass: passes.PkPass, settings: Settings | None=None):
+def sign(pkpass: passes.PkPass, settings: Settings | None = None):
     """
     Sign the pass.
 
