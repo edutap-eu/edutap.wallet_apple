@@ -8,6 +8,9 @@ ROOT_DIR = Path(__file__).parents[3].resolve()
 
 
 class Settings(BaseSettings):
+    """
+    Settings class for the edutap wallet apple application.
+    """
     model_config = SettingsConfigDict(
         env_prefix="EDUTAP_WALLET_APPLE_",
         case_sensitive=False,

@@ -1,3 +1,5 @@
+from fastapi.responses import StreamingResponse
+from edutap.wallet_apple import api
 from ..settings import Settings
 from edutap.wallet_apple.models.handlers import LogEntries
 from edutap.wallet_apple.models.handlers import PushToken
@@ -8,7 +10,7 @@ from fastapi import Request
 from fastapi.concurrency import asynccontextmanager
 from typing import Annotated
 
-
+from edutap.wallet_apple.plugins import get_pass_registrations, get_pass_data_acquisitions
 def get_settings() -> Settings:
     """
     TODO
@@ -157,8 +159,25 @@ async def get_pass(
     --> if auth token is correct: 200, with pass data payload as pkpass-file
     --> if auth token is incorrect: 401
     """
-    return dict(message="Hello World")
 
+    # TODO: how shall we here handle more than one handler?
+    # does that make sense when we return stuff?
+    # TODO: auth handling
+
+    for get_pass_data_acquisition_handler in get_pass_data_acquisitions():
+        pass_data = await get_pass_data_acquisition_handler.get_pass_data(serialNumber)
+
+        # now we have to deserialize a PkPass object and sign it
+        pass1 = api.new(file=pass_data)
+        api.sign(pass1)
+        fh = api.pkpass(pass1)
+        headers = {
+            'Content-Disposition': 'attachment; filename="blurb.pkpass"',
+            'Content-Type': 'application/octet-stream'
+        }
+
+        # Erstelle eine StreamingResponse mit dem BytesIO-Objekt
+        return StreamingResponse(fh, headers=headers)
 
 # ------------------------
 # Neuland
