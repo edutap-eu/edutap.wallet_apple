@@ -42,6 +42,9 @@ test = [
     "pytest",
     "requests-mock",
 ]
+fastapi = [
+    "fastapi",
+]
 typecheck  = [
     "mypy",
     "types-requests",

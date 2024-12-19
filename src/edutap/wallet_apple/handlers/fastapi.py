@@ -1,4 +1,3 @@
-from ..settings import AppleWalletSettings
 from ..settings import Settings
 from edutap.wallet_apple.models.handlers import LogEntries
 from edutap.wallet_apple.models.handlers import PushToken
@@ -48,7 +47,7 @@ async def register_pass(
     serialNumber: str,
     authorization: Annotated[str | None, Header()] = None,
     data: PushToken | None = None,
-    # *,
+    *,
     settings: Settings = Depends(get_settings),
 ):
     """
@@ -100,8 +99,8 @@ async def unregister_pass(
     passTypeIdentifier: str,
     serialNumber: str,
     authorization: Annotated[str | None, Header()] = None,
-    # *,
-    settings: AppleWalletSettings = Depends(get_settings),
+    *,
+    settings: Settings = Depends(get_settings),
 ):
     """
     Unregister
@@ -124,8 +123,8 @@ async def unregister_pass(
 async def device_log(
     request: Request,
     data: LogEntries,
-    # *,
-    # settings: AppleWalletSettings = Depends(get_settings),
+    *,
+    settings: Settings = Depends(get_settings),
 ):
     """
     Logging/Debugging from the device, called by the handheld device
@@ -146,7 +145,7 @@ async def get_pass(
     serialNumber: str,
     authorization: Annotated[str | None, Header()] = None,
     # *,
-    settings: AppleWalletSettings = Depends(get_settings),
+    settings: Settings = Depends(get_settings),
 ):
     """
     Pass delivery
@@ -158,7 +157,7 @@ async def get_pass(
     --> if auth token is correct: 200, with pass data payload as pkpass-file
     --> if auth token is incorrect: 401
     """
-    raise NotImplementedError
+    return dict(message="Hello World")
 
 
 # ------------------------
@@ -175,8 +174,8 @@ async def list_updatable_passes(
     passTypeIdentifier: str,
     previousLastUpdated: str,
     authorization: Annotated[str | None, Header()] = None,
-    # *,
-    settings: AppleWalletSettings = Depends(get_settings),
+    *,
+    settings: Settings = Depends(get_settings),
 ):
     """
     not covered by Apple's documentation, so it is a custom implementation
