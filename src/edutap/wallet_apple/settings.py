@@ -1,7 +1,6 @@
 from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings
-from pydantic_settings import PydanticBaseSettingsSource
 from pydantic_settings import SettingsConfigDict
 
 
@@ -18,7 +17,7 @@ class Settings(BaseSettings):
     )
     root_dir: Path = Field(default_factory=lambda dd: dd.get("root_dir", ROOT_DIR))
     cert_dir_relative: str = "certs"
-    """Relative path to the root directory, canbe overridden
+    """Relative path to the root directory, can be overridden
     by `cert_dir`"""
     cert_dir: Path = Field(
         default_factory=lambda dd: dd["root_dir"] / dd["cert_dir_relative"]

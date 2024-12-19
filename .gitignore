@@ -161,3 +161,7 @@ cython_debug/
 #.idea/
 
 .vscode
+tests/data/generated_passes/*.pkpass
+tests/data/certs/private/*
+*.cer
+*.csr

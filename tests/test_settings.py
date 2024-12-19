@@ -2,7 +2,6 @@ from edutap.wallet_apple.settings import Settings
 from pathlib import Path
 
 import common
-import os
 
 
 def test_settings_via_env_dict(monkeypatch):

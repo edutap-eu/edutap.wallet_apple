@@ -23,13 +23,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pydantic[email]>=2.10.3",
-    "python-dotenv",
     "cryptography",
-    "typing_extensions",
     "pydantic-settings>=2.6.1",
+    "pydantic[email]>=2.10.3",
     "pyyaml",
-    "types-PyYAML"
 ]
 
 [project.urls]
@@ -41,18 +38,20 @@ Documentation = "https://docs.edutap.eu/packages/edutap_wallet_apple/index.html"
 test = [
     "pytest",
     "requests-mock",
-]
+    "fastapi",
+    "httpx",]
 fastapi = [
     "fastapi",
 ]
 typecheck  = [
     "mypy",
-    "types-requests",
     "pytest-stub",
+    "types-PyYAML",
+    "types-requests",
 ]
 develop = [
-    "pdbpp",
     "ipython",
+    "pdbpp",
 ]
 
 [build-system]

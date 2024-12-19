@@ -2,17 +2,18 @@
 
 # pylint: disable=redefined-outer-name
 
-from importlib.metadata import EntryPoint, entry_points
-from importlib import metadata
-import pytest
-
 from edutap.wallet_apple.models import handlers
+from importlib import metadata
+from importlib.metadata import entry_points
+from importlib.metadata import EntryPoint
+
+import pytest
 
 
 try:
+    from edutap.wallet_apple.handlers.fastapi import router
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
-    from edutap.wallet_apple.handlers.fastapi import router
 
     have_fastapi = True
 except ImportError:
@@ -27,13 +28,11 @@ class TestPassRegistration:
         pass_type_id: str,
         serial_number: str,
         push_token: handlers.PushToken,
-    ) -> None:
-        ...
-    
+    ) -> None: ...
+
     async def unregister_pass(
         self, device_id: str, pass_type_id: str, serial_number: str
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
 class TestPassDataAcquisition:
@@ -51,17 +50,28 @@ class TestPassDataAcquisition:
     async def get_update_serial_numbers(
         self, device_type_id: str, pass_type_id: str, last_updated: str
     ) -> handlers.SerialNumbers:
-        return handlers.SerialNumbers(serialNumers=["1234"], lastUpdated="2021-09-01T12:00:00Z")
+        return handlers.SerialNumbers(
+            serialNumers=["1234"], lastUpdated="2021-09-01T12:00:00Z"
+        )
 
-    
+
 @pytest.fixture
 def entrypoints_testing(monkeypatch):
     eps = {
         "edutap.wallet_apple.plugins": [
-            EntryPoint(name="PassRegistration", value="test_handlers_fastapi:TestPassRegistration", group="edutap.wallet_apple.handlers.fastapi.router"),
-            EntryPoint(name="PassDataAcquisition", value="test_handlers_fastapi:TestPassDataAcquisition", group="edutap.wallet_apple.handlers.fastapi.router")
+            EntryPoint(
+                name="PassRegistration",
+                value="test_handlers_fastapi:TestPassRegistration",
+                group="edutap.wallet_apple.handlers.fastapi.router",
+            ),
+            EntryPoint(
+                name="PassDataAcquisition",
+                value="test_handlers_fastapi:TestPassDataAcquisition",
+                group="edutap.wallet_apple.handlers.fastapi.router",
+            ),
         ]
     }
+
     def mock_entry_points(group: str):
         return eps.get(group, [])
 
@@ -70,7 +80,9 @@ def entrypoints_testing(monkeypatch):
 
 
 def test_entrypoints(entrypoints_testing):
-    from edutap.wallet_apple.plugins import get_pass_registrations, get_pass_data_acquisitions
+    from edutap.wallet_apple.plugins import get_pass_data_acquisitions
+    from edutap.wallet_apple.plugins import get_pass_registrations
+
     pr = get_pass_registrations()
     pd = get_pass_data_acquisitions()
     print(pr)
@@ -84,4 +96,3 @@ def test_get_pass(entrypoints_testing):
     response = client.get("/apple_update_service/v1/passes/1234/1234")
     assert response.status_code == 200
     assert response.json() == {"message": "Hello World"}
-
