@@ -1,3 +1,5 @@
+from typing import Generator
+
 from edutap.wallet_apple.settings import Settings
 from pathlib import Path
 
@@ -7,6 +9,8 @@ import common
 def test_settings_via_env_dict(monkeypatch):
 
     # Set the environment variables
+    monkeypatch.delenv("EDUTAP_WALLET_APPLE_ROOT_DIR", raising=False)
+    monkeypatch.delenv("EDUTAP_WALLET_APPLE_CERT_DIR", raising=False)
     monkeypatch.setenv(
         "EDUTAP_WALLET_APPLE_ROOT_DIR",
         str(common.cwd / "data"),
