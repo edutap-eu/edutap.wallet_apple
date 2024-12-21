@@ -50,8 +50,8 @@ async def register_pass(
     passTypeIdentifier: str,
     serialNumber: str,
     authorization: Annotated[str | None, Header()] = None,
+    data: PushToken| None = None,
     *,
-    # data: PushToken | None = None,
     settings: Settings = Depends(get_settings),
 ):
     """
