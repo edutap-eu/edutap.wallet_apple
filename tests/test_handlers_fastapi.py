@@ -6,7 +6,7 @@
 from email.parser import HeaderParser
 from io import BytesIO
 
-from common import apple_passes_dir
+from common import apple_passes_dir, key_files_exist
 from common import generated_passes_dir
 from edutap.wallet_apple import api
 from edutap.wallet_apple.models import handlers
@@ -216,6 +216,7 @@ def test_initial_unsigned_pass(initial_unsigned_pass):
 ################################################
 
 
+@pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
 def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi):
     response = fastapi_client.get(
