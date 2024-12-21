@@ -22,7 +22,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
     "Operating System :: OS Independent",
 ]
-dependencies = [
+dependencies = [                                            
     "cryptography",
     "pydantic-settings>=2.6.1",
     "pydantic[email]>=2.10.3",
@@ -42,6 +42,7 @@ test = [
     "httpx",]
 fastapi = [
     "fastapi",
+    "uvicorn",
 ]
 typecheck  = [
     "mypy",

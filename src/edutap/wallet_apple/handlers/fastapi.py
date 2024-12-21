@@ -50,8 +50,8 @@ async def register_pass(
     passTypeIdentifier: str,
     serialNumber: str,
     authorization: Annotated[str | None, Header()] = None,
-    data: PushToken | None = None,
     *,
+    # data: PushToken | None = None,
     settings: Settings = Depends(get_settings),
 ):
     """
@@ -91,7 +91,10 @@ async def register_pass(
     :return:
     """
 
-    raise NotImplementedError
+    for pass_registration_handler in get_pass_registrations():
+        await pass_registration_handler.register_pass(
+            deviceLibraryIdentitfier, passTypeIdentifier, serialNumber, data
+        )
 
 
 @router.delete(
@@ -120,8 +123,10 @@ async def unregister_pass(
     --> if not authorized: 401
 
     """
-    raise NotImplementedError
-
+    for pass_registration_handler in get_pass_registrations():
+        await pass_registration_handler.unregister_pass(
+            deviceLibraryIdentitfier, passTypeIdentifier, serialNumber
+        )
 
 @router.post("/log")
 async def device_log(
@@ -171,6 +176,17 @@ async def get_pass(
 
         # now we have to deserialize a PkPass object and sign it
         pass1 = api.new(file=pass_data)
+        pass1.pass_object_safe.teamIdentifier = settings.team_identifier
+        pass1.pass_object_safe.passTypeIdentifier = settings.pass_type_identifier
+
+        #compute pass web url
+        url = request.url
+        newpath="/".join(url.path.split("/")[:-3])
+        weburl = url.scheme+"://"+url.netloc+newpath+"/"
+        pass1.pass_object_safe.webServiceURL = weburl
+        # pass1.pass_object_safe.authenticationToken = None
+        # pass1.pass_object_safe.authenticationToken = None
+
         api.sign(pass1)
         fh = api.pkpass(pass1)
         headers = {
@@ -179,7 +195,7 @@ async def get_pass(
         }
 
         # Erstelle eine StreamingResponse mit dem BytesIO-Objekt
-        return StreamingResponse(fh, headers=headers)
+        return StreamingResponse(fh, headers=headers, media_type="application/vnd.apple.pkpass",)
 
 
 # ------------------------
@@ -205,3 +221,12 @@ async def list_updatable_passes(
     Attention: check for correct authentication token, do not allow it to be called
     anonymously
     """
+
+    for pass_registration_handler in get_pass_registrations():
+        serial_numbers = await pass_registration_handler.get_update_serial_numbers(
+            deviceLibraryIdentifier, passTypeIdentifier, previousLastUpdated
+        )
+
+        return serial_numbers
+    
+

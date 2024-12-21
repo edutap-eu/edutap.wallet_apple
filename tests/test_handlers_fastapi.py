@@ -3,6 +3,9 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
+from email.parser import HeaderParser
+from io import BytesIO
+
 from common import apple_passes_dir
 from common import generated_passes_dir
 from edutap.wallet_apple import api
@@ -23,6 +26,7 @@ try:
     from edutap.wallet_apple.handlers.fastapi import router
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
+    from fastapi.responses import HTMLResponse
 
     have_fastapi = True
 except ImportError:
@@ -51,10 +55,17 @@ class SettingsTest(Settings):
         self.unsigned_passes_dir.mkdir(parents=True, exist_ok=True)
         self.signed_passes_dir.mkdir(parents=True, exist_ok=True)
         self.cert_dir = self.data_dir / "certs" / "private"
+        self.pass_type_identifier = "pass.demo.lmu.de"
+        self.team_identifier = "JG943677ZY"
         prefix = self.model_config["env_prefix"]
+
+        # is needed, so that the settings are correct in
+        # eduap.wallet_apple.api and edutap.wallet.handlers.fastapi
         os.environ[prefix + "ROOT_DIR"] = str(self.root_dir)
         os.environ[prefix + "DATA_DIR"] = str(self.data_dir)
         os.environ[prefix + "CERT_DIR"] = str(self.cert_dir)
+        os.environ[prefix + "TEAM_IDENTIFIER"] = str(self.team_identifier)
+        os.environ[prefix + "PASS_TYPE_IDENTIFIER"] = str(self.pass_type_identifier)
 
 
 @pytest.fixture
@@ -84,11 +95,14 @@ class TestPassRegistration:
 
 class TestPassDataAcquisition:
     """
-     test plugin implementation for the `PassDataAcquisition` protocol
+    test plugin implementation for the `PassDataAcquisition` protocol
     works on a local directory and does not need a real device.
     """
 
     async def get_pass_data(self, pass_id: str) -> handlers.PassData:
+        """
+        fetch the unsigned pass by its pass_id from a given folder
+        """
         settings = SettingsTest()
         pass_path = settings.unsigned_passes_dir / f"{pass_id}.pkpass"
         assert pass_path.exists()
@@ -100,9 +114,6 @@ class TestPassDataAcquisition:
         self, device_type_id: str | None, pass_type_id: str, serial_number: str
     ) -> list[handlers.PushToken]:
         return []
-
-    def test_get_update_serial_numbers(self):
-        pass
 
     async def get_update_serial_numbers(
         self, device_type_id: str, pass_type_id: str, last_updated: str
@@ -207,13 +218,61 @@ def test_initial_unsigned_pass(initial_unsigned_pass):
 
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
 def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi):
-    # app = FastAPI()
-    # app.include_router(router)
-    # client = TestClient(app)
-    response = fastapi_client.get("/apple_update_service/v1/passes/1234/1234")
+    response = fastapi_client.get(
+        f"/apple_update_service/v1/passes/{settings_fastapi.pass_type_identifier}/{settings_fastapi.initial_pass_serialnumber}"
+    )
     assert response.status_code == 200
 
-    # TODO: extract pkpass file
-    settings = SettingsTest()
+    cd = response.headers.get("content-disposition")
+    parser = HeaderParser()
+    headers = parser.parsestr(f"Content-Disposition: {cd}")
+    filename = headers.get_param("filename", header="Content-Disposition")
 
-    print(settings)
+    # TODO: extract pkpass file
+    fh = BytesIO(response.content)
+    fp = open(settings_fastapi.signed_passes_dir / filename, "wb")
+
+    # parse the pass and check values
+    fh.seek(0)
+    pass2 = api.new(file=fh)
+    assert pass2.is_signed
+    assert pass2.pass_object_safe.teamIdentifier == settings_fastapi.team_identifier
+    assert (
+        pass2.pass_object_safe.passTypeIdentifier
+        == settings_fastapi.pass_type_identifier
+    )
+    print(pass2)
+
+
+@pytest.mark.skip("internal use only")
+def test_start_server(entrypoints_testing, settings_fastapi):
+    """
+    only used for manual interactive testing with the handheld
+    """
+    import uvicorn
+
+    app = FastAPI()
+    app.include_router(router)
+
+    @app.get("/", response_class=HTMLResponse)
+    async def read_root():
+        html_content = f"""
+        <html>
+            <head>
+                <title>Sample HTML Page</title>
+            </head>
+            <body>
+                <h1>Hello, World!</h1>
+                <a href={router.prefix}/passes/{settings_fastapi.pass_type_identifier}/{settings_fastapi.initial_pass_serialnumber}>Get Pass</a>
+            </body>
+        </html>
+        """
+        return HTMLResponse(content=html_content, status_code=200)
+
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=8080,
+        ssl_keyfile=settings_fastapi.cert_dir / "ssl" / "key.pem",
+        ssl_certfile=settings_fastapi.cert_dir / "ssl" / "cert.pem",
+    )
