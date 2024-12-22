@@ -245,7 +245,7 @@ def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi):
     print(pass2)
 
 
-@pytest.mark.skip("internal use only")
+# @pytest.mark.skip("internal use only")
 def test_start_server(entrypoints_testing, settings_fastapi):
     """
     only used for manual interactive testing with the handheld
@@ -274,6 +274,6 @@ def test_start_server(entrypoints_testing, settings_fastapi):
         app,
         host="0.0.0.0",
         port=8080,
-        ssl_keyfile=settings_fastapi.cert_dir / "ssl" / "key.pem",
-        ssl_certfile=settings_fastapi.cert_dir / "ssl" / "cert.pem",
+        # ssl_keyfile=settings_fastapi.cert_dir / "ssl" / "key.pem",
+        # ssl_certfile=settings_fastapi.cert_dir / "ssl" / "cert.pem",
     )
