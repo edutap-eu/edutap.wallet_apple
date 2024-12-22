@@ -5,6 +5,7 @@ from edutap.wallet_apple.models.handlers import PushToken
 from edutap.wallet_apple.plugins import get_pass_data_acquisitions
 from edutap.wallet_apple.plugins import get_pass_registrations
 from fastapi import APIRouter
+from fastapi.logger import logger
 from fastapi import Depends
 from fastapi import Header
 from fastapi import Request
@@ -185,6 +186,8 @@ async def get_pass(
         scheme = url.scheme
         # scheme = "https" # only https is allowed, with a web url of type http the pass does ot get accepted
         weburl = scheme+"://"+url.netloc+newpath+"/"
+        if scheme == "http":
+            logger.error("Web URL is http, pass will not be accepted by Apple Wallet")
         pass1.pass_object_safe.webServiceURL = weburl
         # pass1.pass_object_safe.authenticationToken = None
         # pass1.pass_object_safe.authenticationToken = None
