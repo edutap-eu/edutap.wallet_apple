@@ -230,8 +230,12 @@ def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi):
     filename = headers.get_param("filename", header="Content-Disposition")
 
     # TODO: extract pkpass file
+    assert len(response.content) > 0
     fh = BytesIO(response.content)
-    fp = open(settings_fastapi.signed_passes_dir / filename, "wb")
+    out = settings_fastapi.signed_passes_dir / filename
+    with open(out, "wb") as fp:
+        fp.write(response.content)
+        os.system(f"open {out}")
 
     # parse the pass and check values
     fh.seek(0)
@@ -245,7 +249,7 @@ def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi):
     print(pass2)
 
 
-# @pytest.mark.skip("internal use only")
+@pytest.mark.skip("internal use only")
 def test_start_server(entrypoints_testing, settings_fastapi):
     """
     only used for manual interactive testing with the handheld

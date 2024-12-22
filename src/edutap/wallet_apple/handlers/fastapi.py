@@ -182,7 +182,9 @@ async def get_pass(
         #compute pass web url
         url = request.url
         newpath="/".join(url.path.split("/")[:-3])
-        weburl = url.scheme+"://"+url.netloc+newpath+"/"
+        scheme = url.scheme
+        # scheme = "https" # only https is allowed, with a web url of type http the pass does ot get accepted
+        weburl = scheme+"://"+url.netloc+newpath+"/"
         pass1.pass_object_safe.webServiceURL = weburl
         # pass1.pass_object_safe.authenticationToken = None
         # pass1.pass_object_safe.authenticationToken = None

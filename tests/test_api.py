@@ -159,3 +159,28 @@ def test_serialize_existing_pass_as_json_dict(
 
         assert isinstance(d, BytesIO)
         print(d)
+
+
+@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
+@pytest.mark.integration
+def test_sign_existing_generic_pass_and_get_bytes_io(
+    apple_passes_dir, generated_passes_dir, settings_test: Settings
+):
+    with open(settings_test.root_dir/"unsigned-passes"/"1234.pkpass", "rb") as fh:
+        pkpass = api.new(file=fh)
+        pkpass.pass_object_safe.passTypeIdentifier = settings_test.pass_type_identifier
+        pkpass.pass_object_safe.teamIdentifier = settings_test.team_identifier
+        # pkpass.pass_object_safe.pass_information.secondaryFields[0].value = (
+        #     "Donald Duck"
+        # )
+
+        api.sign(pkpass, settings=settings_test)
+        assert pkpass.is_signed
+
+        ofile = generated_passes_dir / "1234.pkpass"
+        with api.pkpass(pkpass) as zip_fh:
+            with open(ofile, "wb") as fh:
+                fh.write(zip_fh.read())
+
+        os.system(f"open {ofile}")
+
