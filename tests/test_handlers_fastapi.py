@@ -264,14 +264,16 @@ def test_register_pass(entrypoints_testing, fastapi_client, settings_fastapi):
     )
     assert response.status_code == 200
 
-@pytest.mark.skip("TODO: implement")
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
 def test_list_updateable_passes(entrypoints_testing, fastapi_client, settings_fastapi):
     device_id = "a0ccefd5944f32bcae520d64c4dc7a16"
     response = fastapi_client.get(
-        f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}"
+        f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}?passesUpdatedSince=letztens"
     )
+    serial_numbers = handlers.SerialNumbers.model_validate(response.json())
+    assert serial_numbers.serialNumers == ["1234"]
+    assert serial_numbers.lastUpdated == "2021-09-01T12:00:00Z"
     assert response.status_code == 200
 
 

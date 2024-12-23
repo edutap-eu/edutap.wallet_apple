@@ -1,6 +1,6 @@
 from ..settings import Settings
 from edutap.wallet_apple import api
-from edutap.wallet_apple.models.handlers import LogEntries
+from edutap.wallet_apple.models.handlers import LogEntries, SerialNumbers
 from edutap.wallet_apple.models.handlers import PushToken
 from edutap.wallet_apple.plugins import get_logging_handlers, get_pass_data_acquisitions
 from edutap.wallet_apple.plugins import get_pass_registrations
@@ -42,48 +42,48 @@ def check_authentification_token(
     raise NotImplementedError
 
 
-@router.get("/devices/{deviceLibraryIdentitfier}/registrations/{passTypeIdentifier}")
-async def list_registered_passes(
-    request: Request,
-    deviceLibraryIdentitfier: str,
-    passTypeIdentifier: str,
-    authorization: Annotated[str | None, Header()] = None,
-    *,
-    settings: Settings = Depends(get_settings),
-):
-    """
-    List the serial numbers of passes registered for a device.
+# @router.get("/devices/{deviceLibraryIdentitfier}/registrations/{passTypeIdentifier}")
+# async def list_registered_passes(
+#     request: Request,
+#     deviceLibraryIdentitfier: str,
+#     passTypeIdentifier: str,
+#     authorization: Annotated[str | None, Header()] = None,
+#     *,
+#     settings: Settings = Depends(get_settings),
+# ):
+#     """
+#     List the serial numbers of passes registered for a device.
 
-    see: https://developer.apple.com/documentation/walletpasses/list_the_serial_numbers_of_passes_registered_for_a_device
+#     see: https://developer.apple.com/documentation/walletpasses/list_the_serial_numbers_of_passes_registered_for_a_device
 
-    URL: GET https://yourpasshost.example.com/v1/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}
-    HTTP-Methode: GET
-    HTTP-PATH: /v1/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}
-    HTTP-Path-Parameters:
-        * deviceLibraryIdentifier: str (required) A unique identifier you use to identify and authenticate the device.
-        * passTypeIdentifier: str (required) The pass type identifier of the passes to return. This value corresponds to the value of the passTypeIdentifier key of the passes.
-    HTTP-Headers:
-        * Authorization: ApplePass <authenticationToken>
+#     URL: GET https://yourpasshost.example.com/v1/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}
+#     HTTP-Methode: GET
+#     HTTP-PATH: /v1/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}
+#     HTTP-Path-Parameters:
+#         * deviceLibraryIdentifier: str (required) A unique identifier you use to identify and authenticate the device.
+#         * passTypeIdentifier: str (required) The pass type identifier of the passes to return. This value corresponds to the value of the passTypeIdentifier key of the passes.
+#     HTTP-Headers:
+#         * Authorization: ApplePass <authenticationToken>
 
-    Params definition
-    :deviceLibraryIdentitfier      - the device's identifier
-    :passTypeIdentifier   - the bundle identifier for a class of passes, sometimes referred to as the pass topic, e.g. pass.com.apple.backtoschoolgift, registered with WWDR
+#     Params definition
+#     :deviceLibraryIdentitfier      - the device's identifier
+#     :passTypeIdentifier   - the bundle identifier for a class of passes, sometimes referred to as the pass topic, e.g. pass.com.apple.backtoschoolgift, registered with WWDR
 
-    server action: if the authentication token is correct, return a list of serial numbers for passes associated with the device
-    server response:
-    --> if auth token is correct: 200, with a JSON payload containing an array of serial numbers
-    --> if auth token is incorrect: 401
+#     server action: if the authentication token is correct, return a list of serial numbers for passes associated with the device
+#     server response:
+#     --> if auth token is correct: 200, with a JSON payload containing an array of serial numbers
+#     --> if auth token is incorrect: 401
 
-    :async:
-    :param str deviceLibraryIdentifier: A unique identifier you use to identify and authenticate the device.
-    :param str passTypeIdentifier:      The pass type identifier of the passes to return. This value corresponds to the value of the passTypeIdentifier key of the passes.
+#     :async:
+#     :param str deviceLibraryIdentifier: A unique identifier you use to identify and authenticate the device.
+#     :param str passTypeIdentifier:      The pass type identifier of the passes to return. This value corresponds to the value of the passTypeIdentifier key of the passes.
 
-    :return:
-    """
-    for pass_registration_handler in get_pass_registrations():
-        await pass_registration_handler.register_pass(
-            deviceLibraryIdentitfier, passTypeIdentifier, serialNumber, data
-        )
+#     :return:
+#     """
+#     for pass_registration_handler in get_pass_registrations():
+#         await pass_registration_handler.register_pass(
+#             deviceLibraryIdentitfier, passTypeIdentifier, serialNumber, data
+#         )
 
 
 @router.post(
@@ -261,27 +261,27 @@ async def get_pass(
 
 
 @router.get(
-    "/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}?passesUpdatedSince={previousLastUpdated}"
+    "/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}"
 )
 async def list_updatable_passes(
     request: Request,
     deviceLibraryIdentifier: str,
     passTypeIdentifier: str,
-    previousLastUpdated: str,
+    passesUpdatedSince: str,
     authorization: Annotated[str | None, Header()] = None,
     *,
     settings: Settings = Depends(get_settings),
-):
+) -> SerialNumbers:
     """
-    not covered by Apple's documentation, so it is a custom implementation
+    see https://developer.apple.com/documentation/walletpasses/get-the-list-of-updatable-passes
 
     Attention: check for correct authentication token, do not allow it to be called
     anonymously
     """
 
-    for pass_registration_handler in get_pass_registrations():
+    for pass_registration_handler in get_pass_data_acquisitions():
         serial_numbers = await pass_registration_handler.get_update_serial_numbers(
-            deviceLibraryIdentifier, passTypeIdentifier, previousLastUpdated
+            deviceLibraryIdentifier, passTypeIdentifier, passesUpdatedSince
         )
 
         return serial_numbers
