@@ -250,6 +250,7 @@ def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi):
         pass2.pass_object_safe.passTypeIdentifier
         == settings_fastapi.pass_type_identifier
     )
+    assert pass2.pass_object_safe.webServiceURL == f"https://{settings_fastapi.domain}:{settings_fastapi.https_port}/apple_update_service"
     print(pass2)
 
 
