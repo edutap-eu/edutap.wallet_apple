@@ -60,3 +60,14 @@ class PassDataAcquisition(Protocol):
         Fetches the serial numbers of the passes that have been updated since the last update
         see https://developer.apple.com/documentation/walletpasses/get-the-list-of-updatable-passes
         """
+
+
+class Logging(Protocol):
+    """
+    Protocol definition for a logging handler
+    """
+
+    def log(self, entries: handlers.LogEntries) -> None:
+        """
+        see https://developer.apple.com/documentation/walletpasses/log-a-message
+        """
