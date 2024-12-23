@@ -174,7 +174,7 @@ async def get_pass(
 
     for get_pass_data_acquisition_handler in get_pass_data_acquisitions():
         pass_data = await get_pass_data_acquisition_handler.get_pass_data(serialNumber)
-
+        settigs = Settings()
         # now we have to deserialize a PkPass object and sign it
         pass1 = api.new(file=pass_data)
         pass1.pass_object_safe.teamIdentifier = settings.team_identifier
@@ -186,10 +186,12 @@ async def get_pass(
         scheme = url.scheme
         # scheme = "https" # only https is allowed, with a web url of type http the pass does ot get accepted
         weburl = scheme+"://"+url.netloc+newpath+"/"
-        if scheme == "http":
-            logger.error("Web URL is http, pass will not be accepted by Apple Wallet")
+        # if scheme == "http":
+        #     logger.error("Web URL is http, pass will not be accepted by Apple Wallet")
+            
+        scheme = "https"
+        weburl = f"{scheme}://{settings.domain}:{settings.https_port}{newpath}/"
         pass1.pass_object_safe.webServiceURL = weburl
-        # pass1.pass_object_safe.authenticationToken = None
         # pass1.pass_object_safe.authenticationToken = None
 
         api.sign(pass1)

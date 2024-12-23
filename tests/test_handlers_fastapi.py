@@ -57,6 +57,8 @@ class SettingsTest(Settings):
         self.cert_dir = self.data_dir / "certs" / "private"
         self.pass_type_identifier = "pass.demo.lmu.de"
         self.team_identifier = "JG943677ZY"
+        self.https_port = 8080
+        self.domain = "localhost"
         prefix = self.model_config["env_prefix"]
 
         # is needed, so that the settings are correct in
@@ -66,6 +68,8 @@ class SettingsTest(Settings):
         os.environ[prefix + "CERT_DIR"] = str(self.cert_dir)
         os.environ[prefix + "TEAM_IDENTIFIER"] = str(self.team_identifier)
         os.environ[prefix + "PASS_TYPE_IDENTIFIER"] = str(self.pass_type_identifier)
+        os.environ[prefix + "HTTPS_PORT"] = str(self.https_port)
+        os.environ[prefix + "DOMAIN"] = str(self.domain)
 
 
 @pytest.fixture
