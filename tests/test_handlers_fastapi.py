@@ -263,6 +263,17 @@ def test_register_pass(entrypoints_testing, fastapi_client, settings_fastapi):
         data=handlers.PushToken(pushToken="333333").model_dump_json(),
     )
     assert response.status_code == 200
+    
+    
+@pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
+@pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
+def test_uregister_pass(entrypoints_testing, fastapi_client, settings_fastapi):
+    device_id = "a0ccefd5944f32bcae520d64c4dc7a16"
+    response = fastapi_client.delete(
+        f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}/{1234}",
+    )
+    assert response.status_code == 200
+
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
