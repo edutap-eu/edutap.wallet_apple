@@ -254,6 +254,27 @@ def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi):
     print(pass2)
 
 
+@pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
+@pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
+def test_register_pass(entrypoints_testing, fastapi_client, settings_fastapi):
+    device_id = "a0ccefd5944f32bcae520d64c4dc7a16"
+    response = fastapi_client.post(
+        f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}/{1234}",
+        data=handlers.PushToken(pushToken="333333").model_dump_json(),
+    )
+    assert response.status_code == 200
+
+@pytest.mark.skip("TODO: implement")
+@pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
+@pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
+def test_list_updateable_passes(entrypoints_testing, fastapi_client, settings_fastapi):
+    device_id = "a0ccefd5944f32bcae520d64c4dc7a16"
+    response = fastapi_client.get(
+        f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}"
+    )
+    assert response.status_code == 200
+
+
 @pytest.mark.skip("internal use only")
 def test_start_server(entrypoints_testing, settings_fastapi):
     """
