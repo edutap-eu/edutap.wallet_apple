@@ -1,5 +1,3 @@
-from typing import Generator
-
 from edutap.wallet_apple.settings import Settings
 from pathlib import Path
 

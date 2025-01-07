@@ -1,4 +1,5 @@
-from .protocols import Logging, PassDataAcquisition
+from .protocols import Logging
+from .protocols import PassDataAcquisition
 from .protocols import PassRegistration
 from importlib.metadata import entry_points
 
@@ -25,7 +26,7 @@ def get_pass_data_acquisitions() -> list[PassDataAcquisition]:
     return [plugin() for plugin in plugins]
 
 
-def get_logging_handlers() -> list[PassDataAcquisition]:
+def get_logging_handlers() -> list[Logging]:
     eps = entry_points(group="edutap.wallet_apple.plugins")
     plugins = [ep.load() for ep in eps if ep.name == "Logging"]
     # if not plugins:

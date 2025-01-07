@@ -37,12 +37,12 @@ class Settings(BaseSettings):
         default_factory=lambda dd: dd["cert_dir"] / "wwdr_certificate.pem"
     )
     """Path to the Apple WWDR certificate file in PEM format"""
-    
+
     https_port: int = 443
     """Port for the HTTPS server"""
     domain: str = "localhost"
     """Domain name for the HTTPS server"""
-    
+
     password: str | None = None
 
     pass_type_identifier: str | None = None

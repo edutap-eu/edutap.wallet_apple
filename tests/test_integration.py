@@ -1,10 +1,9 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-imports
-from common import apple_passes_dir
+from common import apple_passes_dir  # noqa: F401
 from common import certs
 from common import create_shell_pass
-from common import data
-from common import generated_passes_dir
+from common import generated_passes_dir  # noqa: F401
 from common import key_files_exist
 from common import only_test_if_crypto_supports_verification
 from common import resources
@@ -151,7 +150,7 @@ def test_passbook_creation():
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_passbook_creation_integration(generated_passes_dir):
+def test_passbook_creation_integration(generated_passes_dir):  # noqa: F811
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -183,7 +182,9 @@ def test_passbook_creation_integration(generated_passes_dir):
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
+def test_passbook_creation_integration_loyalty_with_nfc(
+    generated_passes_dir,  # noqa: F811
+):  # noqa: F811
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -244,7 +245,7 @@ def test_passbook_creation_integration_loyalty_with_nfc(generated_passes_dir):
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_passbook_creation_integration_eventticket(generated_passes_dir):
+def test_passbook_creation_integration_eventticket(generated_passes_dir):  # noqa: F811
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -301,7 +302,9 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):
 @only_test_if_crypto_supports_verification
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_open_pkpass_and_sign_again(apple_passes_dir, generated_passes_dir):
+def test_open_pkpass_and_sign_again(
+    apple_passes_dir, generated_passes_dir  # noqa: F811
+):  # noqa: F811
     """
     tests an existing pass not created by this library and signs it again
     this pass comes as demo from apple and the pass.json contains

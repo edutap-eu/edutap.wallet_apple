@@ -579,12 +579,11 @@ class PkPass(BaseModel):
 # hack in an optional field for each passmodel(passtype) since these are not known at compile time
 # because for each pass type the PassInformation is stored in a different field of which only one is used
 for jsonname, klass in pass_model_registry.items():
-    Pass.model_fields[jsonname] = FieldInfo(
-        annotation=klass,
+    Pass.model_fields[jsonname] = FieldInfo(  # type: ignore
+        annotation=klass,  # type: ignore
         required=False,
         default=None,
-        exclude_none=True,  # type: ignore
+        exclude_none=True,
     )
-
 # add mutually exclusive validator so that only one variant can be defined
 Pass.model_rebuild(force=True)

@@ -15,7 +15,7 @@ class PassRegistration(Protocol):
         device_id: str,
         pass_type_id: str,
         serial_number: str,
-        push_token: handlers.PushToken,
+        push_token: handlers.PushToken | None,
     ) -> None:
         """
         see https://developer.apple.com/documentation/walletpasses/register-a-pass-for-update-notifications
@@ -62,12 +62,13 @@ class PassDataAcquisition(Protocol):
         """
 
 
+@runtime_checkable
 class Logging(Protocol):
     """
     Protocol definition for a logging handler
     """
 
-    def log(self, entries: handlers.LogEntries) -> None:
+    async def log(self, entries: handlers.LogEntries) -> None:
         """
         see https://developer.apple.com/documentation/walletpasses/log-a-message
         """

@@ -1,11 +1,12 @@
 from ..settings import Settings
 from edutap.wallet_apple import api
-from edutap.wallet_apple.models.handlers import LogEntries, SerialNumbers
+from edutap.wallet_apple.models.handlers import LogEntries
 from edutap.wallet_apple.models.handlers import PushToken
-from edutap.wallet_apple.plugins import get_logging_handlers, get_pass_data_acquisitions
+from edutap.wallet_apple.models.handlers import SerialNumbers
+from edutap.wallet_apple.plugins import get_logging_handlers
+from edutap.wallet_apple.plugins import get_pass_data_acquisitions
 from edutap.wallet_apple.plugins import get_pass_registrations
 from fastapi import APIRouter
-from fastapi.logger import logger
 from fastapi import Depends
 from fastapi import Header
 from fastapi import Request
@@ -260,9 +261,7 @@ async def get_pass(
 # ------------------------
 
 
-@router.get(
-    "/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}"
-)
+@router.get("/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}")
 async def list_updatable_passes(
     request: Request,
     deviceLibraryIdentifier: str,
@@ -285,3 +284,5 @@ async def list_updatable_passes(
         )
 
         return serial_numbers
+
+    return SerialNumbers(serialNumers=[], lastUpdated="")

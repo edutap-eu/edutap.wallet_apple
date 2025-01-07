@@ -1,11 +1,11 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-imports
 
-from common import apple_passes_dir
-from common import generated_passes_dir
+from common import apple_passes_dir  # noqa: F401
+from common import generated_passes_dir  # noqa: F401
 from common import key_files_exist
 from common import only_test_if_crypto_supports_verification
-from common import settings_test
+from common import settings_test  # noqa: F401
 from edutap.wallet_apple import api
 from edutap.wallet_apple.crypto import VerificationError
 from edutap.wallet_apple.settings import Settings
@@ -50,7 +50,9 @@ def test_new_pass_empty():
     assert pkpass is not None
 
 
-def test_create_and_save_unsigned_pass_from_json_dict(generated_passes_dir):
+def test_create_and_save_unsigned_pass_from_json_dict(
+    generated_passes_dir,  # noqa: F811
+):  # noqa: F811
     """
     creates a pass object from dict, adds a file and saves it to a pkpass file.
     checks if pass.json and the added file are in the pkpass file.
@@ -81,7 +83,7 @@ def test_create_and_save_unsigned_pass_from_json_dict(generated_passes_dir):
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_sign_existing_pass_and_get_bytes_io(
-    apple_passes_dir, generated_passes_dir, settings_test: Settings
+    apple_passes_dir, generated_passes_dir, settings_test: Settings  # noqa: F811
 ):
     with open(apple_passes_dir / "BoardingPass.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
@@ -96,8 +98,8 @@ def test_sign_existing_pass_and_get_bytes_io(
 
         ofile = generated_passes_dir / "BoardingPass-signed1.pkpass"
         with api.pkpass(pkpass) as zip_fh:
-            with open(ofile, "wb") as fh:
-                fh.write(zip_fh.read())
+            with open(ofile, "wb") as fh1:
+                fh1.write(zip_fh.read())
 
         os.system(f"open {ofile}")
 
@@ -105,7 +107,7 @@ def test_sign_existing_pass_and_get_bytes_io(
 @only_test_if_crypto_supports_verification
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_sign_and_verify_pass(apple_passes_dir, settings_test: Settings):
+def test_sign_and_verify_pass(apple_passes_dir, settings_test: Settings):  # noqa: F811
     with open(apple_passes_dir / "BoardingPass.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
         # this pass has not been created and signed by us, so we verify
@@ -134,7 +136,7 @@ def test_sign_and_verify_pass(apple_passes_dir, settings_test: Settings):
 @pytest.mark.skip("wait for pydantic fix")
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 def test_serialize_existing_pass_as_json_dict(
-    apple_passes_dir, generated_passes_dir, settings_test: Settings
+    apple_passes_dir, generated_passes_dir, settings_test: Settings  # noqa: F811
 ):
     """
     tests serialization of a pass to a BytesIO object.
@@ -164,9 +166,9 @@ def test_serialize_existing_pass_as_json_dict(
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_sign_existing_generic_pass_and_get_bytes_io(
-    apple_passes_dir, generated_passes_dir, settings_test: Settings
+    apple_passes_dir, generated_passes_dir, settings_test: Settings  # noqa: F811
 ):
-    with open(settings_test.root_dir/"unsigned-passes"/"1234.pkpass", "rb") as fh:
+    with open(settings_test.root_dir / "unsigned-passes" / "1234.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
         pkpass.pass_object_safe.passTypeIdentifier = settings_test.pass_type_identifier
         pkpass.pass_object_safe.teamIdentifier = settings_test.team_identifier
@@ -179,8 +181,7 @@ def test_sign_existing_generic_pass_and_get_bytes_io(
 
         ofile = generated_passes_dir / "1234.pkpass"
         with api.pkpass(pkpass) as zip_fh:
-            with open(ofile, "wb") as fh:
-                fh.write(zip_fh.read())
+            with open(ofile, "wb") as fh1:
+                fh1.write(zip_fh.read())
 
         os.system(f"open {ofile}")
-

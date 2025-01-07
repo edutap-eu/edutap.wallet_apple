@@ -67,3 +67,15 @@ def pkpass(pkpass: passes.PkPass) -> BinaryIO:
     :param file: Binary IO file object.
     """
     return pkpass.as_zip_bytesio()
+
+
+def save_link(identifier: str) -> str:
+    """
+    creates a link to download the pass
+    this link is encrypted, so that the pass holder identity
+    cannot be inferred from the link
+
+    :param identifier: Pass identifier.
+    """
+    # TODO: implement
+    raise NotImplementedError
