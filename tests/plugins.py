@@ -3,13 +3,13 @@
 # pylint: disable=unused-argument
 # pylint: disable=missing-class-docstring
 
-import os
-from pathlib import Path
-
-from pydantic import Field
 from edutap.wallet_apple import api
 from edutap.wallet_apple.models import handlers
 from edutap.wallet_apple.settings import Settings
+from pathlib import Path
+from pydantic import Field
+
+import os
 
 
 class SettingsTest(Settings):

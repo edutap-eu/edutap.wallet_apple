@@ -13,7 +13,7 @@ from importlib import metadata
 from importlib.metadata import EntryPoint
 from io import BytesIO
 from pathlib import Path
-from tests.entrypoints import SettingsTest
+from plugins import SettingsTest
 from typing import Callable
 
 import json
@@ -50,12 +50,12 @@ def entrypoints_testing(monkeypatch) -> Callable:
         "edutap.wallet_apple.plugins": [
             EntryPoint(
                 name="PassRegistration",
-                value="tests.entrypoints:TestPassRegistration",
+                value="plugins:TestPassRegistration",
                 group="edutap.wallet_apple.handlers.fastapi.router",
             ),
             EntryPoint(
                 name="PassDataAcquisition",
-                value="tests.entrypoints:TestPassDataAcquisition",
+                value="plugins:TestPassDataAcquisition",
                 group="edutap.wallet_apple.handlers.fastapi.router",
             ),
         ]
