@@ -231,7 +231,7 @@ async def get_pass(
         url = request.url
         newpath = "/".join(url.path.split("/")[:-4])
         scheme = url.scheme
-        # scheme = "https" # only https is allowed, with a web url of type http the pass does ot get accepted
+        # scheme = "https" # only https is allowed, with a web url of type http the pass does not get accepted
         weburl = scheme + "://" + url.netloc + newpath
         # if scheme == "http":
         #     logger.error("Web URL is http, pass will not be accepted by Apple Wallet")
