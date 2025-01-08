@@ -1,3 +1,4 @@
+import datetime
 from ..settings import Settings
 from edutap.wallet_apple import api
 from edutap.wallet_apple.models.handlers import LogEntries
@@ -226,7 +227,7 @@ async def get_pass(
         pass1 = api.new(file=pass_data)
         pass1.pass_object_safe.teamIdentifier = settings.team_identifier
         pass1.pass_object_safe.passTypeIdentifier = settings.pass_type_identifier
-
+        pass1.pass_object_safe.description = f"created at: {datetime.datetime.now()}"
         # compute pass web url
         url = request.url
         newpath = "/".join(url.path.split("/")[:-4])
