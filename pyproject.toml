@@ -43,6 +43,8 @@ test = [
 fastapi = [
     "fastapi",
     "uvicorn",
+    "h2",
+    "httpx",
 ]
 typecheck  = [
     "mypy",
