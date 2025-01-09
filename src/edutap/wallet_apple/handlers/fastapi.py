@@ -262,7 +262,7 @@ async def update_pass(
     authorization: Annotated[str | None, Header()] = None,
     *,
     settings: Settings = Depends(get_settings),
-):
+) -> list[PushToken]:
     """
     see https://developer.apple.com/documentation/walletpasses/update-a-pass
 
@@ -284,6 +284,8 @@ async def update_pass(
     ssl_context = ssl.create_default_context()
     ssl_context.load_cert_chain(certfile=settings.certificate, keyfile=settings.private_key)
 
+    updated = []
+
     # now call APN for each push-token
     for push_token in push_tokens:
         url = f"https://api.push.apple.com/3/device/{push_token.pushToken}"
@@ -294,5 +296,9 @@ async def update_pass(
                 headers={'apns-topic': settings.pass_type_identifier},
                 json={},
             )
-            print(response.status_code)
-            print(response.reason_phrase)
+
+            if response.status_code == 200:
+                updated.append(push_token)
+        
+
+    return updated
