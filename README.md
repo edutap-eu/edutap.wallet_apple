@@ -127,7 +127,7 @@ To check the expiration date of the certificate use:
 openssl x509 -enddate -noout -in wwdr_certificate.pem
 ```
 
-In case the OS provided certificate is expired, copy the certificate to the OS certificates folder (this depends on the system).
+In case the provided certificate is expired, copy the certificate to the OS certificates folder (this depends on the system).
 
 ## Running the Integration Tests
 

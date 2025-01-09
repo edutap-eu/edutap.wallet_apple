@@ -1,4 +1,7 @@
 import datetime
+import ssl
+
+import httpx
 from ..settings import Settings
 from edutap.wallet_apple import api
 from edutap.wallet_apple.models.handlers import LogEntries
@@ -42,50 +45,6 @@ def check_authentification_token(
     authorization_header_string: str | None, auth_required: bool = True
 ) -> bool:
     raise NotImplementedError
-
-
-# @router.get("/devices/{deviceLibraryIdentitfier}/registrations/{passTypeIdentifier}")
-# async def list_registered_passes(
-#     request: Request,
-#     deviceLibraryIdentitfier: str,
-#     passTypeIdentifier: str,
-#     authorization: Annotated[str | None, Header()] = None,
-#     *,
-#     settings: Settings = Depends(get_settings),
-# ):
-#     """
-#     List the serial numbers of passes registered for a device.
-
-#     see: https://developer.apple.com/documentation/walletpasses/list_the_serial_numbers_of_passes_registered_for_a_device
-
-#     URL: GET https://yourpasshost.example.com/v1/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}
-#     HTTP-Methode: GET
-#     HTTP-PATH: /v1/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}
-#     HTTP-Path-Parameters:
-#         * deviceLibraryIdentifier: str (required) A unique identifier you use to identify and authenticate the device.
-#         * passTypeIdentifier: str (required) The pass type identifier of the passes to return. This value corresponds to the value of the passTypeIdentifier key of the passes.
-#     HTTP-Headers:
-#         * Authorization: ApplePass <authenticationToken>
-
-#     Params definition
-#     :deviceLibraryIdentitfier      - the device's identifier
-#     :passTypeIdentifier   - the bundle identifier for a class of passes, sometimes referred to as the pass topic, e.g. pass.com.apple.backtoschoolgift, registered with WWDR
-
-#     server action: if the authentication token is correct, return a list of serial numbers for passes associated with the device
-#     server response:
-#     --> if auth token is correct: 200, with a JSON payload containing an array of serial numbers
-#     --> if auth token is incorrect: 401
-
-#     :async:
-#     :param str deviceLibraryIdentifier: A unique identifier you use to identify and authenticate the device.
-#     :param str passTypeIdentifier:      The pass type identifier of the passes to return. This value corresponds to the value of the passTypeIdentifier key of the passes.
-
-#     :return:
-#     """
-#     for pass_registration_handler in get_pass_registrations():
-#         await pass_registration_handler.register_pass(
-#             deviceLibraryIdentitfier, passTypeIdentifier, serialNumber, data
-#         )
 
 
 @router.post(
@@ -204,6 +163,7 @@ async def get_pass(
     authorization: Annotated[str | None, Header()] = None,
     # *,
     settings: Settings = Depends(get_settings),
+    update: bool = False,
 ):
     """
     Pass delivery
@@ -220,6 +180,8 @@ async def get_pass(
     # does that make sense when we return stuff?
     # TODO: auth handling
 
+    print(f"get_pass: {passTypeIdentifier=}, {serialNumber=}, {update=}")
+
     for get_pass_data_acquisition_handler in get_pass_data_acquisitions():
         pass_data = await get_pass_data_acquisition_handler.get_pass_data(serialNumber)
         settings = Settings()
@@ -227,7 +189,8 @@ async def get_pass(
         pass1 = api.new(file=pass_data)
         pass1.pass_object_safe.teamIdentifier = settings.team_identifier
         pass1.pass_object_safe.passTypeIdentifier = settings.pass_type_identifier
-        pass1.pass_object_safe.description = f"created at: {datetime.datetime.now()}"
+        # pass1.pass_object_safe.description = f"created at: {datetime.datetime.now()}"
+        pass1.pass_object_safe.serialNumber = serialNumber
         # compute pass web url
         url = request.url
         newpath = "/".join(url.path.split("/")[:-4])
@@ -267,7 +230,7 @@ async def list_updatable_passes(
     request: Request,
     deviceLibraryIdentifier: str,
     passTypeIdentifier: str,
-    passesUpdatedSince: str,
+    passesUpdatedSince: str|None = None,
     authorization: Annotated[str | None, Header()] = None,
     *,
     settings: Settings = Depends(get_settings),
@@ -284,6 +247,52 @@ async def list_updatable_passes(
             deviceLibraryIdentifier, passTypeIdentifier, passesUpdatedSince
         )
 
+        print(f"=================serial numbers: {serial_numbers}")
+
         return serial_numbers
 
     return SerialNumbers(serialNumers=[], lastUpdated="")
+
+
+@router.post("/passes/{passTypeIdentifier}/{serialNumber}")
+async def update_pass(
+    request: Request,
+    passTypeIdentifier: str,
+    serialNumber: str,
+    authorization: Annotated[str | None, Header()] = None,
+    *,
+    settings: Settings = Depends(get_settings),
+):
+    """
+    see https://developer.apple.com/documentation/walletpasses/update-a-pass
+
+    Attention: check for correct authentication token, do not allow it to be called
+    anonymously
+
+    see https://developer.apple.com/documentation/UserNotifications/sending-notification-requests-to-apns
+
+    for push notification handling
+    """
+
+    # fetch the push tokens
+    for handler in get_pass_data_acquisitions():
+        push_tokens = await handler.get_push_tokens(
+            None, passTypeIdentifier, serialNumber
+        )
+        print(push_tokens)
+
+    ssl_context = ssl.create_default_context()
+    ssl_context.load_cert_chain(certfile=settings.certificate, keyfile=settings.private_key)
+
+    # now call APN for each push-token
+    for push_token in push_tokens:
+        url = f"https://api.push.apple.com/3/device/{push_token.pushToken}"
+
+        async with httpx.AsyncClient(http2=True, verify=ssl_context) as client:
+            response = await client.post(
+                url,
+                headers={'apns-topic': settings.pass_type_identifier},
+                json={},
+            )
+            print(response.status_code)
+            print(response.reason_phrase)

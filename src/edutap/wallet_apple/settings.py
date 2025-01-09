@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     certificate: Path = Field(
         default_factory=lambda dd: dd["cert_dir"] / "certificate.pem"
     )
-    """Path to the Apple certificate file in PEM format"""
+    """Path to the Apple certificate file in PEM format for pass signing"""
     wwdr_certificate: Path = Field(
         default_factory=lambda dd: dd["cert_dir"] / "wwdr_certificate.pem"
     )
