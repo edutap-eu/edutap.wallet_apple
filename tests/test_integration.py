@@ -20,12 +20,13 @@ import common
 import os
 import pytest
 import uuid
+from common import settings_test
 
 
 @only_test_if_crypto_supports_verification
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_signing():
+def test_signing(settings_test):
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -37,7 +38,9 @@ def test_signing():
     manifest_json = passfile._create_manifest()
 
     key, cert, wwdr_cert = crypto.load_key_files(
-        common.key_file, common.cert_file, common.wwdr_file
+        common.key_file,
+        settings_test.get_certificate_path(settings_test.pass_type_identifier),
+        common.wwdr_file,
     )
     signature = crypto.sign_manifest(
         manifest_json,
@@ -57,7 +60,7 @@ def test_signing():
 @only_test_if_crypto_supports_verification
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_signing1():
+def test_signing1(settings_test):
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -67,10 +70,14 @@ def test_signing1():
 
     passfile = create_shell_pass()
     manifest_json = passfile._create_manifest()
+    cert_file = settings_test.get_certificate_path(settings_test.pass_type_identifier)
 
     key, cert, wwdr_cert = crypto.load_key_files(
-        common.key_file, common.cert_file, common.wwdr_file
+        common.key_file,
+        cert_file,
+        common.wwdr_file,
     )
+
     signature = crypto.sign_manifest(
         manifest_json,
         key,
@@ -89,7 +96,7 @@ def test_signing1():
 
     passfile = create_shell_pass()
     passfile._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
-    passfile.sign(common.key_file, common.cert_file, common.wwdr_file)
+    passfile.sign(common.key_file, cert_file, common.wwdr_file)
 
     zipfile = passfile.as_zip_bytesio()
     assert zipfile is not None
@@ -98,17 +105,18 @@ def test_signing1():
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @only_test_if_crypto_supports_verification
 @pytest.mark.integration
-def test_verification():
+def test_verification(settings_test):
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
     them to git. Store them in the files indicated below, they are ignored
     by git.
     """
+    cert_file = settings_test.get_certificate_path(settings_test.pass_type_identifier)
 
     passfile = create_shell_pass()
     passfile._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
-    passfile.sign(common.key_file, common.cert_file, common.wwdr_file)
+    passfile.sign(common.key_file, cert_file, common.wwdr_file)
     manifest = passfile._create_manifest()
     signature = passfile.files["signature"]
     crypto.verify_manifest(manifest, signature)
@@ -121,7 +129,7 @@ def test_verification():
         passfile.verify()
 
     # now sign it, so verification should pass now
-    passfile.sign(common.key_file, common.cert_file, common.wwdr_file)
+    passfile.sign(common.key_file, cert_file, common.wwdr_file)
     passfile.verify()
 
     zipfile = passfile.as_zip_bytesio()
@@ -132,17 +140,18 @@ def test_verification():
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_passbook_creation():
+def test_passbook_creation(settings_test):
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
     them to git. Store them in the files indicated below, they are ignored
     by git.
     """
+    cert_file = settings_test.get_certificate_path(settings_test.pass_type_identifier)
 
     passfile = create_shell_pass()
     passfile._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
-    passfile.sign(common.key_file, common.cert_file, common.wwdr_file)
+    passfile.sign(common.key_file, cert_file, common.wwdr_file)
     zipfile = passfile.as_zip_bytesio()
     # zipfile = passfile.create(common.cert_file, common.key_file, common.wwdr_file, None)
     assert zipfile
@@ -150,7 +159,7 @@ def test_passbook_creation():
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_passbook_creation_integration(generated_passes_dir):  # noqa: F811
+def test_passbook_creation_integration(generated_passes_dir, settings_test):  # noqa: F811
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -162,6 +171,7 @@ def test_passbook_creation_integration(generated_passes_dir):  # noqa: F811
 
     this test opens the passbook file in the default application for .pkpass files )works only on OSX)
     """
+    cert_file = settings_test.get_certificate_path(settings_test.pass_type_identifier)
 
     pass_file_name = generated_passes_dir / "basic_pass.pkpass"
     passfile = create_shell_pass(
@@ -171,7 +181,7 @@ def test_passbook_creation_integration(generated_passes_dir):  # noqa: F811
 
     passfile.sign(
         certs / "private" / "private.key",
-        certs / "private" / "certificate.pem",
+        cert_file,
         certs / "private" / "wwdr_certificate.pem",
     )
 
@@ -184,6 +194,7 @@ def test_passbook_creation_integration(generated_passes_dir):  # noqa: F811
 @pytest.mark.integration
 def test_passbook_creation_integration_loyalty_with_nfc(
     generated_passes_dir,  # noqa: F811
+    settings_test, 
 ):  # noqa: F811
     """
     This test can only run locally if you provide your personal Apple Wallet
@@ -196,7 +207,7 @@ def test_passbook_creation_integration_loyalty_with_nfc(
 
     this test opens the passbook file in the default application for .pkpass files )works only on OSX)
     """
-
+    cert_file = settings_test.get_certificate_path(settings_test.pass_type_identifier)
     pass_file_name = generated_passes_dir / "loyaltypass_nfc.pkpass"
 
     sn = uuid.uuid4().hex
@@ -235,7 +246,7 @@ def test_passbook_creation_integration_loyalty_with_nfc(
 
     passfile.sign(
         certs / "private" / "private.key",
-        certs / "private" / "certificate.pem",
+        cert_file,
         certs / "private" / "wwdr_certificate.pem",
     )
     with open(pass_file_name, "wb") as fh:
@@ -245,7 +256,7 @@ def test_passbook_creation_integration_loyalty_with_nfc(
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_passbook_creation_integration_eventticket(generated_passes_dir):  # noqa: F811
+def test_passbook_creation_integration_eventticket(generated_passes_dir, settings_test):  # noqa: F811
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -257,7 +268,7 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):  # noq
 
     this test opens the passbook file in the default application for .pkpass files )works only on OSX)
     """
-
+    cert_file = settings_test.get_certificate_path(settings_test.pass_type_identifier)
     pass_file_name = generated_passes_dir / "eventticket.pkpass"
 
     cardInfo = EventTicket()
@@ -290,7 +301,7 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):  # noq
     passobject.backgroundColor = "#fa511e"
     passfile.sign(
         certs / "private" / "private.key",
-        certs / "private" / "certificate.pem",
+        cert_file,
         certs / "private" / "wwdr_certificate.pem",
     )
 
@@ -303,7 +314,9 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir):  # noq
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_open_pkpass_and_sign_again(
-    apple_passes_dir, generated_passes_dir  # noqa: F811
+    apple_passes_dir,
+    generated_passes_dir,  # noqa: F811
+    settings_test
 ):  # noqa: F811
     """
     tests an existing pass not created by this library and signs it again
@@ -311,6 +324,8 @@ def test_open_pkpass_and_sign_again(
     trailing commas which are not allowed in json, but apple accepts
     them, so we have to tolerate them as well
     """
+    cert_file = settings_test.get_certificate_path(settings_test.pass_type_identifier)
+
     fn = apple_passes_dir / "BoardingPass.pkpass"
     with open(fn, "rb") as fh:
         pkpass = PkPass.from_zip(fn)
@@ -329,7 +344,7 @@ def test_open_pkpass_and_sign_again(
     with open(generated_passes_dir / newname, "wb") as fh:
         pkpass.sign(
             common.certs / "private" / "private.key",
-            common.certs / "private" / "certificate.pem",
+            cert_file,
             common.certs / "private" / "wwdr_certificate.pem",
         )
         fh.write(pkpass.as_zip_bytesio().getvalue())

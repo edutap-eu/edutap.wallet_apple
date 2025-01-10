@@ -58,8 +58,8 @@ flowchart TD
     B[create key.pem] --> CSR[create CSR]
     CSR -->|upload CSR in form| F[create+download Certificate.cer - apple.com]
     E --> F
-    F -->|x509| G[create Certificate.pem]
-    G --> H[install Certificate.pem, private.key and wwdr_certificate.pem on server]
+    F -->|x509| G["create certificate-{passtype identifier}.pem"]
+    G --> H["install certificate-{passtype identifier}.pem, private.key and wwdr_certificate.pem on server"]
     WWDRPEM --> H
 ```
 
@@ -97,8 +97,11 @@ To get the certificate:
 
 * Convert the `certificate.cer` (X509 format) to a `certificate.pem` file by calling
 
+ ⚠️ **Attention:**
+the name of the certificate must be in the form `certificate-{passtype identifier}.pem` since the certificate is bound to the pass type identifier.
+
   ```shell
-  openssl x509 -inform der -in pass.cer -out certificate.pem
+  openssl x509 -inform der -in pass.cer -out certificate-{passtype identifier}.pem
   ```
 
 ### Apple Worldwide Developer Relations (WWDR) root certificate

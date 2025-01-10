@@ -66,7 +66,7 @@ def key_files_exist():
 
     return (
         os.path.exists(settings.private_key)
-        and os.path.exists(settings.certificate)
+        # and os.path.exists(settings.certificate)
         and os.path.exists(settings.wwdr_certificate)
     )
 
