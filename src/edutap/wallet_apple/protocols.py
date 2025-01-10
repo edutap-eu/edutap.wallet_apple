@@ -1,3 +1,4 @@
+# pylint: disable=too-few-public-methods
 from .models import handlers
 from typing import Protocol
 from typing import runtime_checkable
