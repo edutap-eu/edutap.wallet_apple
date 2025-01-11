@@ -27,8 +27,8 @@ def test_settings_via_env_dict(monkeypatch):
     assert settings.cert_dir == common.cwd / "data" / "certs/private"
     assert settings.private_key == common.cwd / "data" / "certs/private" / "private.key"
     assert (
-        settings.certificate
-        == common.cwd / "data" / "certs/private" / "certificate.pem"
+        settings.get_certificate_path("pass.demo.lmu.de")
+        == common.cwd / "data" / "certs/private" / "certificate-pass.demo.lmu.de.pem"
     )
     assert (
         settings.wwdr_certificate
