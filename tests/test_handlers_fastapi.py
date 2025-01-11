@@ -144,7 +144,6 @@ def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi):
     headers = parser.parsestr(f"Content-Disposition: {cd}")
     filename = headers.get_param("filename", header="Content-Disposition")
 
-    # TODO: extract pkpass file
     assert len(response.content) > 0
     fh = BytesIO(response.content)
     out = settings_fastapi.signed_passes_dir / filename

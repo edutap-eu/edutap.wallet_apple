@@ -58,7 +58,11 @@ def sign(pkpass: passes.PkPass, settings: Settings | None = None):
 
     passtype_identifier = pkpass.pass_object_safe.passTypeIdentifier
 
-    pkpass.sign(settings.private_key, settings.get_certificate_path(passtype_identifier), settings.wwdr_certificate)
+    pkpass.sign(
+        settings.private_key,
+        settings.get_certificate_path(passtype_identifier),
+        settings.wwdr_certificate,
+    )
 
 
 def pkpass(pkpass: passes.PkPass) -> BinaryIO:

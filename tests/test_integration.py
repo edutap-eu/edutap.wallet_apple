@@ -7,6 +7,7 @@ from common import generated_passes_dir  # noqa: F401
 from common import key_files_exist
 from common import only_test_if_crypto_supports_verification
 from common import resources
+from common import settings_test  # noqa: F401
 from edutap.wallet_apple import crypto
 from edutap.wallet_apple.models.passes import Barcode
 from edutap.wallet_apple.models.passes import BarcodeFormat
@@ -20,13 +21,19 @@ import common
 import os
 import pytest
 import uuid
-from common import settings_test
+
+
+@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
+@pytest.mark.integration
+def test_get_available_pass_type_ids(settings_test): # noqa: F811
+    ids = settings_test.get_available_passtype_ids()
+    assert "pass.demo.lmu.de" in ids 
 
 
 @only_test_if_crypto_supports_verification
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_signing(settings_test):
+def test_signing(settings_test):  # noqa: F811
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -60,7 +67,7 @@ def test_signing(settings_test):
 @only_test_if_crypto_supports_verification
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_signing1(settings_test):
+def test_signing1(settings_test):  # noqa: F811
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -105,7 +112,7 @@ def test_signing1(settings_test):
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @only_test_if_crypto_supports_verification
 @pytest.mark.integration
-def test_verification(settings_test):
+def test_verification(settings_test):  # noqa: F811
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -140,7 +147,7 @@ def test_verification(settings_test):
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_passbook_creation(settings_test):
+def test_passbook_creation(settings_test):  # noqa: F811
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -159,7 +166,9 @@ def test_passbook_creation(settings_test):
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_passbook_creation_integration(generated_passes_dir, settings_test):  # noqa: F811
+def test_passbook_creation_integration(
+    generated_passes_dir, settings_test  # noqa: F811
+):  # noqa: F811
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -194,7 +203,7 @@ def test_passbook_creation_integration(generated_passes_dir, settings_test):  # 
 @pytest.mark.integration
 def test_passbook_creation_integration_loyalty_with_nfc(
     generated_passes_dir,  # noqa: F811
-    settings_test, 
+    settings_test,  # noqa: F811
 ):  # noqa: F811
     """
     This test can only run locally if you provide your personal Apple Wallet
@@ -256,7 +265,9 @@ def test_passbook_creation_integration_loyalty_with_nfc(
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_passbook_creation_integration_eventticket(generated_passes_dir, settings_test):  # noqa: F811
+def test_passbook_creation_integration_eventticket(
+    generated_passes_dir, settings_test  # noqa: F811
+):  # noqa: F811
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -314,9 +325,7 @@ def test_passbook_creation_integration_eventticket(generated_passes_dir, setting
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_open_pkpass_and_sign_again(
-    apple_passes_dir,
-    generated_passes_dir,  # noqa: F811
-    settings_test
+    apple_passes_dir, generated_passes_dir, settings_test  # noqa: F811
 ):  # noqa: F811
     """
     tests an existing pass not created by this library and signs it again

@@ -1,7 +1,3 @@
-import datetime
-import ssl
-
-import httpx
 from ..settings import Settings
 from edutap.wallet_apple import api
 from edutap.wallet_apple.models.handlers import LogEntries
@@ -17,6 +13,9 @@ from fastapi import Request
 from fastapi.concurrency import asynccontextmanager
 from fastapi.responses import StreamingResponse
 from typing import Annotated
+
+import httpx  # type: ignore
+import ssl
 
 
 def get_settings() -> Settings:
@@ -183,7 +182,9 @@ async def get_pass(
     print(f"get_pass: {passTypeIdentifier=}, {serialNumber=}, {update=}")
 
     for get_pass_data_acquisition_handler in get_pass_data_acquisitions():
-        pass_data = await get_pass_data_acquisition_handler.get_pass_data(serialNumber)
+        pass_data = await get_pass_data_acquisition_handler.get_pass_data(
+            pass_type_id=passTypeIdentifier, serial_number=serialNumber
+        )
         settings = Settings()
         # now we have to deserialize a PkPass object and sign it
         pass1 = api.new(file=pass_data)
@@ -230,7 +231,7 @@ async def list_updatable_passes(
     request: Request,
     deviceLibraryIdentifier: str,
     passTypeIdentifier: str,
-    passesUpdatedSince: str|None = None,
+    passesUpdatedSince: str | None = None,
     authorization: Annotated[str | None, Header()] = None,
     *,
     settings: Settings = Depends(get_settings),
@@ -282,7 +283,10 @@ async def update_pass(
         print(push_tokens)
 
     ssl_context = ssl.create_default_context()
-    ssl_context.load_cert_chain(certfile=settings.certificate, keyfile=settings.private_key)
+    ssl_context.load_cert_chain(
+        certfile=settings.get_certificate_path(passTypeIdentifier),
+        keyfile=settings.private_key,
+    )
 
     updated = []
 
@@ -293,12 +297,11 @@ async def update_pass(
         async with httpx.AsyncClient(http2=True, verify=ssl_context) as client:
             response = await client.post(
                 url,
-                headers={'apns-topic': settings.pass_type_identifier},
+                headers={"apns-topic": passTypeIdentifier},
                 json={},
             )
 
             if response.status_code == 200:
                 updated.append(push_token)
-        
 
     return updated

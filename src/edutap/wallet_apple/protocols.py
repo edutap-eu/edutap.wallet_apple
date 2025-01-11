@@ -36,12 +36,11 @@ class PassDataAcquisition(Protocol):
     Protocol definition for an injectable PassDataAcquisition handler
     """
 
-    async def get_pass_data(self, pass_id: str) -> handlers.PassData:
+    async def get_pass_data(self,*, pass_type_id: str|None, serial_number: str) -> handlers.PassData:
         """
         Fetches pass creation data from the database
         is called by the Edutap Apple Provider upon creation of a new pass
 
-        TODO: specify the parameters
         """
 
     async def get_push_tokens(

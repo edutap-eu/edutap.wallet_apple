@@ -22,7 +22,7 @@ class PushToken(BaseModel):
     )
     pushToken: str
     deviceLibraryIdentifier: DeviceTypeIdentifier | None = None
-    passTypeIdentifier: str|None = None
+    passTypeIdentifier: str | None = None
 
 
 class SerialNumbers(BaseModel):

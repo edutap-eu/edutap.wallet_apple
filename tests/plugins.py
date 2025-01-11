@@ -76,12 +76,14 @@ class TestPassDataAcquisition:
     works on a local directory and does not need a real device.
     """
 
-    async def get_pass_data(self, pass_id: str) -> handlers.PassData:
+    async def get_pass_data(
+        self, *, pass_type_id: str | None = None, serial_number: str
+    ) -> handlers.PassData:
         """
         fetch the unsigned pass by its pass_id from a given folder
         """
         settings = SettingsTest()
-        pass_path = settings.unsigned_passes_dir / f"{pass_id}.pkpass"
+        pass_path = settings.unsigned_passes_dir / f"{serial_number}.pkpass"
         assert pass_path.exists()
         with open(pass_path, "rb") as fh:
             pass1 = api.new(file=fh)
