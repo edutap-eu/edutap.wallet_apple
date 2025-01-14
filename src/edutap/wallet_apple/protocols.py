@@ -36,7 +36,9 @@ class PassDataAcquisition(Protocol):
     Protocol definition for an injectable PassDataAcquisition handler
     """
 
-    async def get_pass_data(self,*, pass_type_id: str|None, serial_number: str) -> handlers.PassData:
+    async def get_pass_data(
+        self, *, pass_type_id: str | None, serial_number: str
+    ) -> handlers.PassData:
         """
         Fetches pass creation data from the database
         is called by the Edutap Apple Provider upon creation of a new pass
@@ -44,7 +46,7 @@ class PassDataAcquisition(Protocol):
         """
 
     async def get_push_tokens(
-        self, device_type_id: str | None, pass_type_id: str, serial_number: str
+        self, device_library_id: str | None, pass_type_id: str, serial_number: str
     ) -> list[handlers.PushToken]:
         """
         called during pass update,
@@ -54,7 +56,7 @@ class PassDataAcquisition(Protocol):
         """
 
     async def get_update_serial_numbers(
-        self, device_type_id: str, pass_type_id: str, last_updated: str
+        self, device_library_id: str, pass_type_id: str, last_updated: str
     ) -> handlers.SerialNumbers:
         """
         Fetches the serial numbers of the passes that have been updated since the last update

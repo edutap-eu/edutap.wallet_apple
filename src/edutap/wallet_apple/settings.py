@@ -45,8 +45,8 @@ class Settings(BaseSettings):
 
     password: str | None = None
 
-    #TODO: move that to SettingsTest only
-    pass_type_identifier: str | None = None 
+    # TODO: move that to SettingsTest only
+    pass_type_identifier: str | None = None
     team_identifier: str | None = None
 
     def get_certificate_path(self, pass_type_identifier: str) -> Path:
@@ -54,7 +54,7 @@ class Settings(BaseSettings):
         returns the path to the certificate file for the given pass type identifier
         """
         return self.cert_dir / f"certificate-{pass_type_identifier}.pem"
-    
+
     def get_available_passtype_ids(self) -> list[str]:
         """
         returns the available pass type identifiers

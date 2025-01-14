@@ -25,9 +25,9 @@ import uuid
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_get_available_pass_type_ids(settings_test): # noqa: F811
+def test_get_available_pass_type_ids(settings_test):  # noqa: F811
     ids = settings_test.get_available_passtype_ids()
-    assert "pass.demo.lmu.de" in ids 
+    assert "pass.demo.lmu.de" in ids
 
 
 @only_test_if_crypto_supports_verification
