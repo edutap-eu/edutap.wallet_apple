@@ -100,3 +100,13 @@ class TestPassDataAcquisition:
         return handlers.SerialNumbers(
             serialNumers=["1234"], lastUpdated="2021-09-01T12:00:00Z"
         )
+
+
+class TestLogging:
+    """
+    test plugin implementation for the `Logging` protocol
+    """
+
+    async def log(self, entries: handlers.LogEntries) -> None:
+        for entry in entries.logs:
+            print(f"logger :{entry}")

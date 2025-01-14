@@ -13,6 +13,7 @@ from importlib import metadata
 from importlib.metadata import EntryPoint
 from io import BytesIO
 from pathlib import Path
+from edutap.wallet_apple.plugins import get_logging_handlers
 from plugins import SettingsTest
 from typing import Callable
 
@@ -56,6 +57,11 @@ def entrypoints_testing(monkeypatch) -> Callable:
             EntryPoint(
                 name="PassDataAcquisition",
                 value="plugins:TestPassDataAcquisition",
+                group="edutap.wallet_apple.handlers.fastapi.router",
+            ),
+            EntryPoint(
+                name="Logging",
+                value="plugins:TestLogging",
                 group="edutap.wallet_apple.handlers.fastapi.router",
             ),
         ]
@@ -116,9 +122,11 @@ def test_entrypoints(entrypoints_testing):
 
     pr = get_pass_registrations()
     pd = get_pass_data_acquisitions()
+    logging = get_logging_handlers()
 
     assert len(pr) > 0
     assert len(pd) > 0
+    assert len(logging) > 0
     print(pr)
 
 
@@ -199,6 +207,17 @@ def test_list_updateable_passes(entrypoints_testing, fastapi_client, settings_fa
     assert serial_numbers.serialNumers == ["1234"]
     assert serial_numbers.lastUpdated == "2021-09-01T12:00:00Z"
     assert response.status_code == 200
+
+
+@pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
+@pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
+def test_logging(entrypoints_testing, fastapi_client, settings_fastapi):
+    response = fastapi_client.post(
+        "/apple_update_service/v1/log",
+        data=handlers.LogEntries(logs=["log1", "log2"]).model_dump_json(),
+    )
+    assert response.status_code == 200
+    print(response.json())
 
 
 @pytest.mark.skip("internal use only")
