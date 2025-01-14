@@ -116,6 +116,9 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+tests/data/generated_passes/
+tests/data/certs/private/
+tests/data/signed_passes/
 
 # Spyder project settings
 .spyderproject
