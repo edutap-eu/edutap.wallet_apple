@@ -247,12 +247,7 @@ async def get_pass(
         )
 
 
-# ------------------------
-# Neuland
-# ------------------------
-
-
-@router.get("/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}")
+@router.get("/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}", response_model=SerialNumbers)
 async def list_updatable_passes(
     request: Request,
     deviceLibraryIdentifier: str,
