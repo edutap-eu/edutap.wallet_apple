@@ -164,6 +164,8 @@ def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi):
     pass2 = api.new(file=fh)
     assert pass2.is_signed
     assert pass2.pass_object_safe.teamIdentifier == settings_fastapi.team_identifier
+    assert pass2.pass_object_safe.passTypeIdentifier == settings_fastapi.pass_type_identifier
+    assert pass2.pass_object_safe.description.startswith("changed")
     assert (
         pass2.pass_object_safe.passTypeIdentifier
         == settings_fastapi.pass_type_identifier

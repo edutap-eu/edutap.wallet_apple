@@ -3,6 +3,7 @@
 # pylint: disable=unused-argument
 # pylint: disable=missing-class-docstring
 
+from datetime import datetime
 from edutap.wallet_apple import api
 from edutap.wallet_apple.models import handlers
 from edutap.wallet_apple.settings import Settings
@@ -87,6 +88,8 @@ class TestPassDataAcquisition:
         assert pass_path.exists()
         with open(pass_path, "rb") as fh:
             pass1 = api.new(file=fh)
+            pass1.pass_object_safe.description = f"changed {datetime.now()}"
+            pass1.pass_object_safe.pass_information.secondaryFields[0].label = f"payload {datetime.now()}"
             return api.pkpass(pass1)
 
     async def get_push_tokens(

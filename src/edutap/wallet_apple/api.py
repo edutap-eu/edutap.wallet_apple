@@ -72,6 +72,7 @@ def pkpass(pkpass: passes.PkPass) -> BinaryIO:
     :param pkpass: PkPass model instance.
     :param file: Binary IO file object.
     """
+    pkpass._create_manifest()
     return pkpass.as_zip_bytesio()
 
 

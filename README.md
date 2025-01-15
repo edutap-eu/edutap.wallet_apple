@@ -187,6 +187,7 @@ TODO document it
 
 - [passninja docs](https://www.passninja.com/tutorials/apple-platform/how-does-pass-updating-work-on-apple-wallet)
 
+- [some useful diagrams](http://www.31a2ba2a-b718-11dc-8314-0800200c9a66.com/2016/08/apple-store-passbook-uml-diagrams-and.html)
 
 ## Documentation
 
