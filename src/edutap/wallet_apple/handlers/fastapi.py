@@ -1,3 +1,4 @@
+import datetime
 from ..settings import Settings
 from edutap.wallet_apple import api
 from edutap.wallet_apple.models.handlers import LogEntries
@@ -211,6 +212,7 @@ async def get_pass(
         headers = {
             "Content-Disposition": 'attachment; filename="blurb.pkpass"',
             "Content-Type": "application/octet-stream",
+            "Last-Modified": datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S GMT"),
         }
 
         # Erstelle eine StreamingResponse mit dem BytesIO-Objekt
