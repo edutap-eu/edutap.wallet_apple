@@ -5,7 +5,8 @@
 # pylint: disable=missing-class-docstring
 from common import apple_passes_dir  # noqa: F401
 from common import generated_passes_dir  # noqa: F401
-from common import key_files_exist
+from common import key_files_exist  # noqa: F401
+from common import testlog  # noqa: F401
 from edutap.wallet_apple import api
 from edutap.wallet_apple.models import handlers
 from email.parser import HeaderParser
@@ -141,7 +142,7 @@ def test_initial_unsigned_pass(initial_unsigned_pass):
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
-def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi):
+def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi, testlog):
     response = fastapi_client.get(
         f"/apple_update_service/v1/passes/{settings_fastapi.pass_type_identifier}/{settings_fastapi.initial_pass_serialnumber}"
     )
@@ -164,7 +165,10 @@ def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi):
     pass2 = api.new(file=fh)
     assert pass2.is_signed
     assert pass2.pass_object_safe.teamIdentifier == settings_fastapi.team_identifier
-    assert pass2.pass_object_safe.passTypeIdentifier == settings_fastapi.pass_type_identifier
+    assert (
+        pass2.pass_object_safe.passTypeIdentifier
+        == settings_fastapi.pass_type_identifier
+    )
     assert pass2.pass_object_safe.description.startswith("changed")
     assert (
         pass2.pass_object_safe.passTypeIdentifier
@@ -174,18 +178,27 @@ def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi):
         pass2.pass_object_safe.webServiceURL
         == f"https://{settings_fastapi.domain}:{settings_fastapi.https_port}/apple_update_service"
     )
+
+    logs = [l for l in testlog if l["realm"] == "fastapi" and l["event"] == "get_pass"]
+    assert len(logs) == 1
+
     print(pass2)
 
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
-def test_register_pass(entrypoints_testing, fastapi_client, settings_fastapi):
+def test_register_pass(entrypoints_testing, fastapi_client, settings_fastapi, testlog):
     device_id = "a0ccefd5944f32bcae520d64c4dc7a16"
     response = fastapi_client.post(
         f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}/{1234}",
         data=handlers.PushToken(pushToken="333333").model_dump_json(),
     )
     assert response.status_code == 200
+
+    logs = [
+        l for l in testlog if l["realm"] == "fastapi" and l["event"] == "register_pass"
+    ]
+    assert len(logs) == 1
 
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
@@ -200,7 +213,9 @@ def test_uregister_pass(entrypoints_testing, fastapi_client, settings_fastapi):
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
-def test_list_updateable_passes(entrypoints_testing, fastapi_client, settings_fastapi):
+def test_list_updateable_passes(
+    entrypoints_testing, fastapi_client, settings_fastapi, testlog
+):
     device_id = "a0ccefd5944f32bcae520d64c4dc7a16"
     response = fastapi_client.get(
         f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}?passesUpdatedSince=letztens"
@@ -209,6 +224,13 @@ def test_list_updateable_passes(entrypoints_testing, fastapi_client, settings_fa
     assert serial_numbers.serialNumers == ["1234"]
     assert serial_numbers.lastUpdated == "2021-09-01T12:00:00Z"
     assert response.status_code == 200
+
+    logs = [
+        l
+        for l in testlog
+        if l["realm"] == "fastapi" and l["event"] == "list_updatable_passes"
+    ]
+    assert len(logs) == 2
 
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")

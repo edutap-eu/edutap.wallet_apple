@@ -96,7 +96,16 @@ async def register_pass(
 
     :return:
     """
-
+    logger = settings.get_logger()
+    logger.info(
+        "register_pass",
+        deviceLibraryIdentitfier=deviceLibraryIdentitfier,
+        passTypeIdentifier=passTypeIdentifier,
+        serialNumber=serialNumber,
+        realm="fastapi",
+        url=request.url,
+        push_token=data
+    )
     for pass_registration_handler in get_pass_registrations():
         await pass_registration_handler.register_pass(
             deviceLibraryIdentitfier, passTypeIdentifier, serialNumber, data
@@ -129,6 +138,15 @@ async def unregister_pass(
     --> if not authorized: 401
 
     """
+    logger = settings.get_logger()
+    logger.info(
+        "unregister_pass",
+        deviceLibraryIdentitfier=deviceLibraryIdentitfier,
+        passTypeIdentifier=passTypeIdentifier,
+        serialNumber=serialNumber,
+        realm="fastapi",
+        url=request.url
+    )
     for pass_registration_handler in get_pass_registrations():
         await pass_registration_handler.unregister_pass(
             deviceLibraryIdentitfier, passTypeIdentifier, serialNumber
@@ -180,8 +198,14 @@ async def get_pass(
     # does that make sense when we return stuff?
     # TODO: auth handling
 
-    print(f"get_pass: {passTypeIdentifier=}, {serialNumber=}, {update=}")
-
+    logger = settings.get_logger()
+    logger.info(
+        "get_pass",
+        passTypeIdentifier=passTypeIdentifier,
+        serialNumber=serialNumber,
+        realm="fastapi",
+        url=request.url
+    )
     for get_pass_data_acquisition_handler in get_pass_data_acquisitions():
         pass_data = await get_pass_data_acquisition_handler.get_pass_data(
             pass_type_id=passTypeIdentifier, serial_number=serialNumber
@@ -212,7 +236,7 @@ async def get_pass(
         headers = {
             "Content-Disposition": 'attachment; filename="blurb.pkpass"',
             "Content-Type": "application/octet-stream",
-            "Last-Modified": datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S GMT"),
+            "Last-Modified": f"{datetime.datetime.now()}",
         }
 
         # Erstelle eine StreamingResponse mit dem BytesIO-Objekt
@@ -244,7 +268,15 @@ async def list_updatable_passes(
     Attention: check for correct authentication token, do not allow it to be called
     anonymously
     """
-
+    logger = settings.get_logger()
+    logger.info(
+        "list_updatable_passes",
+        deviceLibraryIdentifier=deviceLibraryIdentifier,
+        passTypeIdentifier=passTypeIdentifier,
+        passesUpdatedSince=passesUpdatedSince,
+        realm="fastapi",
+        url=request.url
+    )
     for pass_registration_handler in get_pass_data_acquisitions():
         serial_numbers = await pass_registration_handler.get_update_serial_numbers(
             deviceLibraryIdentifier, passTypeIdentifier, passesUpdatedSince
@@ -252,8 +284,10 @@ async def list_updatable_passes(
 
         print(f"=================serial numbers: {serial_numbers}")
 
+        logger.info("list_updatable_passes", realm="fastapi", serial_numbers=serial_numbers)
         return serial_numbers
 
+    logger.info("list_updatable_passes", realm="fastapi", serial_numbers=serial_numbers, empty=True)
     return SerialNumbers(serialNumers=[], lastUpdated="")
 
 
@@ -276,7 +310,14 @@ async def update_pass(
 
     for push notification handling
     """
-
+    logger = settings.get_logger()
+    logger.info(
+        "update_pass",
+        passTypeIdentifier=passTypeIdentifier,
+        serialNumber=serialNumber,
+        realm="fastapi",
+        url=request.url
+    )
     # fetch the push tokens
     for handler in get_pass_data_acquisitions():
         push_tokens = await handler.get_push_tokens(
@@ -306,4 +347,5 @@ async def update_pass(
             if response.status_code == 200:
                 updated.append(push_token)
 
+    logger.info("update_pass", realm="fastapi", updated=updated)
     return updated

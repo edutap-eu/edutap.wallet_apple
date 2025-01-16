@@ -3,6 +3,8 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
+import structlog
+logger = structlog.get_logger("edutap.wallet_apple")
 
 ROOT_DIR = Path(__file__).parents[3].resolve()
 
@@ -60,3 +62,6 @@ class Settings(BaseSettings):
         returns the available pass type identifiers
         """
         return [p.stem.split("-")[-1] for p in self.cert_dir.glob("certificate-*.pem")]
+
+    def get_logger(self):
+        return logger

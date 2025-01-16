@@ -1,3 +1,5 @@
+import logging
+
 from edutap.wallet_apple import crypto
 from edutap.wallet_apple.models.passes import Barcode
 from edutap.wallet_apple.models.passes import BarcodeFormat
@@ -7,6 +9,7 @@ from edutap.wallet_apple.models.passes import PkPass
 from edutap.wallet_apple.models.passes import StoreCard
 from edutap.wallet_apple.settings import Settings
 from pathlib import Path
+from edutap.wallet_apple.settings import logger
 
 import os
 import pytest
@@ -24,7 +27,6 @@ key_file = certs / "private" / "private.key"
 wwdr_file = certs / "private" / "wwdr_certificate.pem"
 
 PASS_TYPE_IDENTIFIER = "pass.demo.lmu.de"
-
 
 @pytest.fixture
 def generated_passes_dir():
@@ -51,7 +53,30 @@ def settings_test():
 
     return settings
 
+@pytest.fixture(scope="function")
+def testlog():
+    # create a logging handler that stores the log messages into a list
+    # this logging handler will configured into logger
+    from structlog.testing import capture_logs
+    with capture_logs() as logs:
+        yield logs
+        return logs
+    # class TestLog(logging.Handler):
+    #     def __init__(self):
+    #         logging.Handler.__init__(self, level=logging.DEBUG)
+    #         self.records = []
 
+    #     def emit(self, record):
+    #         self.records.append(record)
+            
+    # testlog = TestLog()
+    # logger = logging.getLogger("edutap.wallet_apple")
+    # logger.setLevel(logging.DEBUG)
+    # logger.addHandler(testlog)
+    # yield testlog
+    # logger.removeHandler(testlog)
+    
+    
 def key_files_exist():
     """
     utility function to check if the key files exist
