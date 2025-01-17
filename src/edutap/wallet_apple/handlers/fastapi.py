@@ -277,8 +277,6 @@ async def list_updatable_passes(
             deviceLibraryIdentifier, passTypeIdentifier, passesUpdatedSince
         )
 
-        print(f"=================serial numbers: {serial_numbers}")
-
         logger.info("list_updatable_passes", realm="fastapi", serial_numbers=serial_numbers)
         return serial_numbers
 
@@ -318,7 +316,6 @@ async def update_pass(
         push_tokens = await handler.get_push_tokens(
             None, passTypeIdentifier, serialNumber
         )
-        print(push_tokens)
 
     ssl_context = ssl.create_default_context()
     ssl_context.load_cert_chain(
@@ -331,11 +328,20 @@ async def update_pass(
     # now call APN for each push-token
     for push_token in push_tokens:
         url = f"https://api.push.apple.com/3/device/{push_token.pushToken}"
+        headers = {"apns-topic": passTypeIdentifier}
+        
+        logger.info(
+            "update_pass",
+            action="call APN",
+            realm="fastapi",
+            url=url,
+            headers=headers
+        )
 
         async with httpx.AsyncClient(http2=True, verify=ssl_context) as client:
             response = await client.post(
                 url,
-                headers={"apns-topic": passTypeIdentifier},
+                headers=headers,
                 json={},
             )
 
