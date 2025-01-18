@@ -50,6 +50,8 @@ class Settings(BaseSettings):
     # TODO: move that to SettingsTest only
     pass_type_identifier: str | None = None
     team_identifier: str | None = None
+    
+    authentication_token: str | None = None
 
     def get_certificate_path(self, pass_type_identifier: str) -> Path:
         """

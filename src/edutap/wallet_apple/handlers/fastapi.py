@@ -96,6 +96,8 @@ async def register_pass(
 
     :return:
     """
+    # TODO: auth handling
+
     logger = settings.get_logger()
     logger.info(
         "register_pass",
@@ -138,6 +140,8 @@ async def unregister_pass(
     --> if not authorized: 401
 
     """
+    # TODO: auth handling
+
     logger = settings.get_logger()
     logger.info(
         "unregister_pass",
@@ -217,6 +221,11 @@ async def get_pass(
         pass1.pass_object_safe.passTypeIdentifier = settings.pass_type_identifier
         # pass1.pass_object_safe.description = f"created at: {datetime.datetime.now()}"
         pass1.pass_object_safe.serialNumber = serialNumber
+        
+        # TODO: to discuss: shall the authentication token be set here?
+        if settings.authentication_token:
+            pass1.pass_object_safe.authenticationToken = settings.authentication_token
+            
         # compute pass web url
         url = request.url
         newpath = "/".join(url.path.split("/")[:-4])
@@ -253,7 +262,6 @@ async def list_updatable_passes(
     deviceLibraryIdentifier: str,
     passTypeIdentifier: str,
     passesUpdatedSince: str | None = None,
-    authorization: Annotated[str | None, Header()] = None,
     *,
     settings: Settings = Depends(get_settings),
 ) -> SerialNumbers:
