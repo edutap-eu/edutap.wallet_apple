@@ -24,10 +24,11 @@ classifiers = [
 ]
 dependencies = [
     "cryptography",
+    "httpx",
     "pydantic-settings>=2.6.1",
     "pydantic[email]>=2.10.3",
     "pyyaml",
-    "structlog"
+    "structlog",
 ]
 
 [project.urls]
