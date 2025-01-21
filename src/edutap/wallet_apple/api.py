@@ -113,7 +113,7 @@ def extract_auth_token(
 
 def save_link(
     pass_type_id: str,
-    seial_number: str,
+    serial_number: str,
     settings: Settings | None = None,
     url_prefix: str = "/apple_update_service/v1",
     schema: str = "https",
@@ -128,7 +128,7 @@ def save_link(
     if settings is None:
         settings = Settings()
 
-    token = create_auth_token(pass_type_id, seial_number, settings.fernet_key).decode(
+    token = create_auth_token(pass_type_id, serial_number, settings.fernet_key).decode(
         "utf-8"
     )
     if settings.https_port == 443 or not settings.https_port:

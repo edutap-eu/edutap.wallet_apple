@@ -95,10 +95,18 @@ class TestPassDataAcquisition:
         assert pass_path.exists()
         with open(pass_path, "rb") as fh:
             pass1 = api.new(file=fh)
+            if pass_type_id is not None:
+                pass1.pass_object_safe.passTypeIdentifier = pass_type_id
+                
             pass1.pass_object_safe.description = f"changed {datetime.now()}"
             pass1.pass_object_safe.pass_information.secondaryFields[0].label = (
                 f"payload {datetime.now()}"
             )
+            if not update:
+                token = api.create_auth_token(pass1.pass_object_safe.passTypeIdentifier, serial_number)
+                pass1.pass_object_safe.authenticationToken = token
+            pass1.pass_object_safe.serialNumber = serial_number
+            
             return api.pkpass(pass1)
 
     async def get_push_tokens(

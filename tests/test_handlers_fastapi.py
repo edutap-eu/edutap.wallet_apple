@@ -183,14 +183,16 @@ def test_save_link(settings_fastapi):
 ################################################
 # Here come the real tests
 ################################################
-
+settings = SettingsTest()
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
-def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi, testlog):
+@pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids()) #["pass.demo.lmu.de", "pass.demo.library.lmu.de"])
+def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi, pass_type_id, testlog):
+    serial_number = settings_fastapi.initial_pass_serialnumber
     download_link = api.save_link(
-        settings_fastapi.pass_type_identifier,
-        settings_fastapi.initial_pass_serialnumber,
+        pass_type_id=pass_type_id,
+        serial_number=settings_fastapi.initial_pass_serialnumber,
         schema="http",
     )
 
@@ -217,13 +219,14 @@ def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi, testlog
     assert pass2.pass_object_safe.teamIdentifier == settings_fastapi.team_identifier
     assert (
         pass2.pass_object_safe.passTypeIdentifier
-        == settings_fastapi.pass_type_identifier
+        == pass_type_id
     )
     assert pass2.pass_object_safe.description.startswith("changed")
     assert (
         pass2.pass_object_safe.passTypeIdentifier
-        == settings_fastapi.pass_type_identifier
+        == pass_type_id
     )
+    assert pass2.pass_object_safe.serialNumber == serial_number
     assert (
         pass2.pass_object_safe.webServiceURL
         == f"https://{settings_fastapi.domain}:{settings_fastapi.https_port}/apple_update_service"

@@ -303,8 +303,8 @@ async def prepare_pass(
         # now we have to deserialize a PkPass, set individual propsand sign it
         pass1 = api.new(file=pass_data)
         pass1.pass_object_safe.teamIdentifier = settings.team_identifier
-        pass1.pass_object_safe.passTypeIdentifier = settings.pass_type_identifier
-        pass1.pass_object_safe.serialNumber = serialNumber
+        # pass1.pass_object_safe.passTypeIdentifier = passTypeIdentifier
+        # pass1.pass_object_safe.serialNumber = serialNumber
 
         scheme = "https"
         # chop off the last part of the path because it contains the
