@@ -175,7 +175,14 @@ def test_sign_existing_generic_pass_and_get_bytes_io(
         # pkpass.pass_object_safe.pass_information.secondaryFields[0].value = (
         #     "Donald Duck"
         # )
-
+        # pkpass.pass_object_safe.authenticationToken = "1234567890123456"
+        fernet_key = b'AIYbyKUTkJpExGmNjEoI23AOqcMHIO7HhWPnMYKQWZA=' #TODO: softcode
+        token = api.create_auth_token(
+            pkpass.pass_object_safe.passTypeIdentifier,
+            "1234",  #TODO: serial number softcoded,
+            fernet_key=fernet_key,
+        )
+        pkpass.pass_object_safe.authenticationToken = token.decode("utf-8")
         api.sign(pkpass, settings=settings_test)
         assert pkpass.is_signed
 

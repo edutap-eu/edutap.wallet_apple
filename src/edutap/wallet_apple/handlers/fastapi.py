@@ -1,4 +1,6 @@
 import datetime
+
+import cryptography
 from ..settings import Settings
 from edutap.wallet_apple import api
 from edutap.wallet_apple.models.handlers import LogEntries
@@ -7,7 +9,7 @@ from edutap.wallet_apple.models.handlers import SerialNumbers
 from edutap.wallet_apple.plugins import get_logging_handlers
 from edutap.wallet_apple.plugins import get_pass_data_acquisitions
 from edutap.wallet_apple.plugins import get_pass_registrations
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi import Depends
 from fastapi import Header
 from fastapi import Request
@@ -41,10 +43,30 @@ router = APIRouter(
 )
 
 
-def check_authentification_token(
-    authorization_header_string: str | None, auth_required: bool = True
-) -> bool:
-    raise NotImplementedError
+async def check_authorization(
+    authorization: str | None,
+    pass_type_identifier: str | None = None,
+    serial_number: str | None = None,
+) -> None:
+    """
+    check the authorization token as it comes in the request header for
+    `register_pass`, `unregister_pass` and `get_pass` endpoints
+    the autorizatio string is of the form `ApplePass <authenticationToken>`
+    where the authotizationToken is the authentication token that is stored in the
+    apple pass
+
+    raises a 401 exception if the token is not correct
+    """
+
+    for pass_registration_handler in get_pass_data_acquisitions():
+        if authorization is None:
+            raise HTTPException(status_code=401, detail="Unauthorized - no token give")
+        token = authorization.split(" ")[1]
+        check = await pass_registration_handler.check_authentication_token(
+            pass_type_identifier, serial_number, token
+        )
+        if not check:
+            raise HTTPException(status_code=401, detail="Unauthorized - wrong token")
 
 
 @router.post(
@@ -96,6 +118,8 @@ async def register_pass(
 
     :return:
     """
+    await check_authorization(authorization, passTypeIdentifier, serialNumber)
+
     logger = settings.get_logger()
     logger.info(
         "register_pass",
@@ -104,7 +128,7 @@ async def register_pass(
         serialNumber=serialNumber,
         realm="fastapi",
         url=request.url,
-        push_token=data
+        push_token=data,
     )
     for pass_registration_handler in get_pass_registrations():
         await pass_registration_handler.register_pass(
@@ -138,6 +162,8 @@ async def unregister_pass(
     --> if not authorized: 401
 
     """
+    await check_authorization(authorization, passTypeIdentifier, serialNumber)
+
     logger = settings.get_logger()
     logger.info(
         "unregister_pass",
@@ -145,7 +171,7 @@ async def unregister_pass(
         passTypeIdentifier=passTypeIdentifier,
         serialNumber=serialNumber,
         realm="fastapi",
-        url=request.url
+        url=request.url,
     )
     for pass_registration_handler in get_pass_registrations():
         await pass_registration_handler.unregister_pass(
@@ -173,15 +199,52 @@ async def device_log(
         await logging_handler.log(data)
 
 
+@router.get("/download-pass/{token}")
+async def download_pass(request: Request, token: str, settings=Depends(get_settings)):
+    """
+    download a pass from the server. The parameter is a token, so fromoutside
+    the personal pass data are not deducible.
+
+    GET /v1/download-pass/<token>
+
+    server response:
+    --> if token is correct: 200, with pass data payload as pkpass-file
+    --> if token is incorrect: 401
+    """
+    logger = settings.get_logger()
+    logger.info(
+        "download_pass",
+        realm="fastapi",
+        url=request.url,
+    )
+    pass_type_identifier, serial_number = api.extract_auth_token(
+        token, settings.fernet_key
+    )
+    res = await prepare_pass(pass_type_identifier, serial_number, update=False)
+
+    fh = api.pkpass(res)
+
+    headers = {
+        "Content-Disposition": 'attachment; filename="blurb.pkpass"',
+        "Content-Type": "application/octet-stream",
+        "Last-Modified": f"{datetime.datetime.now()}",
+    }
+
+    return StreamingResponse(
+        fh,
+        headers=headers,
+        media_type="application/vnd.apple.pkpass",
+    )
+
+
 @router.get("/passes/{passTypeIdentifier}/{serialNumber}")
-async def get_pass(
+async def get_updated_pass(
     request: Request,
     passTypeIdentifier: str,
     serialNumber: str,
     authorization: Annotated[str | None, Header()] = None,
     # *,
     settings: Settings = Depends(get_settings),
-    update: bool = False,
 ):
     """
     Pass delivery
@@ -194,66 +257,77 @@ async def get_pass(
     --> if auth token is incorrect: 401
     """
 
-    # TODO: how shall we here handle more than one handler?
-    # does that make sense when we return stuff?
-    # TODO: auth handling
+    await check_authorization(authorization, passTypeIdentifier, serialNumber)
 
     logger = settings.get_logger()
     logger.info(
-        "get_pass",
+        "get_updated_pass",
         passTypeIdentifier=passTypeIdentifier,
         serialNumber=serialNumber,
         realm="fastapi",
-        url=request.url
+        url=request.url,
     )
+    res = await prepare_pass(passTypeIdentifier, serialNumber, update=True)
+    fh = api.pkpass(res)
+
+    headers = {
+        "Content-Disposition": 'attachment; filename="blurb.pkpass"',
+        "Content-Type": "application/octet-stream",
+        "Last-Modified": f"{datetime.datetime.now()}",
+    }
+
+    # Erstelle eine StreamingResponse mit dem BytesIO-Objekt
+    return StreamingResponse(
+        fh,
+        headers=headers,
+        media_type="application/vnd.apple.pkpass",
+    )
+
+
+async def prepare_pass(
+    passTypeIdentifier: str, serialNumber: str, update: bool
+) -> api.PkPass:
+    """
+    helper function to prepare a pass for delivery.
+    it is used for initially dowloading a pass and for updating a pass.
+    The latter endpoint is protected by an authentication token.
+
+    this function retrieves an unsigned pass from the database, sets individual
+    properties (teamIdetifier, passTypeIdentifier) and signs the pass.
+    """
     for get_pass_data_acquisition_handler in get_pass_data_acquisitions():
         pass_data = await get_pass_data_acquisition_handler.get_pass_data(
-            pass_type_id=passTypeIdentifier, serial_number=serialNumber
+            pass_type_id=passTypeIdentifier, serial_number=serialNumber, update=update
         )
         settings = Settings()
-        # now we have to deserialize a PkPass object and sign it
+        # now we have to deserialize a PkPass, set individual propsand sign it
         pass1 = api.new(file=pass_data)
         pass1.pass_object_safe.teamIdentifier = settings.team_identifier
         pass1.pass_object_safe.passTypeIdentifier = settings.pass_type_identifier
-        # pass1.pass_object_safe.description = f"created at: {datetime.datetime.now()}"
         pass1.pass_object_safe.serialNumber = serialNumber
-        # compute pass web url
-        url = request.url
-        newpath = "/".join(url.path.split("/")[:-4])
-        scheme = url.scheme
-        # scheme = "https" # only https is allowed, with a web url of type http the pass does not get accepted
-        weburl = scheme + "://" + url.netloc + newpath
-        # if scheme == "http":
-        #     logger.error("Web URL is http, pass will not be accepted by Apple Wallet")
 
         scheme = "https"
-        weburl = f"{scheme}://{settings.domain}:{settings.https_port}{newpath}"
+        # chop off the last part of the path because it contains the
+        # apple api version and this is automatically added by the the
+        # device when it calls this endpoint
+        apipath = "/".join(router.prefix.split("/")[:-1])
+        weburl = f"{scheme}://{settings.domain}:{settings.https_port}{apipath}"
         pass1.pass_object_safe.webServiceURL = weburl
         # pass1.pass_object_safe.authenticationToken = None
-
         api.sign(pass1)
-        fh = api.pkpass(pass1)
-        headers = {
-            "Content-Disposition": 'attachment; filename="blurb.pkpass"',
-            "Content-Type": "application/octet-stream",
-            "Last-Modified": f"{datetime.datetime.now()}",
-        }
 
-        # Erstelle eine StreamingResponse mit dem BytesIO-Objekt
-        return StreamingResponse(
-            fh,
-            headers=headers,
-            media_type="application/vnd.apple.pkpass",
-        )
+        return pass1
 
 
-@router.get("/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}", response_model=SerialNumbers)
+@router.get(
+    "/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}",
+    response_model=SerialNumbers,
+)
 async def list_updatable_passes(
     request: Request,
     deviceLibraryIdentifier: str,
     passTypeIdentifier: str,
     passesUpdatedSince: str | None = None,
-    authorization: Annotated[str | None, Header()] = None,
     *,
     settings: Settings = Depends(get_settings),
 ) -> SerialNumbers:
@@ -270,17 +344,24 @@ async def list_updatable_passes(
         passTypeIdentifier=passTypeIdentifier,
         passesUpdatedSince=passesUpdatedSince,
         realm="fastapi",
-        url=request.url
+        url=request.url,
     )
     for pass_registration_handler in get_pass_data_acquisitions():
         serial_numbers = await pass_registration_handler.get_update_serial_numbers(
             deviceLibraryIdentifier, passTypeIdentifier, passesUpdatedSince
         )
 
-        logger.info("list_updatable_passes", realm="fastapi", serial_numbers=serial_numbers)
+        logger.info(
+            "list_updatable_passes", realm="fastapi", serial_numbers=serial_numbers
+        )
         return serial_numbers
 
-    logger.info("list_updatable_passes", realm="fastapi", serial_numbers=serial_numbers, empty=True)
+    logger.info(
+        "list_updatable_passes",
+        realm="fastapi",
+        serial_numbers=serial_numbers,
+        empty=True,
+    )
     return SerialNumbers(serialNumers=[], lastUpdated="")
 
 
@@ -309,7 +390,7 @@ async def update_pass(
         passTypeIdentifier=passTypeIdentifier,
         serialNumber=serialNumber,
         realm="fastapi",
-        url=request.url
+        url=request.url,
     )
     # fetch the push tokens
     for handler in get_pass_data_acquisitions():
@@ -329,13 +410,9 @@ async def update_pass(
     for push_token in push_tokens:
         url = f"https://api.push.apple.com/3/device/{push_token.pushToken}"
         headers = {"apns-topic": passTypeIdentifier}
-        
+
         logger.info(
-            "update_pass",
-            action="call APN",
-            realm="fastapi",
-            url=url,
-            headers=headers
+            "update_pass", action="call APN", realm="fastapi", url=url, headers=headers
         )
 
         async with httpx.AsyncClient(http2=True, verify=ssl_context) as client:

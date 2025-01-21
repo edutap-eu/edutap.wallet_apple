@@ -36,8 +36,10 @@ class SettingsTest(Settings):
         self.cert_dir = self.data_dir / "certs" / "private"
         self.pass_type_identifier = "pass.demo.lmu.de"
         self.team_identifier = "JG943677ZY"
-        self.https_port = 8080
+        self.https_port = 443
         self.domain = "localhost"
+        self.fernet_key = "AIYbyKUTkJpExGmNjEoI23AOqcMHIO7HhWPnMYKQWZA="
+    
         prefix = self.model_config["env_prefix"]
 
         # is needed, so that the settings are correct in
@@ -49,6 +51,7 @@ class SettingsTest(Settings):
         os.environ[prefix + "PASS_TYPE_IDENTIFIER"] = str(self.pass_type_identifier)
         os.environ[prefix + "HTTPS_PORT"] = str(self.https_port)
         os.environ[prefix + "DOMAIN"] = str(self.domain)
+        os.environ[prefix + "FERNET_KEY"] = 'AIYbyKUTkJpExGmNjEoI23AOqcMHIO7HhWPnMYKQWZA='
 
 
 class TestPassRegistration:
@@ -78,7 +81,11 @@ class TestPassDataAcquisition:
     """
 
     async def get_pass_data(
-        self, *, pass_type_id: str | None = None, serial_number: str
+        self,
+        *,
+        pass_type_id: str | None = None,
+        serial_number: str,
+        update: bool = False,
     ) -> handlers.PassData:
         """
         fetch the unsigned pass by its pass_id from a given folder
@@ -89,7 +96,9 @@ class TestPassDataAcquisition:
         with open(pass_path, "rb") as fh:
             pass1 = api.new(file=fh)
             pass1.pass_object_safe.description = f"changed {datetime.now()}"
-            pass1.pass_object_safe.pass_information.secondaryFields[0].label = f"payload {datetime.now()}"
+            pass1.pass_object_safe.pass_information.secondaryFields[0].label = (
+                f"payload {datetime.now()}"
+            )
             return api.pkpass(pass1)
 
     async def get_push_tokens(
@@ -103,6 +112,15 @@ class TestPassDataAcquisition:
         return handlers.SerialNumbers(
             serialNumers=["1234"], lastUpdated="2021-09-01T12:00:00Z"
         )
+
+    async def check_authentication_token(
+        self, pass_type_id: str | None, serial_number: str | None, token: str
+    ) -> bool:
+        """
+        checks if a given authentication token is valid
+        """
+        pid, sn = api.extract_auth_token(token)
+        return pid == pass_type_id and sn == serial_number
 
 
 class TestLogging:

@@ -37,11 +37,16 @@ class PassDataAcquisition(Protocol):
     """
 
     async def get_pass_data(
-        self, *, pass_type_id: str | None, serial_number: str
+        self, *, pass_type_id: str | None, serial_number: str, update: bool = False
     ) -> handlers.PassData:
         """
         Fetches pass creation data from the database
         is called by the Edutap Apple Provider upon creation of a new pass
+        
+        :param pass_type_id: the pass type identifier
+        :param serial_number: the serial number of the pass
+        :param update: if True the pass data is updated, this is normally true
+            when this function is invoked by the apple phone
 
         """
 
@@ -61,6 +66,11 @@ class PassDataAcquisition(Protocol):
         """
         Fetches the serial numbers of the passes that have been updated since the last update
         see https://developer.apple.com/documentation/walletpasses/get-the-list-of-updatable-passes
+        """
+
+    async def check_authentication_token(self, token: str) -> bool:
+        """
+        checks if a given authentication token is valid
         """
 
 

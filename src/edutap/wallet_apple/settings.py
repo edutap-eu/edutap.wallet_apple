@@ -31,10 +31,6 @@ class Settings(BaseSettings):
     """directory where the certificates and keys are stored"""
     private_key: Path = Field(default_factory=lambda dd: dd["cert_dir"] / "private.key")
     """Path to the private key file in PEM format"""
-    # certificate: Path = Field(
-    #     default_factory=lambda dd: dd["cert_dir"] / "certificate.pem"
-    # )
-    """Path to the Apple certificate file in PEM format for pass signing"""
     wwdr_certificate: Path = Field(
         default_factory=lambda dd: dd["cert_dir"] / "wwdr_certificate.pem"
     )
@@ -50,6 +46,7 @@ class Settings(BaseSettings):
     # TODO: move that to SettingsTest only
     pass_type_identifier: str | None = None
     team_identifier: str | None = None
+    fernet_key: str | None = None
 
     def get_certificate_path(self, pass_type_identifier: str) -> Path:
         """

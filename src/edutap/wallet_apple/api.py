@@ -1,4 +1,7 @@
+import cryptography.fernet
 from .models import passes
+from .models.passes import PkPass
+
 from edutap.wallet_apple.settings import Settings
 from typing import Any
 from typing import BinaryIO
@@ -76,7 +79,45 @@ def pkpass(pkpass: passes.PkPass) -> BinaryIO:
     return pkpass.as_zip_bytesio()
 
 
-def save_link(identifier: str) -> str:
+def create_auth_token(
+    pass_type_identifier: str, serial_number: str, fernet_key: str | None = None
+) -> str:
+    """
+    create an authentication token using cryptography.Fernet symmetric encryption
+    """
+    if fernet_key is None:
+        settings = Settings()
+        fernet_key = settings.fernet_key.encode("utf-8")
+
+    fernet = cryptography.fernet.Fernet(fernet_key)
+    token = fernet.encrypt(f"{pass_type_identifier}:{serial_number}".encode())
+    return token
+
+
+def extract_auth_token(
+    token: str | bytes, fernet_key: bytes | None = None
+) -> tuple[str, str]:
+    """
+    extract the pass_type_identifier and serial_number from the authentication token
+    """
+    if fernet_key is None:
+        settings = Settings()
+        fernet_key = settings.fernet_key.encode("utf-8")
+
+    if not isinstance(token, bytes):
+        token = token.encode()
+    fernet = cryptography.fernet.Fernet(fernet_key)
+    decrypted = fernet.decrypt(token)
+    return decrypted.decode().split(":")
+
+
+def save_link(
+    pass_type_id: str,
+    seial_number: str,
+    settings: Settings | None = None,
+    url_prefix: str = "/apple_update_service/v1",
+    schema: str = "https",
+) -> str:
     """
     creates a link to download the pass
     this link is encrypted, so that the pass holder identity
@@ -84,5 +125,13 @@ def save_link(identifier: str) -> str:
 
     :param identifier: Pass identifier.
     """
-    # TODO: implement
-    raise NotImplementedError
+    if settings is None:
+        settings = Settings()
+
+    token = create_auth_token(pass_type_id, seial_number, settings.fernet_key).decode(
+        "utf-8"
+    )
+    if settings.https_port == 443 or not settings.https_port:
+        return f"{schema}://{settings.domain}{url_prefix}/download-pass/{token}"
+    
+    return f"{schema}://{settings.domain}:{settings.https_port}{url_prefix}/download-pass/{token}"
