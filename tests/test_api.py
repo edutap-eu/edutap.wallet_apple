@@ -16,6 +16,7 @@ import json
 import os
 import pytest
 
+from plugins import SettingsTest  # noqa: F401
 
 def test_load_pass_from_json():
     with open(common.jsons / "minimal_storecard.json", encoding="utf-8") as fh:
@@ -162,27 +163,37 @@ def test_serialize_existing_pass_as_json_dict(
         assert isinstance(d, BytesIO)
         print(d)
 
-
-@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
+pass_type_ids = SettingsTest().get_available_passtype_ids()
+pass
+# @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
+@pytest.mark.parametrize("pass_type_id", pass_type_ids)
 def test_sign_existing_generic_pass_and_get_bytes_io(
-    apple_passes_dir, generated_passes_dir, settings_test: Settings  # noqa: F811
+    apple_passes_dir,
+    generated_passes_dir,
+    settings_test: Settings,
+    pass_type_id: str,  # noqa: F811
 ):
     with open(settings_test.root_dir / "unsigned-passes" / "1234.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
-        pkpass.pass_object_safe.passTypeIdentifier = settings_test.pass_type_identifier
+        pkpass.pass_object_safe.passTypeIdentifier = pass_type_id #settings_test.pass_type_identifier
         pkpass.pass_object_safe.teamIdentifier = settings_test.team_identifier
-        # pkpass.pass_object_safe.pass_information.secondaryFields[0].value = (
-        #     "Donald Duck"
-        # )
-        # pkpass.pass_object_safe.authenticationToken = "1234567890123456"
-        fernet_key = b'AIYbyKUTkJpExGmNjEoI23AOqcMHIO7HhWPnMYKQWZA=' #TODO: softcode
+
+        settings_test.fernet_key = fernet_key = (
+            b"AIYbyKUTkJpExGmNjEoI23AOqcMHIO7HhWPnMYKQWZA="  # TODO: softcode
+        )
         token = api.create_auth_token(
             pkpass.pass_object_safe.passTypeIdentifier,
-            "1234",  #TODO: serial number softcoded,
+            "1234",  # TODO: serial number softcoded,
             fernet_key=fernet_key,
         )
         pkpass.pass_object_safe.authenticationToken = token.decode("utf-8")
+        pkpass.pass_object_safe.serialNumber = "1234"
+        pkpass.pass_object_safe.webServiceURL = api.save_link(
+            pkpass.pass_object_safe.passTypeIdentifier,
+            pkpass.pass_object_safe.serialNumber,
+            settings=settings_test,
+        )
         api.sign(pkpass, settings=settings_test)
         assert pkpass.is_signed
 

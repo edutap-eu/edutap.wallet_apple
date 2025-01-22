@@ -295,6 +295,12 @@ def test_get_updated_pass(
     # check the logs
     logs = [l for l in testlog if l["realm"] == "fastapi" and l["event"] == "get_updated_pass"]
     assert len(logs) == 1
+    
+    # the failed authentication should be logged
+    errlogs = [
+        l for l in testlog if l["realm"] == "fastapi" and l["event"] == "check_authorization_failure"
+    ]
+    assert len(errlogs) == 1
 
     print(pass2)
 
@@ -320,18 +326,24 @@ def test_register_pass(entrypoints_testing, fastapi_client, settings_fastapi, te
         f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}/{1234}",
         data=handlers.PushToken(pushToken="333333").model_dump_json(),
         headers={"authorization": f"ApplePass {token}"},
-     )
+    )
     assert response.status_code == 200
 
     logs = [
         l for l in testlog if l["realm"] == "fastapi" and l["event"] == "register_pass"
     ]
     assert len(logs) == 1
+    
+    # the failed authentication should be logged
+    errlogs = [
+        l for l in testlog if l["realm"] == "fastapi" and l["event"] == "check_authorization_failure"
+    ]
+    assert len(errlogs) == 1
 
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
-def test_unregister_pass(entrypoints_testing, fastapi_client, settings_fastapi):
+def test_unregister_pass(entrypoints_testing, fastapi_client, settings_fastapi, testlog):
     device_id = "a0ccefd5944f32bcae520d64c4dc7a16"
     # give it a correct authorization token (normally the handheld would do that based on the  auth toke in the pass)
     # we have to fake it here
@@ -350,6 +362,16 @@ def test_unregister_pass(entrypoints_testing, fastapi_client, settings_fastapi):
         headers={"authorization": f"ApplePass {token}"},
      )
     assert response.status_code == 200
+
+    logs = [
+        l for l in testlog if l["realm"] == "fastapi" and l["event"] == "unregister_pass"
+    ]
+    assert len(logs) == 1
+    # the failed authentication should be logged
+    errlogs = [
+        l for l in testlog if l["realm"] == "fastapi" and l["event"] == "check_authorization_failure"
+    ]
+    assert len(errlogs) == 1
 
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")

@@ -68,7 +68,9 @@ class PassDataAcquisition(Protocol):
         see https://developer.apple.com/documentation/walletpasses/get-the-list-of-updatable-passes
         """
 
-    async def check_authentication_token(self, token: str) -> bool:
+    async def check_authentication_token(
+        self, pass_type_id: str | None, serial_number: str | None, token: str
+    ) -> bool:
         """
         checks if a given authentication token is valid
         """

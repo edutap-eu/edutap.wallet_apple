@@ -57,15 +57,31 @@ async def check_authorization(
 
     raises a 401 exception if the token is not correct
     """
-
+    
     for pass_registration_handler in get_pass_data_acquisitions():
         if authorization is None:
+            get_settings().get_logger().warn(
+                "check_authorization_failure",
+                authorization=authorization,
+                pass_type_identifier=pass_type_identifier,
+                serial_number=serial_number,
+                reason="no token given",
+                realm="fastapi",
+            )
             raise HTTPException(status_code=401, detail="Unauthorized - no token give")
         token = authorization.split(" ")[1]
         check = await pass_registration_handler.check_authentication_token(
             pass_type_identifier, serial_number, token
         )
         if not check:
+            get_settings().get_logger().warn(
+                "check_authorization_failure",
+                authorization=authorization,
+                pass_type_identifier=pass_type_identifier,
+                serial_number=serial_number,
+                reason="wrong token",
+                realm="fastapi",
+            )
             raise HTTPException(status_code=401, detail="Unauthorized - wrong token")
 
 
@@ -118,9 +134,11 @@ async def register_pass(
 
     :return:
     """
+    logger = settings.get_logger()
+
     await check_authorization(authorization, passTypeIdentifier, serialNumber)
 
-    logger = settings.get_logger()
+
     logger.info(
         "register_pass",
         deviceLibraryIdentitfier=deviceLibraryIdentitfier,
