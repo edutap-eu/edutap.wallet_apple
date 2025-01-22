@@ -137,19 +137,20 @@ async def register_pass(
     # TODO: auth handling
 
     logger = settings.get_logger()
-
-    await check_authorization(authorization, passTypeIdentifier, serialNumber)
-
-
     logger.info(
         "register_pass",
         deviceLibraryIdentitfier=deviceLibraryIdentitfier,
         passTypeIdentifier=passTypeIdentifier,
         serialNumber=serialNumber,
+        authorization=authorization,
         realm="fastapi",
         url=request.url,
         push_token=data,
     )
+    await check_authorization(authorization, passTypeIdentifier, serialNumber)
+
+
+
     for pass_registration_handler in get_pass_registrations():
         await pass_registration_handler.register_pass(
             deviceLibraryIdentitfier, passTypeIdentifier, serialNumber, data
