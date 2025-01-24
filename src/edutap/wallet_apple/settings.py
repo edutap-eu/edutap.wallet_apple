@@ -3,7 +3,9 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
-import structlog
+import structlog  # type: ignore
+
+
 logger = structlog.get_logger("edutap.wallet_apple")
 
 ROOT_DIR = Path(__file__).parents[3].resolve()

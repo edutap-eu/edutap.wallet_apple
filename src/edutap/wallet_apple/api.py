@@ -1,11 +1,14 @@
-import cryptography.fernet
 from .models import passes
-from .models.passes import PkPass
-
+from .models.passes import PkPass  # noqa: F401
+from edutap.wallet_apple.plugins import get_pass_data_acquisitions
 from edutap.wallet_apple.settings import Settings
 from typing import Any
 from typing import BinaryIO
 from typing import Optional
+
+import cryptography.fernet
+import httpx  # type: ignore
+import ssl
 
 
 def new(
@@ -80,15 +83,18 @@ def pkpass(pkpass: passes.PkPass) -> BinaryIO:
 
 
 def create_auth_token(
-    pass_type_identifier: str, serial_number: str, fernet_key: str | None = None
-) -> str:
+    pass_type_identifier: str, serial_number: str, fernet_key: str | bytes | None = None
+) -> bytes:
     """
     create an authentication token using cryptography.Fernet symmetric encryption
     """
     if fernet_key is None:
         settings = Settings()
+        assert settings.fernet_key, "fernet_key is not set in the settings"
         fernet_key = settings.fernet_key.encode("utf-8")
 
+    if not isinstance(fernet_key, bytes):
+        fernet_key = fernet_key.encode("utf-8")
     fernet = cryptography.fernet.Fernet(fernet_key)
     token = fernet.encrypt(f"{pass_type_identifier}:{serial_number}".encode())
     return token
@@ -102,6 +108,7 @@ def extract_auth_token(
     """
     if fernet_key is None:
         settings = Settings()
+        assert settings.fernet_key is not None, "fernet_key is not set in the settings"
         fernet_key = settings.fernet_key.encode("utf-8")
 
     if not isinstance(token, bytes):
@@ -133,5 +140,52 @@ def save_link(
     )
     if settings.https_port == 443 or not settings.https_port:
         return f"{schema}://{settings.domain}{url_prefix}/download-pass/{token}"
-    
+
     return f"{schema}://{settings.domain}:{settings.https_port}{url_prefix}/download-pass/{token}"
+
+
+async def trigger_update(passTypeIdentifier, serialNumber, settings: Settings | None):
+    """
+    performs a APNs call to push an update to a pass/device
+    """
+    if settings is None:
+        settings = Settings()
+
+    logger = settings.get_logger()
+
+    # fetch the push tokens
+    for handler in get_pass_data_acquisitions():
+        push_tokens = await handler.get_push_tokens(
+            None, passTypeIdentifier, serialNumber
+        )
+
+    # create the ssl context for the APN call based on the certificate for the passTypeIdentifier
+    ssl_context = ssl.create_default_context()
+    ssl_context.load_cert_chain(
+        certfile=settings.get_certificate_path(passTypeIdentifier),
+        keyfile=settings.private_key,
+    )
+
+    updated = []
+
+    # now call APN for each push-token
+    for push_token in push_tokens:
+        url = f"https://api.push.apple.com/3/device/{push_token.pushToken}"
+        headers = {"apns-topic": passTypeIdentifier}
+
+        logger.info(
+            "update_pass", action="call APN", realm="fastapi", url=url, headers=headers
+        )
+
+        async with httpx.AsyncClient(http2=True, verify=ssl_context) as client:
+            response = await client.post(
+                url,
+                headers=headers,
+                json={},
+            )
+
+            if response.status_code == 200:
+                updated.append(push_token)
+
+    logger.info("update_pass", realm="fastapi", updated=updated)
+    return updated

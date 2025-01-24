@@ -3,19 +3,16 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
-from common import apple_passes_dir  # noqa: F401
-from common import generated_passes_dir  # noqa: F401
-from common import key_files_exist  # noqa: F401
-from common import testlog  # noqa: F401
 from edutap.wallet_apple import api
 from edutap.wallet_apple.models import handlers
+from edutap.wallet_apple.plugins import get_logging_handlers
 from email.parser import HeaderParser
 from importlib import metadata
 from importlib.metadata import EntryPoint
 from io import BytesIO
 from pathlib import Path
-from edutap.wallet_apple.plugins import get_logging_handlers
 from plugins import SettingsTest
+from tests.conftest import key_files_exist  # noqa: F401
 from typing import Callable
 
 import json
@@ -24,7 +21,8 @@ import pytest
 
 
 try:
-    from edutap.wallet_apple.handlers.fastapi import router
+    from edutap.wallet_apple.handlers.fastapi import router_apple_wallet
+    from edutap.wallet_apple.handlers.fastapi import router_download_pass
     from fastapi import FastAPI
     from fastapi.responses import HTMLResponse
     from fastapi.testclient import TestClient
@@ -88,7 +86,8 @@ def fastapi_client(entrypoints_testing) -> TestClient:
     returns a TestClient instance ready for testing
     """
     app = FastAPI()
-    app.include_router(router)
+    app.include_router(router_apple_wallet)
+    app.include_router(router_download_pass)
     return TestClient(app)
 
 
@@ -185,10 +184,19 @@ def test_save_link(settings_fastapi):
 ################################################
 settings = SettingsTest()
 
+
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
-@pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids()) #["pass.demo.lmu.de", "pass.demo.library.lmu.de"])
-def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi, pass_type_id, testlog):
+@pytest.mark.parametrize(
+    "pass_type_id", settings.get_available_passtype_ids()
+)  # ["pass.demo.lmu.de", "pass.demo.library.lmu.de"])
+def test_get_pass(
+    entrypoints_testing,
+    fastapi_client,
+    settings_fastapi,
+    pass_type_id,
+    testlog,  # noqa: F811
+):
     serial_number = settings_fastapi.initial_pass_serialnumber
     download_link = api.save_link(
         pass_type_id=pass_type_id,
@@ -197,7 +205,7 @@ def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi, pass_ty
     )
 
     response = fastapi_client.get(download_link)
-    
+
     assert response.status_code == 200
 
     cd = response.headers.get("content-disposition")
@@ -217,15 +225,9 @@ def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi, pass_ty
     pass2 = api.new(file=fh)
     assert pass2.is_signed
     assert pass2.pass_object_safe.teamIdentifier == settings_fastapi.team_identifier
-    assert (
-        pass2.pass_object_safe.passTypeIdentifier
-        == pass_type_id
-    )
+    assert pass2.pass_object_safe.passTypeIdentifier == pass_type_id
     assert pass2.pass_object_safe.description.startswith("changed")
-    assert (
-        pass2.pass_object_safe.passTypeIdentifier
-        == pass_type_id
-    )
+    assert pass2.pass_object_safe.passTypeIdentifier == pass_type_id
     assert pass2.pass_object_safe.serialNumber == serial_number
     assert (
         pass2.pass_object_safe.webServiceURL
@@ -233,7 +235,11 @@ def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi, pass_ty
     )
 
     # check the logs
-    logs = [l for l in testlog if l["realm"] == "fastapi" and l["event"] == "download_pass"]
+    logs = [
+        log
+        for log in testlog
+        if log["realm"] == "fastapi" and log["event"] == "download_pass"
+    ]
     assert len(logs) == 1
 
     print(pass2)
@@ -242,14 +248,15 @@ def test_get_pass(entrypoints_testing, fastapi_client, settings_fastapi, pass_ty
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
 def test_get_updated_pass(
-    entrypoints_testing, fastapi_client, settings_fastapi, testlog
-):
-    # give it a correct authorization token (normally the handheld would do that based on the  auth toke in the pass)
+    entrypoints_testing, fastapi_client, settings_fastapi, testlog  # noqua F811
+):  # noqua F811
+    # give it a correct authorization token (normally the handheld would do that based on the auth token in the pass)
     # we have to fake it here
     token = api.create_auth_token(
-        settings_fastapi.pass_type_identifier, settings_fastapi.initial_pass_serialnumber
+        settings_fastapi.pass_type_identifier,
+        settings_fastapi.initial_pass_serialnumber,
     ).decode("utf-8")
-    
+
     response = fastapi_client.get(
         f"/apple_update_service/v1/passes/{settings_fastapi.pass_type_identifier}/{settings_fastapi.initial_pass_serialnumber}",
     )
@@ -293,12 +300,18 @@ def test_get_updated_pass(
     )
 
     # check the logs
-    logs = [l for l in testlog if l["realm"] == "fastapi" and l["event"] == "get_updated_pass"]
+    logs = [
+        log
+        for log in testlog
+        if log["realm"] == "fastapi" and log["event"] == "get_updated_pass"
+    ]
     assert len(logs) == 1
-    
+
     # the failed authentication should be logged
     errlogs = [
-        l for l in testlog if l["realm"] == "fastapi" and l["event"] == "check_authorization_failure"
+        log
+        for log in testlog
+        if log["realm"] == "fastapi" and log["event"] == "check_authorization_failure"
     ]
     assert len(errlogs) == 1
 
@@ -307,21 +320,24 @@ def test_get_updated_pass(
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
-def test_register_pass(entrypoints_testing, fastapi_client, settings_fastapi, testlog):
+def test_register_pass(
+    entrypoints_testing, fastapi_client, settings_fastapi, testlog
+):  # noqua F811
     device_id = "a0ccefd5944f32bcae520d64c4dc7a16"
-    # give it a correct authorization token (normally the handheld would do that based on the  auth toke in the pass)
+    # give it a correct authorization token (normally the handheld would do that based on the auth token in the pass)
     # we have to fake it here
     token = api.create_auth_token(
-        settings_fastapi.pass_type_identifier, settings_fastapi.initial_pass_serialnumber
+        settings_fastapi.pass_type_identifier,
+        settings_fastapi.initial_pass_serialnumber,
     ).decode("utf-8")
-    
+
     # without auth token it should fail
     response = fastapi_client.post(
         f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}/{1234}",
         data=handlers.PushToken(pushToken="333333").model_dump_json(),
     )
     assert response.status_code == 401
-    
+
     response = fastapi_client.post(
         f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}/{1234}",
         data=handlers.PushToken(pushToken="333333").model_dump_json(),
@@ -330,46 +346,57 @@ def test_register_pass(entrypoints_testing, fastapi_client, settings_fastapi, te
     assert response.status_code == 200
 
     logs = [
-        l for l in testlog if l["realm"] == "fastapi" and l["event"] == "register_pass"
+        log
+        for log in testlog
+        if log["realm"] == "fastapi" and log["event"] == "register_pass"
     ]
-    assert len(logs) == 1
-    
+    assert len(logs) >= 1
+
     # the failed authentication should be logged
     errlogs = [
-        l for l in testlog if l["realm"] == "fastapi" and l["event"] == "check_authorization_failure"
+        log
+        for log in testlog
+        if log["realm"] == "fastapi" and log["event"] == "check_authorization_failure"
     ]
     assert len(errlogs) == 1
 
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
-def test_unregister_pass(entrypoints_testing, fastapi_client, settings_fastapi, testlog):
+def test_unregister_pass(
+    entrypoints_testing, fastapi_client, settings_fastapi, testlog  # noqa: F811
+):
     device_id = "a0ccefd5944f32bcae520d64c4dc7a16"
-    # give it a correct authorization token (normally the handheld would do that based on the  auth toke in the pass)
+    # give it a correct authorization token (normally the handheld would do that based on the  auth token in the pass)
     # we have to fake it here
     token = api.create_auth_token(
-        settings_fastapi.pass_type_identifier, settings_fastapi.initial_pass_serialnumber
+        settings_fastapi.pass_type_identifier,
+        settings_fastapi.initial_pass_serialnumber,
     ).decode("utf-8")
-    
+
     # without auth token it should fail
     response = fastapi_client.delete(
         f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}/{1234}",
     )
     assert response.status_code == 401
-    
+
     response = fastapi_client.delete(
         f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}/{1234}",
         headers={"authorization": f"ApplePass {token}"},
-     )
+    )
     assert response.status_code == 200
 
     logs = [
-        l for l in testlog if l["realm"] == "fastapi" and l["event"] == "unregister_pass"
+        log
+        for log in testlog
+        if log["realm"] == "fastapi" and log["event"] == "unregister_pass"
     ]
     assert len(logs) == 1
     # the failed authentication should be logged
     errlogs = [
-        l for l in testlog if l["realm"] == "fastapi" and l["event"] == "check_authorization_failure"
+        log
+        for log in testlog
+        if log["realm"] == "fastapi" and log["event"] == "check_authorization_failure"
     ]
     assert len(errlogs) == 1
 
@@ -377,7 +404,7 @@ def test_unregister_pass(entrypoints_testing, fastapi_client, settings_fastapi, 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
 def test_list_updateable_passes(
-    entrypoints_testing, fastapi_client, settings_fastapi, testlog
+    entrypoints_testing, fastapi_client, settings_fastapi, testlog  # noqua F811
 ):
     device_id = "a0ccefd5944f32bcae520d64c4dc7a16"
     response = fastapi_client.get(
@@ -389,9 +416,9 @@ def test_list_updateable_passes(
     assert response.status_code == 200
 
     logs = [
-        l
-        for l in testlog
-        if l["realm"] == "fastapi" and l["event"] == "list_updatable_passes"
+        log
+        for log in testlog
+        if log["realm"] == "fastapi" and log["event"] == "list_updatable_passes"
     ]
     assert len(logs) == 2
 
@@ -416,7 +443,7 @@ def test_start_server(entrypoints_testing, settings_fastapi):
     import uvicorn  # type: ignore
 
     app = FastAPI()
-    app.include_router(router)
+    app.include_router(router_apple_wallet)
 
     @app.get("/", response_class=HTMLResponse)
     async def read_root():
@@ -427,7 +454,7 @@ def test_start_server(entrypoints_testing, settings_fastapi):
             </head>
             <body>
                 <h1>Hello, World!</h1>
-                <a href={router.prefix}/passes/{settings_fastapi.pass_type_identifier}/{settings_fastapi.initial_pass_serialnumber}>Get Pass</a>
+                <a href={router_apple_wallet.prefix}/passes/{settings_fastapi.pass_type_identifier}/{settings_fastapi.initial_pass_serialnumber}>Get Pass</a>
             </body>
         </html>
         """

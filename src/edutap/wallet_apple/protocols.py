@@ -42,7 +42,7 @@ class PassDataAcquisition(Protocol):
         """
         Fetches pass creation data from the database
         is called by the Edutap Apple Provider upon creation of a new pass
-        
+
         :param pass_type_id: the pass type identifier
         :param serial_number: the serial number of the pass
         :param update: if True the pass data is updated, this is normally true

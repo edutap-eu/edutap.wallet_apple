@@ -1,9 +1,9 @@
-from common import create_shell_pass
 from edutap.wallet_apple.models import passes
 from edutap.wallet_apple.models.passes import BarcodeFormat
+from tests.conftest import create_shell_pass
 
-import common
 import json
+import tests.conftest as conftest
 
 
 def test_model():
@@ -17,7 +17,7 @@ def test_model():
 
 
 def test_load_minimal_storecard():
-    buf = open(common.jsons / "minimal_storecard.json").read()
+    buf = open(conftest.jsons / "minimal_storecard.json").read()
     pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.storeCard is not None
@@ -27,7 +27,7 @@ def test_load_minimal_storecard():
 
 
 def test_load_storecard_nfc():
-    buf = open(common.jsons / "storecard_with_nfc.json").read()
+    buf = open(conftest.jsons / "storecard_with_nfc.json").read()
     pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.storeCard is not None
@@ -38,7 +38,7 @@ def test_load_storecard_nfc():
 
 
 def test_load_minimal_generic_pass():
-    buf = open(common.jsons / "minimal_generic_pass.json").read()
+    buf = open(conftest.jsons / "minimal_generic_pass.json").read()
     pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.generic is not None
@@ -48,7 +48,7 @@ def test_load_minimal_generic_pass():
 
 
 def test_load_generic_pass():
-    buf = open(common.jsons / "generic_pass.json").read()
+    buf = open(conftest.jsons / "generic_pass.json").read()
     pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.generic is not None
@@ -58,7 +58,7 @@ def test_load_generic_pass():
 
 
 def test_load_boarding_pass():
-    buf = open(common.jsons / "boarding_pass.json").read()
+    buf = open(conftest.jsons / "boarding_pass.json").read()
     pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.boardingPass is not None
@@ -68,7 +68,7 @@ def test_load_boarding_pass():
 
 
 def test_load_event_pass():
-    buf = open(common.jsons / "event_ticket.json").read()
+    buf = open(conftest.jsons / "event_ticket.json").read()
     pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.eventTicket is not None
@@ -78,7 +78,7 @@ def test_load_event_pass():
 
 
 def test_load_coupon():
-    buf = open(common.jsons / "coupon.json").read()
+    buf = open(conftest.jsons / "coupon.json").read()
     pass1 = passes.Pass.model_validate_json(buf)
 
     assert pass1.coupon is not None
@@ -101,7 +101,7 @@ def test_basic_pass():
     assert passfile_json is not None
     assert passfile_json["suppressStripShine"] is False
     assert passfile_json["formatVersion"] == 1
-    assert passfile_json["passTypeIdentifier"] == common.PASS_TYPE_IDENTIFIER
+    assert passfile_json["passTypeIdentifier"] == conftest.PASS_TYPE_IDENTIFIER
     assert passfile_json["serialNumber"] == "1234567"
     assert passfile_json["teamIdentifier"] == "Team Identifier"
     assert passfile_json["organizationName"] == "Org Name"
@@ -188,7 +188,7 @@ def test_pdf_417_pass():
 
 def test_files():
     passfile = create_shell_pass()
-    passfile._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
+    passfile._add_file("icon.png", open(conftest.resources / "white_square.png", "rb"))
     assert len(passfile.files) == 1
     assert "icon.png" in passfile.files
 
@@ -196,7 +196,7 @@ def test_files():
     manifest = json.loads(manifest_json)
     assert "170eed23019542b0a2890a0bf753effea0db181a" == manifest["icon.png"]
 
-    passfile._add_file("logo.png", open(common.resources / "white_square.png", "rb"))
+    passfile._add_file("logo.png", open(conftest.resources / "white_square.png", "rb"))
     assert "logo.png" in passfile.files
 
     manifest_json = passfile._create_manifest()

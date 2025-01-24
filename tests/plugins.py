@@ -39,7 +39,7 @@ class SettingsTest(Settings):
         self.https_port = 443
         self.domain = "localhost"
         self.fernet_key = "AIYbyKUTkJpExGmNjEoI23AOqcMHIO7HhWPnMYKQWZA="
-    
+
         prefix = self.model_config["env_prefix"]
 
         # is needed, so that the settings are correct in
@@ -51,7 +51,9 @@ class SettingsTest(Settings):
         os.environ[prefix + "PASS_TYPE_IDENTIFIER"] = str(self.pass_type_identifier)
         os.environ[prefix + "HTTPS_PORT"] = str(self.https_port)
         os.environ[prefix + "DOMAIN"] = str(self.domain)
-        os.environ[prefix + "FERNET_KEY"] = 'AIYbyKUTkJpExGmNjEoI23AOqcMHIO7HhWPnMYKQWZA='
+        os.environ[prefix + "FERNET_KEY"] = (
+            "AIYbyKUTkJpExGmNjEoI23AOqcMHIO7HhWPnMYKQWZA="
+        )
 
 
 class TestPassRegistration:
@@ -97,16 +99,18 @@ class TestPassDataAcquisition:
             pass1 = api.new(file=fh)
             if pass_type_id is not None:
                 pass1.pass_object_safe.passTypeIdentifier = pass_type_id
-                
+
             pass1.pass_object_safe.description = f"changed {datetime.now()}"
             pass1.pass_object_safe.pass_information.secondaryFields[0].label = (
                 f"payload {datetime.now()}"
             )
             if not update:
-                token = api.create_auth_token(pass1.pass_object_safe.passTypeIdentifier, serial_number)
+                token = api.create_auth_token(
+                    pass1.pass_object_safe.passTypeIdentifier, serial_number
+                )
                 pass1.pass_object_safe.authenticationToken = token
             pass1.pass_object_safe.serialNumber = serial_number
-            
+
             return api.pkpass(pass1)
 
     async def get_push_tokens(

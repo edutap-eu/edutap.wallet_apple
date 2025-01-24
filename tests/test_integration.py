@@ -1,13 +1,5 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-imports
-from common import apple_passes_dir  # noqa: F401
-from common import certs
-from common import create_shell_pass
-from common import generated_passes_dir  # noqa: F401
-from common import key_files_exist
-from common import only_test_if_crypto_supports_verification
-from common import resources
-from common import settings_test  # noqa: F401
 from edutap.wallet_apple import crypto
 from edutap.wallet_apple.models.passes import Barcode
 from edutap.wallet_apple.models.passes import BarcodeFormat
@@ -16,10 +8,18 @@ from edutap.wallet_apple.models.passes import NFC
 from edutap.wallet_apple.models.passes import Pass
 from edutap.wallet_apple.models.passes import PkPass
 from edutap.wallet_apple.models.passes import StoreCard
+from tests.conftest import apple_passes_dir  # noqa: F401
+from tests.conftest import certs
+from tests.conftest import create_shell_pass
+from tests.conftest import generated_passes_dir  # noqa: F401
+from tests.conftest import key_files_exist
+from tests.conftest import only_test_if_crypto_supports_verification
+from tests.conftest import resources
+from tests.conftest import settings_test  # noqa: F401
 
-import common
 import os
 import pytest
+import tests.conftest as conftest
 import uuid
 
 
@@ -45,9 +45,9 @@ def test_signing(settings_test):  # noqa: F811
     manifest_json = passfile._create_manifest()
 
     key, cert, wwdr_cert = crypto.load_key_files(
-        common.key_file,
+        conftest.key_file,
         settings_test.get_certificate_path(settings_test.pass_type_identifier),
-        common.wwdr_file,
+        conftest.wwdr_file,
     )
     signature = crypto.sign_manifest(
         manifest_json,
@@ -80,9 +80,9 @@ def test_signing1(settings_test):  # noqa: F811
     cert_file = settings_test.get_certificate_path(settings_test.pass_type_identifier)
 
     key, cert, wwdr_cert = crypto.load_key_files(
-        common.key_file,
+        conftest.key_file,
         cert_file,
-        common.wwdr_file,
+        conftest.wwdr_file,
     )
 
     signature = crypto.sign_manifest(
@@ -102,8 +102,8 @@ def test_signing1(settings_test):  # noqa: F811
         crypto.verify_manifest(tampered_manifest, signature)
 
     passfile = create_shell_pass()
-    passfile._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
-    passfile.sign(common.key_file, cert_file, common.wwdr_file)
+    passfile._add_file("icon.png", open(conftest.resources / "white_square.png", "rb"))
+    passfile.sign(conftest.key_file, cert_file, conftest.wwdr_file)
 
     zipfile = passfile.as_zip_bytesio()
     assert zipfile is not None
@@ -122,8 +122,8 @@ def test_verification(settings_test):  # noqa: F811
     cert_file = settings_test.get_certificate_path(settings_test.pass_type_identifier)
 
     passfile = create_shell_pass()
-    passfile._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
-    passfile.sign(common.key_file, cert_file, common.wwdr_file)
+    passfile._add_file("icon.png", open(conftest.resources / "white_square.png", "rb"))
+    passfile.sign(conftest.key_file, cert_file, conftest.wwdr_file)
     manifest = passfile._create_manifest()
     signature = passfile.files["signature"]
     crypto.verify_manifest(manifest, signature)
@@ -136,7 +136,7 @@ def test_verification(settings_test):  # noqa: F811
         passfile.verify()
 
     # now sign it, so verification should pass now
-    passfile.sign(common.key_file, cert_file, common.wwdr_file)
+    passfile.sign(conftest.key_file, cert_file, conftest.wwdr_file)
     passfile.verify()
 
     zipfile = passfile.as_zip_bytesio()
@@ -157,8 +157,8 @@ def test_passbook_creation(settings_test):  # noqa: F811
     cert_file = settings_test.get_certificate_path(settings_test.pass_type_identifier)
 
     passfile = create_shell_pass()
-    passfile._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
-    passfile.sign(common.key_file, cert_file, common.wwdr_file)
+    passfile._add_file("icon.png", open(conftest.resources / "white_square.png", "rb"))
+    passfile.sign(conftest.key_file, cert_file, conftest.wwdr_file)
     zipfile = passfile.as_zip_bytesio()
     # zipfile = passfile.create(common.cert_file, common.key_file, common.wwdr_file, None)
     assert zipfile
@@ -352,9 +352,9 @@ def test_open_pkpass_and_sign_again(
 
     with open(generated_passes_dir / newname, "wb") as fh:
         pkpass.sign(
-            common.certs / "private" / "private.key",
+            conftest.certs / "private" / "private.key",
             cert_file,
-            common.certs / "private" / "wwdr_certificate.pem",
+            conftest.certs / "private" / "wwdr_certificate.pem",
         )
         fh.write(pkpass.as_zip_bytesio().getvalue())
 

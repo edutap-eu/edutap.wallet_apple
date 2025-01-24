@@ -1,25 +1,25 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-imports
 
-from common import apple_passes_dir  # noqa: F401
-from common import generated_passes_dir  # noqa: F401
-from common import key_files_exist
-from common import only_test_if_crypto_supports_verification
-from common import settings_test  # noqa: F401
 from edutap.wallet_apple import api
 from edutap.wallet_apple.crypto import VerificationError
 from edutap.wallet_apple.settings import Settings
 from io import BytesIO
+from plugins import SettingsTest  # noqa: F401
+from tests.conftest import apple_passes_dir  # noqa: F401
+from tests.conftest import generated_passes_dir  # noqa: F401
+from tests.conftest import key_files_exist
+from tests.conftest import only_test_if_crypto_supports_verification
+from tests.conftest import settings_test  # noqa: F401
 
-import common
 import json
 import os
 import pytest
+import tests.conftest as conftest
 
-from plugins import SettingsTest  # noqa: F401
 
 def test_load_pass_from_json():
-    with open(common.jsons / "minimal_storecard.json", encoding="utf-8") as fh:
+    with open(conftest.jsons / "minimal_storecard.json", encoding="utf-8") as fh:
         buf = fh.read()
         data = json.loads(buf)
         pkpass = api.new(data=data)
@@ -27,16 +27,16 @@ def test_load_pass_from_json():
 
 
 def test_load_pass_from_zip():
-    with open(common.resources / "basic_pass.pkpass", "rb") as fh:
+    with open(conftest.resources / "basic_pass.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
         assert pkpass is not None
 
 
 def test_load_pass_with_data_and_file_must_fail():
-    with open(common.jsons / "minimal_storecard.json", encoding="utf-8") as fh:
+    with open(conftest.jsons / "minimal_storecard.json", encoding="utf-8") as fh:
         buf = fh.read()
 
-    with open(common.resources / "basic_pass.pkpass", "rb") as fh:
+    with open(conftest.resources / "basic_pass.pkpass", "rb") as fh:
         with pytest.raises(ValueError) as ex:
             pkpass = api.new(data=buf, file=fh)
             assert pkpass is not None
@@ -58,11 +58,11 @@ def test_create_and_save_unsigned_pass_from_json_dict(
     creates a pass object from dict, adds a file and saves it to a pkpass file.
     checks if pass.json and the added file are in the pkpass file.
     """
-    buf = open(common.jsons / "storecard_with_nfc.json").read()
+    buf = open(conftest.jsons / "storecard_with_nfc.json").read()
     jdict = json.loads(buf)
     pass1 = api.new(data=jdict)
 
-    pass1._add_file("icon.png", open(common.resources / "white_square.png", "rb"))
+    pass1._add_file("icon.png", open(conftest.resources / "white_square.png", "rb"))
 
     ofile = generated_passes_dir / "unsigned-pass.pkpass"
     with api.pkpass(pass1) as zip_fh:
@@ -163,25 +163,29 @@ def test_serialize_existing_pass_as_json_dict(
         assert isinstance(d, BytesIO)
         print(d)
 
+
 pass_type_ids = SettingsTest().get_available_passtype_ids()
 pass
+
+
 # @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 @pytest.mark.parametrize("pass_type_id", pass_type_ids)
 def test_sign_existing_generic_pass_and_get_bytes_io(
-    apple_passes_dir,
-    generated_passes_dir,
-    settings_test: Settings,
+    apple_passes_dir,  # noqa: F811
+    generated_passes_dir,  # noqa: F811
+    settings_test: Settings,  # noqa: F811
     pass_type_id: str,  # noqa: F811
 ):
     with open(settings_test.root_dir / "unsigned-passes" / "1234.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
-        pkpass.pass_object_safe.passTypeIdentifier = pass_type_id #settings_test.pass_type_identifier
+        pkpass.pass_object_safe.passTypeIdentifier = (
+            pass_type_id  # settings_test.pass_type_identifier
+        )
         pkpass.pass_object_safe.teamIdentifier = settings_test.team_identifier
 
-        settings_test.fernet_key = fernet_key = (
-            b"AIYbyKUTkJpExGmNjEoI23AOqcMHIO7HhWPnMYKQWZA="  # TODO: softcode
-        )
+        fernet_key = b"AIYbyKUTkJpExGmNjEoI23AOqcMHIO7HhWPnMYKQWZA="  # TODO: softcode
+        settings_test.fernet_key = fernet_key.decode("utf-8")
         token = api.create_auth_token(
             pkpass.pass_object_safe.passTypeIdentifier,
             "1234",  # TODO: serial number softcoded,
