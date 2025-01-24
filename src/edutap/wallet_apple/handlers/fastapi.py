@@ -359,7 +359,7 @@ async def list_updatable_passes(
     return SerialNumbers(serialNumers=[], lastUpdated="")
 
 
-@router_apple_wallet.get("/download-pass/{token}")
+@router_download_pass.get("/download-pass/{token}")
 async def download_pass(request: Request, token: str, settings=Depends(get_settings)):
     """
     download a pass from the server. The parameter is a token, so fromoutside
