@@ -19,11 +19,7 @@ import datetime
 
 
 def get_settings() -> Settings:
-    """
-    TODO
-    """
     res = Settings()
-
     return res
 
 
@@ -165,6 +161,16 @@ async def register_pass(
             deviceLibraryIdentitfier, passTypeIdentifier, serialNumber, data
         )
 
+    logger.info(
+        "register_pass done",
+        deviceLibraryIdentitfier=deviceLibraryIdentitfier,
+        passTypeIdentifier=passTypeIdentifier,
+        serialNumber=serialNumber,
+        authorization=authorization,
+        realm="fastapi",
+        url=request.url,
+        push_token=data,
+    )
 
 @router_apple_wallet.delete(
     "/devices/{deviceLibraryIdentitfier}/registrations/{passTypeIdentifier}/{serialNumber}"
@@ -313,7 +319,7 @@ async def prepare_pass(
     raise LookupError("Pass not found")
 
 
-@router_download_pass.get(
+@router_apple_wallet.get(
     "/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}",
     response_model=SerialNumbers,
 )
@@ -395,37 +401,3 @@ async def download_pass(request: Request, token: str, settings=Depends(get_setti
         headers=headers,
         media_type="application/vnd.apple.pkpass",
     )
-
-
-# @router_apple_pass_update.post("/passes/{passTypeIdentifier}/{serialNumber}")
-# async def update_pass(
-#     request: Request,
-#     passTypeIdentifier: str,
-#     serialNumber: str,
-#     authorization: Annotated[str | None, Header()] = None,
-#     *,
-#     settings: Settings = Depends(get_settings),
-# ) -> list[PushToken]:
-#     """
-#     see https://developer.apple.com/documentation/walletpasses/update-a-pass
-
-#     see https://developer.apple.com/documentation/UserNotifications/sending-notification-requests-to-apns
-
-#     for push notification handling
-
-#     the authorization token is checked against the athorizationToken in the pass data
-
-#     TODO: Logik in einen eigenen Handler auslagern
-#     """
-#     logger = settings.get_logger()
-
-#     check_authorization(authorization, passTypeIdentifier, serialNumber)
-
-#     logger.info(
-#         "update_pass",
-#         passTypeIdentifier=passTypeIdentifier,
-#         serialNumber=serialNumber,
-#         realm="fastapi",
-#         url=request.url,
-#     )
-#     return await push_pass_update(passTypeIdentifier, serialNumber, settings)
