@@ -403,13 +403,23 @@ def test_unregister_pass(
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
+@pytest.mark.parametrize(
+    "last_updated_since", [None, "2021-09-01T12:00:00Z", "letztens"]
+)  # ["pass.demo.lmu.de", "pass.demo.library.lmu.de"])
 def test_list_updateable_passes(
-    entrypoints_testing, fastapi_client, settings_fastapi, testlog  # noqua F811
+    entrypoints_testing,
+    fastapi_client,
+    settings_fastapi,
+    testlog,
+    last_updated_since,  # noqua F811
 ):
     device_id = "a0ccefd5944f32bcae520d64c4dc7a16"
-    response = fastapi_client.get(
-        f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}?passesUpdatedSince=letztens"
+    url = (
+        f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}?passesUpdatedSince={last_updated_since}"
+        if last_updated_since
+        else f"/apple_update_service/v1/devices/{device_id}/registrations/{settings_fastapi.pass_type_identifier}"
     )
+    response = fastapi_client.get(url)
     serial_numbers = handlers.SerialNumbers.model_validate(response.json())
     assert serial_numbers.serialNumers == ["1234"]
     assert serial_numbers.lastUpdated == "2021-09-01T12:00:00Z"

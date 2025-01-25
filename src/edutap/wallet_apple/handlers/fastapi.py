@@ -172,6 +172,7 @@ async def register_pass(
         push_token=data,
     )
 
+
 @router_apple_wallet.delete(
     "/devices/{deviceLibraryIdentitfier}/registrations/{passTypeIdentifier}/{serialNumber}"
 )
@@ -327,7 +328,7 @@ async def list_updatable_passes(
     request: Request,
     deviceLibraryIdentifier: str,
     passTypeIdentifier: str,
-    passesUpdatedSince: str,
+    passesUpdatedSince: str | None = None,
     *,
     settings: Settings = Depends(get_settings),
 ) -> SerialNumbers:
