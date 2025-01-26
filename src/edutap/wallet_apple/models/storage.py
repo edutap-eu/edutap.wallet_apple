@@ -14,7 +14,7 @@ class AppleDeviceRegistry(BaseModel):  # type: ignore[call-arg]
     to send update notifications.
     """
 
-    deviceLibraryIdentitfier: str
+    deviceLibraryIdentifier: str
     pushToken: str
     registrationTime: datetime = Field(default=datetime.now(tz=timezone.utc))
 
@@ -42,7 +42,7 @@ class ApplePassRegistration(BaseModel):  # type: ignore[call-arg]
      In this case the passdata will be created empty and filled later.
     """
 
-    deviceLibraryIdentitfier: str  # Foreign key to AppleDeviceRegistry
+    deviceLibraryIdentifier: str  # Foreign key to AppleDeviceRegistry
     passTypeIdentifier: str  # Forein key to ApplePassData
     serialNumber: str
     registrationTime: datetime = Field(default=datetime.now(tz=timezone.utc))
