@@ -421,7 +421,7 @@ def test_list_updateable_passes(
     )
     response = fastapi_client.get(url)
     serial_numbers = handlers.SerialNumbers.model_validate(response.json())
-    assert serial_numbers.serialNumers == ["1234"]
+    assert serial_numbers.serialNumbers == ["1234"]
     assert serial_numbers.lastUpdated == "2021-09-01T12:00:00Z"
     assert response.status_code == 200
 

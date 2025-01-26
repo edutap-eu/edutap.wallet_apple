@@ -363,7 +363,7 @@ async def list_updatable_passes(
         serial_numbers=serial_numbers,
         empty=True,
     )
-    return SerialNumbers(serialNumers=[], lastUpdated="")
+    return SerialNumbers(serialNumbers=[], lastUpdated="")
 
 
 @router_download_pass.get("/download-pass/{token}")

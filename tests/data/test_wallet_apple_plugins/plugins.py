@@ -37,4 +37,4 @@ class TestPassDataAcquisition:
     async def get_update_serial_numbers(
         self, device_type_id: str, pass_type_id: str, last_updated: str
     ) -> handlers.SerialNumbers:
-        return handlers.SerialNumbers(serialNumers=[], lastUpdated="never")
+        return handlers.SerialNumbers(serialNumbers=[], lastUpdated="never")

@@ -32,7 +32,7 @@ class SerialNumbers(BaseModel):
     see: https://developer.apple.com/documentation/walletpasses/serialnumbers
     """
 
-    serialNumers: list[str]
+    serialNumbers: list[str]
     lastUpdated: str
     """A developer-defined string that contains a tag that indicates the modification time for the returned passes."""
 

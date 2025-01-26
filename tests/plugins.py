@@ -122,7 +122,7 @@ class TestPassDataAcquisition:
         self, device_type_id: str, pass_type_id: str, last_updated: str
     ) -> handlers.SerialNumbers:
         return handlers.SerialNumbers(
-            serialNumers=["1234"], lastUpdated="2021-09-01T12:00:00Z"
+            serialNumbers=["1234"], lastUpdated="2021-09-01T12:00:00Z"
         )
 
     async def check_authentication_token(
