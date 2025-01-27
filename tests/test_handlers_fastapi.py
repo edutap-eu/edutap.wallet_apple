@@ -3,7 +3,7 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
-from conftest import key_files_exist  # noqa: F401
+from conftest import key_files_exist
 from edutap.wallet_apple import api
 from edutap.wallet_apple.models import handlers
 from edutap.wallet_apple.plugins import get_logging_handlers
@@ -92,7 +92,7 @@ def fastapi_client(entrypoints_testing) -> TestClient:
 
 
 @pytest.fixture
-def initial_unsigned_pass(generated_passes_dir) -> Path:  # noqa: F811
+def initial_unsigned_pass(generated_passes_dir) -> Path:
     """
     fixture for creating a new unsigned pass
     needed for testing `TestPassDataAcquisition.get_pass_data()`
@@ -195,7 +195,7 @@ def test_get_pass(
     fastapi_client,
     settings_fastapi,
     pass_type_id,
-    testlog,  # noqa: F811
+    testlog,
 ):
     serial_number = settings_fastapi.initial_pass_serialnumber
     download_link = api.save_link(
@@ -248,8 +248,8 @@ def test_get_pass(
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
 def test_get_updated_pass(
-    entrypoints_testing, fastapi_client, settings_fastapi, testlog  # noqua F811
-):  # noqua F811
+    entrypoints_testing, fastapi_client, settings_fastapi, testlog
+):
     # give it a correct authorization token (normally the handheld would do that based on the auth token in the pass)
     # we have to fake it here
     token = api.create_auth_token(
@@ -320,9 +320,7 @@ def test_get_updated_pass(
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
-def test_register_pass(
-    entrypoints_testing, fastapi_client, settings_fastapi, testlog
-):  # noqua F811
+def test_register_pass(entrypoints_testing, fastapi_client, settings_fastapi, testlog):
     device_id = "a0ccefd5944f32bcae520d64c4dc7a16"
     # give it a correct authorization token (normally the handheld would do that based on the auth token in the pass)
     # we have to fake it here
@@ -364,7 +362,7 @@ def test_register_pass(
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
 def test_unregister_pass(
-    entrypoints_testing, fastapi_client, settings_fastapi, testlog  # noqa: F811
+    entrypoints_testing, fastapi_client, settings_fastapi, testlog
 ):
     device_id = "a0ccefd5944f32bcae520d64c4dc7a16"
     # give it a correct authorization token (normally the handheld would do that based on the  auth token in the pass)
@@ -411,7 +409,7 @@ def test_list_updateable_passes(
     fastapi_client,
     settings_fastapi,
     testlog,
-    last_updated_since,  # noqua F811
+    last_updated_since,
 ):
     device_id = "a0ccefd5944f32bcae520d64c4dc7a16"
     url = (

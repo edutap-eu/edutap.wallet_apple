@@ -1,16 +1,13 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-imports
 
-from conftest import apple_passes_dir  # noqa: F401
-from conftest import generated_passes_dir  # noqa: F401
 from conftest import key_files_exist
 from conftest import only_test_if_crypto_supports_verification
-from conftest import settings_test  # noqa: F401
 from edutap.wallet_apple import api
 from edutap.wallet_apple.crypto import VerificationError
 from edutap.wallet_apple.settings import Settings
 from io import BytesIO
-from plugins import SettingsTest  # noqa: F401
+from plugins import SettingsTest
 
 import conftest as conftest
 import json
@@ -52,8 +49,8 @@ def test_new_pass_empty():
 
 
 def test_create_and_save_unsigned_pass_from_json_dict(
-    generated_passes_dir,  # noqa: F811
-):  # noqa: F811
+    generated_passes_dir,
+):
     """
     creates a pass object from dict, adds a file and saves it to a pkpass file.
     checks if pass.json and the added file are in the pkpass file.
@@ -84,7 +81,7 @@ def test_create_and_save_unsigned_pass_from_json_dict(
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 def test_sign_existing_pass_and_get_bytes_io(
-    apple_passes_dir, generated_passes_dir, settings_test: Settings  # noqa: F811
+    apple_passes_dir, generated_passes_dir, settings_test: Settings
 ):
     with open(apple_passes_dir / "BoardingPass.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
@@ -108,7 +105,7 @@ def test_sign_existing_pass_and_get_bytes_io(
 @only_test_if_crypto_supports_verification
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
-def test_sign_and_verify_pass(apple_passes_dir, settings_test: Settings):  # noqa: F811
+def test_sign_and_verify_pass(apple_passes_dir, settings_test: Settings):
     with open(apple_passes_dir / "BoardingPass.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
         # this pass has not been created and signed by us, so we verify
@@ -137,7 +134,7 @@ def test_sign_and_verify_pass(apple_passes_dir, settings_test: Settings):  # noq
 @pytest.mark.skip("wait for pydantic fix")
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 def test_serialize_existing_pass_as_json_dict(
-    apple_passes_dir, generated_passes_dir, settings_test: Settings  # noqa: F811
+    apple_passes_dir, generated_passes_dir, settings_test: Settings
 ):
     """
     tests serialization of a pass to a BytesIO object.
@@ -172,10 +169,10 @@ pass
 @pytest.mark.integration
 @pytest.mark.parametrize("pass_type_id", pass_type_ids)
 def test_sign_existing_generic_pass_and_get_bytes_io(
-    apple_passes_dir,  # noqa: F811
-    generated_passes_dir,  # noqa: F811
-    settings_test: Settings,  # noqa: F811
-    pass_type_id: str,  # noqa: F811
+    apple_passes_dir,
+    generated_passes_dir,
+    settings_test: Settings,
+    pass_type_id: str,
 ):
     with open(settings_test.root_dir / "unsigned-passes" / "1234.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
