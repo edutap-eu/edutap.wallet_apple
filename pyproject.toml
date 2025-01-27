@@ -39,6 +39,7 @@ Documentation = "https://docs.edutap.eu/packages/edutap_wallet_apple/index.html"
 [project.optional-dependencies]
 test = [
     "pytest",
+    "pytest-cov",
     "requests-mock",
     "fastapi",
     "httpx",
@@ -72,6 +73,8 @@ minversion = "6.0"
 testpaths = [
     "tests",
 ]
+addopts = "--cov=edutap.wallet_apple --cov-report term --cov-report html"
+
 markers = [
     "integration: Test are running against the real Apple Wallet API, needs account configuration. (deselect with '-m \"not integration\"')",
 ]
