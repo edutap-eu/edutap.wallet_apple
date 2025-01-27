@@ -141,7 +141,6 @@ async def register_pass(
 
     :return:
     """
-    # TODO: auth handling
 
     logger = settings.get_logger()
     logger.info(
