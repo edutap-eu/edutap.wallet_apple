@@ -61,7 +61,7 @@ class PassDataAcquisition(Protocol):
         """
 
     async def get_update_serial_numbers(
-        self, device_library_id: str, pass_type_id: str, last_updated: str
+        self, device_library_id: str, pass_type_id: str, last_updated: str | None = None
     ) -> handlers.SerialNumbers:
         """
         Fetches the serial numbers of the passes that have been updated since the last update
