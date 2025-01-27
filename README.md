@@ -29,13 +29,20 @@ source .venv/bin/activate
 pip install -e .[test]
 ```
 
+If you also need the [Apple Update Services](https://developer.apple.com/documentation/walletpasses/adding-a-web-service-to-update-passes) you need FastAPI as a dependency. In this case install with
+
+```bash
+pip install -e .[fastapi]
+```
 ## Running the Unittests
 
 The unit tests can be run without the cert files:
 
 ```shell
-pytest -m "not integration"
+pytest
 ```
+
+Don't be surprised if many tests are skipped, that is because for many tests it is needed to install apple certificatesfor passes which is explained in the next section.
 
 ## Installation of Certificates
 
