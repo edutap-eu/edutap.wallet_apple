@@ -1,8 +1,8 @@
 [project]
-name = "edutap.wallet_apple"
+name = "edutap.wallet-apple"
 version = "1.0.0a1.dev0"
 description = "Library for Apple Wallet Communication"
-keywords = ["wallet", "Apple", "api", "pass"]
+keywords = ["wallet", "apple", "api", "pass", 'fastapi', 'digital identity']
 readme = "README.md"
 authors = [
     {name = "Philipp Auersperg-Castell", email = "phil@bluedynamics.com"},
@@ -16,15 +16,15 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
-    "Development Status :: 4 - Beta",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries",
     "Operating System :: OS Independent",
 ]
 dependencies = [
     "cryptography",
-    "httpx",
     "pydantic-settings>=2.6.1",
     "pydantic[email]>=2.10.3",
     "pyyaml",
@@ -41,7 +41,8 @@ test = [
     "pytest",
     "requests-mock",
     "fastapi",
-    "httpx",]
+    "httpx",
+]
 fastapi = [
     "fastapi",
     "uvicorn",
