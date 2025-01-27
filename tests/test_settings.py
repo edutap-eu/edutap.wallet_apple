@@ -1,7 +1,7 @@
 from edutap.wallet_apple.settings import Settings
 from pathlib import Path
 
-import tests.conftest as conftest
+import conftest
 
 
 def test_settings_via_env_dict(monkeypatch):

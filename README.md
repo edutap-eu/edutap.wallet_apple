@@ -6,12 +6,12 @@ This package provides
 
 - [x] an API and models for the creation of apple pass files (.pkpass)
 - [x] infrastructure to sign pass files with an Apples certificate.
-- [ ] Initial pass delivery with save link creation and a matching FastAPI endpoint.
-- [ ] Support for the update process of passes
+- [x] Initial pass delivery with save link creation and a matching FastAPI endpoint.
+- [x] Support for the update process of passes
     - using apple push notifications and
     - providing an update information endpoint (FastAPI)
     - providing an pass delivery endpoint for fetching updated passes.
-- [ ] abstract/pluggable data providers are defined to fetch data on pass-delivery or -update.
+- [x] abstract/pluggable data providers are defined to fetch data on pass-delivery or -update.
 
 
 ## Installation
@@ -89,7 +89,7 @@ To get the certificate:
 
 * Visit the iOS Provisioning [Portal -> Pass Type IDs -> New Pass Type ID](https://developer.apple.com/account/resources/identifiers/list/passTypeId)
     - either create a new pass type ID by clicking the blue (+) icon on top of the menu
-    - or select one of the existing pass type ID's
+    - or select one of the existing pass type IDs
 
 * In the screen labelled `Edit your Identifier Configuration` either
     - select an existing certificate and hit the `Download` button
@@ -221,6 +221,6 @@ It is licensed under the [EUROPEAN UNION PUBLIC LICENCE v. 1.2](https://opensour
 ## TODOS
 
 - [ ] pass verification following [apple instructions for building passes](https://developer.apple.com/documentation/walletpasses/building-a-pass)
-- [ ] implement api call that accepts an unsigned .pkpass and verifies and signs it
+- [x] implement api call that accepts an unsigned .pkpass and verifies and signs it
 - [ ] provide JSON schema for passes
     for apple one json schema for each pass type

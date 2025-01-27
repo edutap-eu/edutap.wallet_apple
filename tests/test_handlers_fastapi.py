@@ -3,6 +3,7 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
+from conftest import key_files_exist  # noqa: F401
 from edutap.wallet_apple import api
 from edutap.wallet_apple.models import handlers
 from edutap.wallet_apple.plugins import get_logging_handlers
@@ -12,7 +13,6 @@ from importlib.metadata import EntryPoint
 from io import BytesIO
 from pathlib import Path
 from plugins import SettingsTest
-from tests.conftest import key_files_exist  # noqa: F401
 from typing import Callable
 
 import json

@@ -1,21 +1,21 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-imports
 
+from conftest import apple_passes_dir  # noqa: F401
+from conftest import generated_passes_dir  # noqa: F401
+from conftest import key_files_exist
+from conftest import only_test_if_crypto_supports_verification
+from conftest import settings_test  # noqa: F401
 from edutap.wallet_apple import api
 from edutap.wallet_apple.crypto import VerificationError
 from edutap.wallet_apple.settings import Settings
 from io import BytesIO
 from plugins import SettingsTest  # noqa: F401
-from tests.conftest import apple_passes_dir  # noqa: F401
-from tests.conftest import generated_passes_dir  # noqa: F401
-from tests.conftest import key_files_exist
-from tests.conftest import only_test_if_crypto_supports_verification
-from tests.conftest import settings_test  # noqa: F401
 
+import conftest as conftest
 import json
 import os
 import pytest
-import tests.conftest as conftest
 
 
 def test_load_pass_from_json():

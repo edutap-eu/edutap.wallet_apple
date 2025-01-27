@@ -1,5 +1,13 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-imports
+from conftest import apple_passes_dir  # noqa: F401
+from conftest import certs
+from conftest import create_shell_pass
+from conftest import generated_passes_dir  # noqa: F401
+from conftest import key_files_exist
+from conftest import only_test_if_crypto_supports_verification
+from conftest import resources
+from conftest import settings_test  # noqa: F401
 from edutap.wallet_apple import crypto
 from edutap.wallet_apple.models.passes import Barcode
 from edutap.wallet_apple.models.passes import BarcodeFormat
@@ -8,18 +16,10 @@ from edutap.wallet_apple.models.passes import NFC
 from edutap.wallet_apple.models.passes import Pass
 from edutap.wallet_apple.models.passes import PkPass
 from edutap.wallet_apple.models.passes import StoreCard
-from tests.conftest import apple_passes_dir  # noqa: F401
-from tests.conftest import certs
-from tests.conftest import create_shell_pass
-from tests.conftest import generated_passes_dir  # noqa: F401
-from tests.conftest import key_files_exist
-from tests.conftest import only_test_if_crypto_supports_verification
-from tests.conftest import resources
-from tests.conftest import settings_test  # noqa: F401
 
+import conftest
 import os
 import pytest
-import tests.conftest as conftest
 import uuid
 
 

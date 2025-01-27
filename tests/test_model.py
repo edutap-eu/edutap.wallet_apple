@@ -1,9 +1,9 @@
+from conftest import create_shell_pass
 from edutap.wallet_apple.models import passes
 from edutap.wallet_apple.models.passes import BarcodeFormat
-from tests.conftest import create_shell_pass
 
+import conftest as conftest
 import json
-import tests.conftest as conftest
 
 
 def test_model():
