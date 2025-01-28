@@ -2,7 +2,7 @@
 
 ## API Functions
 
-**Attention** Work in progrss, not yet valid
+**Attention** Work in progress, not yet valid
 
 ```{eval-rst}
 .. rubric:: Passes
