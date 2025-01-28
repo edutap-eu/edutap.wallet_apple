@@ -11,7 +11,6 @@ from fastapi import Depends
 from fastapi import Header
 from fastapi import HTTPException
 from fastapi import Request
-from fastapi.concurrency import asynccontextmanager
 from fastapi.responses import StreamingResponse
 from typing import Annotated
 
@@ -23,30 +22,21 @@ def get_settings() -> Settings:
     return res
 
 
-@asynccontextmanager
-async def lifespan(router: APIRouter):
-    # setup phase
-    yield
-    # shutdown
-
-
 # router that handles the apple wallet api:
 #   POST register pass: /devices/{deviceLibraryIdentitfier}/registrations/{passTypeIdentifier}/{serialNumber}
 #   DELETE unregister pass: /devices/{deviceLibraryIdentitfier}/registrations/{passTypeIdentifier}/{serialNumber}
 #   GET get_updated_pass /passes/{passTypeIdentifier}/{serialNumber}
 #   GET list_updatable_passes: /devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}
-
 #   POST logging info issued by handheld: /log
-
 router_apple_wallet = APIRouter(
-    prefix="/apple_update_service/v1",
-    lifespan=lifespan,
+    prefix=f"/{get_settings().handler_prefix}/v1",
+    tags=["edutap.wallet_apple"],
 )
 
 # download pass: /download-pass/{token}
 router_download_pass = APIRouter(
-    prefix="/apple_update_service/v1",
-    lifespan=lifespan,
+    prefix=f"/{get_settings().handler_prefix}/v1",
+    tags=["edutap.wallet_apple"],
 )
 
 
@@ -58,7 +48,7 @@ async def check_authorization(
     """
     check the authorization token as it comes in the request header for
     `register_pass`, `unregister_pass` and `get_pass` endpoints
-    the autorizatio string is of the form `ApplePass <authenticationToken>`
+    the authorization string is of the form `ApplePass <authenticationToken>`
     where the authotizationToken is the authentication token that is stored in the
     apple pass
 

@@ -43,11 +43,9 @@ class Settings(BaseSettings):
     domain: str = "localhost"
     """Domain name for the HTTPS server"""
 
-    password: str | None = None
-
-    # TODO: move that to SettingsTest only
-    pass_type_identifier: str | None = None
+    # password: str | None = None
     team_identifier: str | None = None
+    handler_prefix: str = "apple_update_service"
     fernet_key: str | None = None
 
     def get_certificate_path(self, pass_type_identifier: str) -> Path:

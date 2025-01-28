@@ -6,7 +6,9 @@ from edutap.wallet_apple.models.passes import Pass
 from edutap.wallet_apple.models.passes import PkPass
 from edutap.wallet_apple.models.passes import StoreCard
 from edutap.wallet_apple.settings import Settings
+from importlib import metadata
 from pathlib import Path
+from typing import Callable
 
 import os
 import pytest
@@ -158,3 +160,45 @@ def create_shell_pass_loyalty(
 
     passfile.barcode = stdBarcode
     return passfile
+
+
+@pytest.fixture
+def entrypoints_testing(monkeypatch) -> Callable:
+    """
+    fixture for mocking entrypoints for testing:
+
+    - class TestPassRegistration
+    - class TestPassDataAcquisition
+    - class TestLogging
+    """
+    eps = {
+        "edutap.wallet_apple.plugins": [
+            metadata.EntryPoint(
+                name="PassRegistration",
+                value="plugins:TestPassRegistration",
+                group="edutap.wallet_apple.handlers.fastapi.router",
+            ),
+            metadata.EntryPoint(
+                name="PassDataAcquisition",
+                value="plugins:TestPassDataAcquisition",
+                group="edutap.wallet_apple.handlers.fastapi.router",
+            ),
+            metadata.EntryPoint(
+                name="Logging",
+                value="plugins:TestLogging",
+                group="edutap.wallet_apple.handlers.fastapi.router",
+            ),
+        ]
+    }
+
+    def mock_entry_points(group: str):
+        """
+        replacement for the official `importlib.metadata.entry_points()` function
+        """
+        return eps.get(group, [])
+
+    from edutap.wallet_apple import plugins
+
+    monkeypatch.setattr(metadata, "entry_points", mock_entry_points)
+    monkeypatch.setattr(plugins, "entry_points", mock_entry_points)
+    return mock_entry_points

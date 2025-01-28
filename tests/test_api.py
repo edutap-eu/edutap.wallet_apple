@@ -15,6 +15,9 @@ import os
 import pytest
 
 
+settings = SettingsTest()
+
+
 def test_load_pass_from_json():
     with open(conftest.jsons / "minimal_storecard.json", encoding="utf-8") as fh:
         buf = fh.read()
@@ -79,13 +82,14 @@ def test_create_and_save_unsigned_pass_from_json_dict(
 
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
+@pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
 @pytest.mark.integration
 def test_sign_existing_pass_and_get_bytes_io(
-    apple_passes_dir, generated_passes_dir, settings_test: Settings
+    apple_passes_dir, generated_passes_dir, settings_test: Settings, pass_type_id: str
 ):
     with open(apple_passes_dir / "BoardingPass.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
-        pkpass.pass_object_safe.passTypeIdentifier = settings_test.pass_type_identifier
+        pkpass.pass_object_safe.passTypeIdentifier = pass_type_id
         pkpass.pass_object_safe.teamIdentifier = settings_test.team_identifier
         pkpass.pass_object_safe.pass_information.secondaryFields[0].value = (
             "Donald Duck"
@@ -104,8 +108,11 @@ def test_sign_existing_pass_and_get_bytes_io(
 
 @only_test_if_crypto_supports_verification
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
+@pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
 @pytest.mark.integration
-def test_sign_and_verify_pass(apple_passes_dir, settings_test: Settings):
+def test_sign_and_verify_pass(
+    apple_passes_dir, settings_test: Settings, pass_type_id: str
+):
     with open(apple_passes_dir / "BoardingPass.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
         # this pass has not been created and signed by us, so we verify
@@ -117,7 +124,7 @@ def test_sign_and_verify_pass(apple_passes_dir, settings_test: Settings):
 
         # we have to change the passTypeIdentifier and teamIdentifier
         # so that we can sign it with our key and certificate
-        pkpass.pass_object_safe.passTypeIdentifier = settings_test.pass_type_identifier
+        pkpass.pass_object_safe.passTypeIdentifier = pass_type_id
         pkpass.pass_object_safe.teamIdentifier = settings_test.team_identifier
 
         # now of course the verification should fail
@@ -133,8 +140,9 @@ def test_sign_and_verify_pass(apple_passes_dir, settings_test: Settings):
 
 @pytest.mark.skip("wait for pydantic fix")
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
+@pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
 def test_serialize_existing_pass_as_json_dict(
-    apple_passes_dir, generated_passes_dir, settings_test: Settings
+    apple_passes_dir, generated_passes_dir, settings_test: Settings, pass_type_id: str
 ):
     """
     tests serialization of a pass to a BytesIO object.
@@ -148,7 +156,7 @@ def test_serialize_existing_pass_as_json_dict(
     """
     with open(apple_passes_dir / "BoardingPass.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
-        pkpass.pass_object_safe.passTypeIdentifier = settings_test.pass_type_identifier
+        pkpass.pass_object_safe.passTypeIdentifier = pass_type_id  # type: ignore
         pkpass.pass_object_safe.teamIdentifier = settings_test.team_identifier
         pkpass.pass_object_safe.pass_information.secondaryFields[0].value = "Doald Duck"
 

@@ -8,17 +8,16 @@ from edutap.wallet_apple import api
 from edutap.wallet_apple.models import handlers
 from edutap.wallet_apple.plugins import get_logging_handlers
 from email.parser import HeaderParser
-from importlib import metadata
-from importlib.metadata import EntryPoint
 from io import BytesIO
 from pathlib import Path
 from plugins import SettingsTest
-from typing import Callable
 
 import json
 import os
 import pytest
 
+
+settings = SettingsTest()
 
 try:
     from edutap.wallet_apple.handlers.fastapi import router_apple_wallet
@@ -36,47 +35,6 @@ except ImportError:
 @pytest.fixture
 def settings_fastapi():
     return SettingsTest()
-
-
-@pytest.fixture
-def entrypoints_testing(monkeypatch) -> Callable:
-    """
-    fixture for mocking entrypoints for testing:
-
-    - class TestPassRegistration
-    - class TestPassDataAcquisition
-    """
-    eps = {
-        "edutap.wallet_apple.plugins": [
-            EntryPoint(
-                name="PassRegistration",
-                value="plugins:TestPassRegistration",
-                group="edutap.wallet_apple.handlers.fastapi.router",
-            ),
-            EntryPoint(
-                name="PassDataAcquisition",
-                value="plugins:TestPassDataAcquisition",
-                group="edutap.wallet_apple.handlers.fastapi.router",
-            ),
-            EntryPoint(
-                name="Logging",
-                value="plugins:TestLogging",
-                group="edutap.wallet_apple.handlers.fastapi.router",
-            ),
-        ]
-    }
-
-    def mock_entry_points(group: str):
-        """
-        replacement for the official `importlib.metadata.entry_points()` function
-        """
-        return eps.get(group, [])
-
-    from edutap.wallet_apple import plugins
-
-    monkeypatch.setattr(metadata, "entry_points", mock_entry_points)
-    monkeypatch.setattr(plugins, "entry_points", mock_entry_points)
-    return mock_entry_points
 
 
 @pytest.fixture
@@ -182,7 +140,6 @@ def test_save_link(settings_fastapi):
 ################################################
 # Here come the real tests
 ################################################
-settings = SettingsTest()
 
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")

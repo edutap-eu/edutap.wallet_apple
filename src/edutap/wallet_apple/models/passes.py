@@ -1,8 +1,3 @@
-# pylint: disable=missing-function-docstring
-# pylint: disable=missing-class-docstring
-# pylint: disable=too-few-public-methods
-# pylint: disable=invalid-name
-# pylint: disable=fixme
 from collections import OrderedDict
 from edutap.wallet_apple import crypto
 from enum import Enum
