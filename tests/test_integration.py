@@ -12,14 +12,15 @@ from edutap.wallet_apple.models.passes import NFC
 from edutap.wallet_apple.models.passes import Pass
 from edutap.wallet_apple.models.passes import PkPass
 from edutap.wallet_apple.models.passes import StoreCard
+from plugins import SettingsTest
 
 import conftest
 import pytest
 import uuid
 
-from tests.plugins import SettingsTest
 
 settings = SettingsTest()
+
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
@@ -169,7 +170,9 @@ def test_passbook_creation(settings_test, pass_type_id):
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
 @pytest.mark.integration
-def test_passbook_creation_integration(generated_passes_dir, settings_test, pass_type_id):
+def test_passbook_creation_integration(
+    generated_passes_dir, settings_test, pass_type_id
+):
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -204,9 +207,7 @@ def test_passbook_creation_integration(generated_passes_dir, settings_test, pass
 @pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
 @pytest.mark.integration
 def test_passbook_creation_integration_loyalty_with_nfc(
-    generated_passes_dir,
-    settings_test,
-    pass_type_id
+    generated_passes_dir, settings_test, pass_type_id
 ):
     """
     This test can only run locally if you provide your personal Apple Wallet
@@ -269,7 +270,9 @@ def test_passbook_creation_integration_loyalty_with_nfc(
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
 @pytest.mark.integration
-def test_passbook_creation_integration_eventticket(generated_passes_dir, settings_test, pass_type_id):
+def test_passbook_creation_integration_eventticket(
+    generated_passes_dir, settings_test, pass_type_id
+):
     """
     This test can only run locally if you provide your personal Apple Wallet
     certificates, private key and password. It would not be wise to add
@@ -341,7 +344,6 @@ def test_open_pkpass_and_sign_again(
     fn = apple_passes_dir / "BoardingPass.pkpass"
     with open(fn, "rb") as fh:
         pkpass = PkPass.from_zip(fn)
-
         assert pkpass
 
     crypto.verify_manifest(pkpass.files["manifest.json"], pkpass.files["signature"])
