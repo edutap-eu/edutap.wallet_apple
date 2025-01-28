@@ -17,8 +17,6 @@ class PushToken(BaseModel):
 
     model_config = ConfigDict(  # control if instances can have extra attributes
         extra="forbid",
-        # extra="ignore",
-        # extra="allow",
     )
     pushToken: str
     deviceLibraryIdentifier: DeviceTypeIdentifier | None = None
@@ -45,8 +43,6 @@ class LogEntries(BaseModel):
     """
 
     model_config = ConfigDict(  # control if instances can have extra attributes
-        # extra="forbid",
-        # extra="ignore",
         extra="allow",
     )
     logs: list[str] = []

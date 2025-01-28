@@ -1,8 +1,4 @@
-import pytest
-
-
-@pytest.mark.skip(reason="not implemented yet")
-def test_get_pass_registrations():
+def test_get_pass_registrations(entrypoints_testing):
     from edutap.wallet_apple.plugins import get_pass_registrations
     from edutap.wallet_apple.protocols import PassRegistration
 
@@ -11,8 +7,7 @@ def test_get_pass_registrations():
     assert isinstance(plugins[0], PassRegistration)
 
 
-@pytest.mark.skip(reason="not implemented yet")
-def test_get_pass_data_acquisitions():
+def test_get_pass_data_acquisitions(entrypoints_testing):
     from edutap.wallet_apple.plugins import get_pass_data_acquisitions
     from edutap.wallet_apple.protocols import PassDataAcquisition
 
