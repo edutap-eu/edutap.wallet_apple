@@ -1,6 +1,6 @@
 [project]
 name = "edutap.wallet-apple"
-version = "1.0.0a1.dev1"
+version = "1.0.0a1"
 description = "Library for Apple Wallet Communication"
 keywords = ["wallet", "apple", "api", "pass", 'fastapi', 'digital identity']
 readme = "README.md"
