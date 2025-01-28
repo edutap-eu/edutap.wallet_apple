@@ -4,6 +4,7 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
 from conftest import key_files_exist
+from conftest import load_pass_viewer
 from edutap.wallet_apple import api
 from edutap.wallet_apple.models import handlers
 from edutap.wallet_apple.plugins import get_logging_handlers
@@ -13,7 +14,6 @@ from pathlib import Path
 from plugins import SettingsTest
 
 import json
-import os
 import pytest
 
 
@@ -175,7 +175,7 @@ def test_get_pass(
     out = settings_fastapi.signed_passes_dir / filename
     with open(out, "wb") as fp:
         fp.write(response.content)
-        os.system(f"open {out}")
+        load_pass_viewer(out)
 
     # parse the pass and check values
     fh.seek(0)
@@ -235,7 +235,7 @@ def test_get_updated_pass(
     out = settings_fastapi.signed_passes_dir / filename
     with open(out, "wb") as fp:
         fp.write(response.content)
-        os.system(f"open {out}")
+        load_pass_viewer(out)
 
     # parse the pass and check values
     fh.seek(0)
