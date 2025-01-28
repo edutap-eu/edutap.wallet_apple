@@ -28,6 +28,14 @@ wwdr_file = certs / "private" / "wwdr_certificate.pem"
 PASS_TYPE_IDENTIFIER = "pass.demo.lmu.de"
 
 
+def load_pass_viewer(passfile: Path) -> None:
+    """
+    open the pass file in the pass viewer,
+    under MacOS the pass viewer only opensif the pass is vald.
+    """
+    os.system(f"open {passfile}")
+
+
 @pytest.fixture
 def generated_passes_dir():
     target = data / "generated_passes"
@@ -47,7 +55,6 @@ def settings_test():
     settings = Settings(
         root_dir=cwd / "data",
         cert_dir_relative="certs/private",
-        pass_type_identifier="pass.demo.lmu.de",
         team_identifier="JG943677ZY",
     )
 
@@ -56,27 +63,15 @@ def settings_test():
 
 @pytest.fixture(scope="function")
 def testlog():
-    # create a logging handler that stores the log messages into a list
-    # this logging handler will configured into logger
+    """
+    create a logging handler that stores the log messages into a list
+    this logging handler will configured into logger
+    """
     from structlog.testing import capture_logs  # type: ignore
 
     with capture_logs() as logs:
         yield logs
         return logs
-    # class TestLog(logging.Handler):
-    #     def __init__(self):
-    #         logging.Handler.__init__(self, level=logging.DEBUG)
-    #         self.records = []
-
-    #     def emit(self, record):
-    #         self.records.append(record)
-
-    # testlog = TestLog()
-    # logger = logging.getLogger("edutap.wallet_apple")
-    # logger.setLevel(logging.DEBUG)
-    # logger.addHandler(testlog)
-    # yield testlog
-    # logger.removeHandler(testlog)
 
 
 def key_files_exist():
