@@ -11,7 +11,10 @@ from pathlib import Path
 from typing import Callable
 
 import os
+import platform
 import pytest
+import subprocess
+import tempfile
 import uuid
 
 
@@ -32,8 +35,38 @@ def load_pass_viewer(passfile: Path) -> None:
     """
     open the pass file in the pass viewer,
     under MacOS the pass viewer only opensif the pass is vald.
+
+    uses the security cms command to verify the pass file
+
+    see https://medium.com/deutsche-telekom-gurgaon/safeguarding-data-using-der-encoded-cms-message-0ce156946369
+    see https://ss64.com/mac/security.html
     """
-    os.system(f"open {passfile}")
+    # os.system(f"open {passfile}")  #uncomment this line to open the pass file in the pass viewer for visual inspection
+
+    if platform.system() == "Darwin":
+        with tempfile.TemporaryDirectory() as temp_dir:
+            print(f"Temporäres Verzeichnis erstellt: {temp_dir}")
+
+            odir = Path(temp_dir)
+
+            os.system(f"unzip -o {passfile} -d {odir}")
+
+            result = subprocess.run(
+                ["security", "cms", "-D", "-i", odir / "signature"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+            if result.returncode != 0:
+                raise ValueError(result.stderr)
+
+            with open(odir / "manifest.json", "rb") as fh:
+                manifest = fh.read()
+
+            if manifest != result.stdout:
+                raise ValueError("manifest and signature do not match")
+
+            result.returncode == 0
 
 
 @pytest.fixture

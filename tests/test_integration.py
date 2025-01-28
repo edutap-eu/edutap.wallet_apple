@@ -15,6 +15,7 @@ from edutap.wallet_apple.models.passes import StoreCard
 from plugins import SettingsTest
 
 import conftest
+import json
 import pytest
 import uuid
 
@@ -324,6 +325,128 @@ def test_passbook_creation_integration_eventticket(
     with open(pass_file_name, "wb") as fh:
         fh.write(passfile.as_zip_bytesio().getvalue())
         load_pass_viewer(pass_file_name)
+
+
+@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
+@pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
+@pytest.mark.integration
+def test_passbook_creation_integration_eventticket_unsigned(
+    generated_passes_dir, settings_test, pass_type_id
+):
+    """
+    This test can only run locally if you provide your personal Apple Wallet
+    certificates, private key and password. It would not be wise to add
+    them to git. Store them in the files indicated below, they are ignored
+    by git.
+
+    ATTENTION: in order to run this test you have to install the necessary certificates in data/certs/private following the README.md
+    these certificates are not provided in the repository for security reasons.
+
+    this test opens the passbook file in the default application for .pkpass files )works only on OSX)
+    """
+    pass_file_name = generated_passes_dir / "eventticket-invalid.pkpass"
+
+    cardInfo = EventTicket()
+    cardInfo.addPrimaryField("title", "EAIE2023", "event")
+    stdBarcode = Barcode(
+        message="test barcode", format=BarcodeFormat.CODE128, altText="alternate text"
+    )
+    sn = uuid.uuid4().hex
+    passobject = Pass(
+        eventTicket=cardInfo,
+        organizationName="eduTAP",
+        passTypeIdentifier="pass.demo.lmu.de",
+        teamIdentifier="JG943677ZY",
+        serialNumber=sn,
+        description="edutap Sample Pass",
+        webServiceURL="https://edutap.bluedynamics.net:8443/apple_update_service/v1",
+        authenticationToken="0123456789012345",  # must be 16 characters
+    )
+
+    passobject.barcode = stdBarcode
+    passfile = PkPass(pass_object=passobject)
+
+    passfile._add_file("icon.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("iconx2.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("logo.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("logox2.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("strip.png", open(resources / "eaie-hero.jpg", "rb"))
+    # passfile.addFile("background.png", open(resources / "eaie-hero.jpg", "rb"))
+
+    passobject.backgroundColor = "#fa511e"
+
+    with pytest.raises(ValueError):
+        with open(pass_file_name, "wb") as fh:
+            fh.write(passfile.as_zip_bytesio().getvalue())
+            load_pass_viewer(pass_file_name)
+
+
+@pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
+@pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
+@pytest.mark.integration
+def test_passbook_creation_integration_eventticket_tampered(
+    generated_passes_dir, settings_test, pass_type_id
+):
+    """
+    This test can only run locally if you provide your personal Apple Wallet
+    certificates, private key and password. It would not be wise to add
+    them to git. Store them in the files indicated below, they are ignored
+    by git.
+
+    ATTENTION: in order to run this test you have to install the necessary certificates in data/certs/private following the README.md
+    these certificates are not provided in the repository for security reasons.
+
+    this test opens the passbook file in the default application for .pkpass files )works only on OSX)
+    """
+    cert_file = settings_test.get_certificate_path(pass_type_id)
+    pass_file_name = generated_passes_dir / "eventticket-tampered.pkpass"
+
+    cardInfo = EventTicket()
+    cardInfo.addPrimaryField("title", "EAIE2023", "event")
+    stdBarcode = Barcode(
+        message="test barcode", format=BarcodeFormat.CODE128, altText="alternate text"
+    )
+    sn = uuid.uuid4().hex
+    passobject = Pass(
+        eventTicket=cardInfo,
+        organizationName="eduTAP",
+        passTypeIdentifier="pass.demo.lmu.de",
+        teamIdentifier="JG943677ZY",
+        serialNumber=sn,
+        description="edutap Sample Pass",
+        webServiceURL="https://edutap.bluedynamics.net:8443/apple_update_service/v1",
+        authenticationToken="0123456789012345",  # must be 16 characters
+    )
+
+    passobject.barcode = stdBarcode
+    passfile = PkPass(pass_object=passobject)
+
+    passfile._add_file("icon.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("iconx2.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("logo.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("logox2.png", open(resources / "edutap.png", "rb"))
+    passfile._add_file("strip.png", open(resources / "eaie-hero.jpg", "rb"))
+    # passfile.addFile("background.png", open(resources / "eaie-hero.jpg", "rb"))
+
+    passobject.backgroundColor = "#fa511e"
+    passfile.sign(
+        certs / "private" / "private.key",
+        cert_file,
+        certs / "private" / "wwdr_certificate.pem",
+    )
+
+    # tamper with the manifest
+    manifest = json.loads(passfile.files["manifest.json"])
+    passfile.files["pass.json"] = passfile.pass_object.model_dump_json(indent=4)
+    manifest["pass.json"] = "tampered"
+    passfile.files["manifest.json"] = passfile.files["manifest.json"] = json.dumps(
+        manifest
+    )
+
+    with pytest.raises(ValueError):
+        with open(pass_file_name, "wb") as fh:
+            fh.write(passfile.as_zip_bytesio().getvalue())
+            load_pass_viewer(pass_file_name)
 
 
 @only_test_if_crypto_supports_verification
