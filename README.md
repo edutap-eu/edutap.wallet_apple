@@ -1,233 +1,41 @@
 # edutap.wallet_apple
 
+<p style="text-align:center;">
+
+![PyPI - Version](https://img.shields.io/pypi/v/edutap.wallet_apple?logo=python)
+[![CI Tests](https://github.com/edutap-eu/edutap.wallet_apple/actions/workflows/tests.yaml/badge.svg)](https://github.com/edutap-eu/edutap.wallet_apple/actions/workflows/tests.yaml)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/edutap-eu/edutap.wallet_apple/main.svg)](https://results.pre-commit.ci/latest/github/edutap-eu/edutap.wallet_apple/main)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+![GitHub Repo stars](https://img.shields.io/github/stars/edutap-eu/edutap.wallet_apple)
+
+</p>
+
 This package provides a Python API and web server endpoints to create and update official Apple Wallet Passes.
 
 This package provides
 
-- [x] an API and models for the creation of apple pass files (.pkpass)
-- [x] infrastructure to sign pass files with an Apples certificate.
-- [x] Initial pass delivery with save link creation and a matching FastAPI endpoint.
-- [x] Support for the update process of passes
-    - using apple push notifications and
-    - providing an update information endpoint (FastAPI)
-    - providing an pass delivery endpoint for fetching updated passes.
-- [x] abstract/pluggable data providers are defined to fetch data on pass-delivery or -update.
-
-
-## Installation
-
-Prerequisites:
-
-- Python >= 3.10
-
-
-Example installation for development via Pip, it is recommended to use a Python Virtual Environment:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .[test]
-```
-
-If you also need the [Apple Update Services](https://developer.apple.com/documentation/walletpasses/adding-a-web-service-to-update-passes) you need FastAPI as a dependency. In this case install with
-
-```bash
-pip install -e .[fastapi]
-```
-## Running the Unittests
-
-The unit tests can be run without the cert files:
-
-```shell
-pytest
-```
-
-Don't be surprised if many tests are skipped, that is because for many tests it is needed to install apple certificatesfor passes which is explained in the next section.
-
-## Installation of Certificates
-
-PKPASS is a file format, used for storage and exchange of digital passes, developed by Apple for its Wallet application (Formerly known as PassBook until iOS 9)
-
-For signing the .pkpass files we need certificate and key files that need to be created.
-Please follow exactly the steps described below.
-You need an Apple developer account to obtain the certificate for the pass identifier.
-
-To run integration tests a private key, a certificate and the Apple root certificate needs to be prepared.
-
-This is the overall process to get the necessary certificates for issuing passes:
-
-```mermaid
-flowchart TD
-    B[create private key.pem]
-    D[get/create Pass ID - apple.com]
-    WWDR[download AppleWWDRCA.cer] -->WWDRPEM[convert to wwdr_certificate.pem]
-    D --> E[request Certificate.cer based on Pass Id - apple.com]
-    B[create key.pem] --> CSR[create CSR]
-    CSR -->|upload CSR in form| F[create+download Certificate.cer - apple.com]
-    E --> F
-    F -->|x509| G["create certificate-{passtype identifier}.pem"]
-    G --> H["install certificate-{passtype identifier}.pem, private.key and wwdr_certificate.pem on server"]
-    WWDRPEM --> H
-```
-
-### Preparing Private Key and Certificate Signing Request
-
-> **_NOTE:_**  This is only necessary when you create a new certificate, if you already have certificates in your account you can download them.
-
-1. Create your own private key
-   ```shell
-   openssl genrsa -out private.key 2048
-   ```
-
-2. Create a certificate signing request (CSR) with the private key
-
-   Name and email do not necessarily have to match with the account data of your apple developer account.
-
-   ```shell
-   openssl req -new -key private.key -out request.csr -subj="/emailAddress=[your email addr],CN=[your full name],C=[your country ISO code]"
-   ```
-
-### Get a Pass Type ID and Certificate from Apple
-
-You need a developer account at Apple to get a pass type ID and a certificate for signing passes.
-You can get a free developer account at [developer.apple.com](https://developer.apple.com/programs/)
-
-To get the certificate:
-
-* Visit the iOS Provisioning [Portal -> Pass Type IDs -> New Pass Type ID](https://developer.apple.com/account/resources/identifiers/list/passTypeId)
-    - either create a new pass type ID by clicking the blue (+) icon on top of the menu
-    - or select one of the existing pass type IDs
-
-* In the screen labelled `Edit your Identifier Configuration` either
-    - select an existing certificate and hit the `Download` button
-    - or hit `Create Certificate` on the bottom of the page (there you need the above mentioned `request.cer`) and download it
-
-* Convert the `certificate.cer` (X509 format) to a `certificate.pem` file by calling
-
- ⚠️ **Attention:**
-the name of the certificate must be in the form `certificate-{passtype identifier}.pem` since the certificate is bound to the pass type identifier.
-
-  ```shell
-  openssl x509 -inform der -in pass.cer -out certificate-{passtype identifier}.pem
-  ```
-
-### Apple Worldwide Developer Relations (WWDR) root certificate
-
-The certificate is usually preinstalled in your OS, but either in case of expiration or if you want to run the integration tests, the most recent can be downloaded at
-[Apple Certification Authority AppleWWDRCA.cer download](https://developer.apple.com/certificationauthority/AppleWWDRCA.cer)
-
-```shell
-curl https://www.apple.com/certificateauthority/AppleWWDRCAG4.cer -o AppleWWDRCA.cer
-```
-
-For more on expiration read [Apple Support - Expiration](https://developer.apple.com/support/certificates/expiration/).
-There is also an [overview of downloadable Apple certificates](https://www.apple.com/certificateauthority/)
-
-Once downloaded, convert the root certificate into a pem file"
-
-```shell
-openssl x509 -inform der -in AppleWWDRCA.cer -out wwdr_certificate.pem
-```
-
-Further reading: [Building a Pass - documentation at Apple](https://developer.apple.com/documentation/walletpasses/building_a_pass)
-
-To check the expiration date of the certificate use:
-
-```shell
-openssl x509 -enddate -noout -in wwdr_certificate.pem
-```
-
-In case the provided certificate is expired, copy the certificate to the OS certificates folder (this depends on the system).
-
-## Running the Integration Tests
-
-⚠️ **Attention:**
- To run integration tests, the above mentioned files (`certificate.pem`, `private.key` and `wwdr_certificate.pem`) have to be located at `tests/data/certs/private`.
-Create the folder if it is missing, do *never* add/commit them it to Git!
-
-```shell
-pytest -m integration
-```
-
-the test "test_passbook_creation_integration" will create a passbook file and display it with the passbook viewer.
-
-The test case `test_passbook_creation_integration` will create some pkpass-files.
-Those are located under tests/data/generated_passes.
-Displaying the pass works only under OSX since the passbook viewer is part of it.
-
-# PkPass creation
-
-The `edutap.wallet_apple` package provides a Python API to create Apple Wallet Passes.
-The following diagram shows the process of creating a signed pass file.
-
-```mermaid
-flowchart TD
-    CreatePass[create pass object]
-    CreatePass --> PassJson[pass.json]
-    CreatePass --> |add files| Files[files]
-    PassJson --> Manifest[create manifest]
-    Files --> |create with file hashes| Manifest[manifest]
-    Manifest --> Signature[signature file]
-    Certificate --> Signature
-    WWDRCertificate --> Signature
-    PrivateKey --> Signature
-    Signature --> PassFile[pass.pkpass ]
-    Files --> PassFile
-    Manifest --> PassFile
-```
-
-# Notification
-
-TODO document it
-
-## Create a certificate for push notifications
-
-TODO document it
-
-## Further readings
-
-- [apple doc for updating passes](https://developer.apple.com/documentation/walletpasses/adding_a_web_service_to_update_passes)
-
-- [apple doc for pass design - specifies the image file names](https://developer.apple.com/library/archive/documentation/UserExperience/Conceptual/PassKit_PG/Creating.html#//apple_ref/doc/uid/TP40012195-CH4-SW1)
-
-- [apple instructions for building passes](https://developer.apple.com/documentation/walletpasses/building-a-pass)
-
-- [passninja docs](https://www.passninja.com/tutorials/apple-platform/how-does-pass-updating-work-on-apple-wallet)
-
-- [some useful diagrams](http://www.31a2ba2a-b718-11dc-8314-0800200c9a66.com/2016/08/apple-store-passbook-uml-diagrams-and.html)
+-  an API and models for the creation of Apple pass files (.pkpass)
+-  infrastructure to sign pass files with an Apples certificate.
+-  Initial pass delivery with save link creation and a matching FastAPI endpoint.
+-  Support for the update process of passes
+  - using Apple push notifications and
+  - providing an update information endpoint (FastAPI)
+  - providing an pass delivery endpoint for fetching updated passes.
+-  abstract/pluggable data providers are defined to fetch data on pass-delivery or -update.
 
 ## Documentation
 
-Read the [complete `edutap.wallet_apple` documentation](https://docs.edutap.eu/packages/edutap_wallet_apple/index.html) to get started.
+Read the [complete edutap.wallet_apple documentation](https://docs.edutap.eu/packages/edutap_wallet_apple/index.html) to get started.
 
 ## Credits
 
-This project was initiated and initially financed by [LMU München](https://www.lmu.de).
-Further development was financially supported by [Hochschule München](https://hm.edu/).
-
-It is inspired by the work of the [devartis/passbook Python library](https://github.com/devartis/passbook).
+- Initiated and initially financed by [LMU München](https://www.lmu.de).
+- Further development was financially supported by [Hochschule München](https://hm.edu/).
+- inspired by the work of the [devartis/passbook](https://github.com/devartis/passbook) Python library.
 
 Contributors:
 
 - Alexander Loechel (LMU)
 - Philipp Auersperg-Castell (BlueDynamics Alliance)
 - Jens Klein (BlueDynamics Alliance)
-
-## Source Code
-
-The sources are in a GIT DVCS with its main branches at the [GitHub `edutap-eu` `edutap.wallet_apple` repository](https://github.com/edutap-eu/edutap.wallet_apple) .
-
-We'd be happy to see many issue reports, forks and pull requests to make the package even better.
-
-## License
-
-The code is copyrighted 2023 by eduTAP - EUGLOH Working Package - Campus Life and contributors.
-
-It is licensed under the [EUROPEAN UNION PUBLIC LICENCE v. 1.2](https://opensource.org/license/eupl-1-2/), a free and OpenSource software license.
-
-## TODOS
-
-- [ ] pass verification following [apple instructions for building passes](https://developer.apple.com/documentation/walletpasses/building-a-pass)
-- [x] implement api call that accepts an unsigned .pkpass and verifies and signs it
-- [ ] provide JSON schema for passes
-    for apple one json schema for each pass type
+- Robert Niederreiter (BlueDynamics Alliance)

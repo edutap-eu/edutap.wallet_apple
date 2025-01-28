@@ -5,8 +5,8 @@ description = "Library for Apple Wallet Communication"
 keywords = ["wallet", "apple", "api", "pass", 'fastapi', 'digital identity']
 readme = "README.md"
 authors = [
-    {name = "Philipp Auersperg-Castell", email = "phil@bluedynamics.com"},
     {name = "Alexander Loechel", email = "Alexander.Loechel@lmu.de"},
+    {name = "Philipp Auersperg-Castell", email = "phil@bluedynamics.com"},
     {name = "Jens Klein", email = "jk@kleinundpartner.at"},
     {name = "Robert Niederreiter", email = "rnix@squarewave.at"},
 ]
