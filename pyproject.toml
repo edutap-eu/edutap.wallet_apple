@@ -27,6 +27,7 @@ dependencies = [
     "cryptography",
     "pydantic-settings>=2.6.1",
     "pydantic[email]>=2.10.3",
+    "httpx",
     "pyyaml",
     "structlog",
 ]
@@ -86,7 +87,9 @@ explicit_package_bases = true
 [[tool.mypy.overrides]]
 module = [
     "cryptography.*",
+    "httpx.*",
 ]
+
 ignore_missing_imports = true
 
 [tool.isort]
