@@ -307,6 +307,14 @@ def test_register_pass(entrypoints_testing, fastapi_client, settings_fastapi, te
     ]
     assert len(logs) >= 1
 
+    handlerlogs = [
+        log
+        for log in testlog
+        if log["realm"] == "handlers" and log["event"] == "register_pass"
+    ]
+
+    assert len(handlerlogs) == 2
+
     # the failed authentication should be logged
     errlogs = [
         log
@@ -347,6 +355,15 @@ def test_unregister_pass(
         if log["realm"] == "fastapi" and log["event"] == "unregister_pass"
     ]
     assert len(logs) == 1
+
+    handlerlogs = [
+        log
+        for log in testlog
+        if log["realm"] == "handlers" and log["event"] == "unregister_pass"
+    ]
+
+    assert len(handlerlogs) == 2
+
     # the failed authentication should be logged
     errlogs = [
         log
@@ -390,13 +407,20 @@ def test_list_updateable_passes(
 
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
-def test_logging(entrypoints_testing, fastapi_client, settings_fastapi):
+def test_logging(entrypoints_testing, fastapi_client, settings_fastapi, testlog):
     response = fastapi_client.post(
         "/apple_update_service/v1/log",
         data=handlers.LogEntries(logs=["log1", "log2"]).model_dump_json(),
     )
     assert response.status_code == 200
     print(response.json())
+
+    handlerlogs = [
+        log for log in testlog if log["realm"] == "handlers" and log["event"] == "log"
+    ]
+
+    # two logs ad two handlers give 4 logs to be there
+    assert len(handlerlogs) == 4
 
 
 @pytest.mark.skip("internal use only")

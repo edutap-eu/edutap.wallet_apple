@@ -6,7 +6,8 @@ from importlib.metadata import entry_points
 
 def get_pass_registrations() -> list[PassRegistration]:
     eps = entry_points(group="edutap.wallet_apple.plugins")
-    plugins = [ep.load() for ep in eps if ep.name == "PassRegistration"]
+    # allow multiple entries by searching for the prefix
+    plugins = [ep.load() for ep in eps if ep.name.startswith("PassRegistration")]
     if not plugins:
         raise NotImplementedError("No pass registration plug-in found")
     for plugin in plugins:
@@ -17,6 +18,7 @@ def get_pass_registrations() -> list[PassRegistration]:
 
 def get_pass_data_acquisitions() -> list[PassDataAcquisition]:
     eps = entry_points(group="edutap.wallet_apple.plugins")
+    # here we only allow one entry, so we search for the exact name
     plugins = [ep.load() for ep in eps if ep.name == "PassDataAcquisition"]
     if not plugins:
         raise NotImplementedError("No pass data acquisition plug-in found")
@@ -28,7 +30,8 @@ def get_pass_data_acquisitions() -> list[PassDataAcquisition]:
 
 def get_logging_handlers() -> list[Logging]:
     eps = entry_points(group="edutap.wallet_apple.plugins")
-    plugins = [ep.load() for ep in eps if ep.name == "Logging"]
+    # allow multiple entries by searching for the prefix
+    plugins = [ep.load() for ep in eps if ep.name.startswith("Logging")]
     # if not plugins:
     #     raise NotImplementedError("No logging plug-in found")
     for plugin in plugins:

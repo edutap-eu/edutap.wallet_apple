@@ -207,6 +207,11 @@ def entrypoints_testing(monkeypatch) -> Callable:
                 group="edutap.wallet_apple.handlers.fastapi.router",
             ),
             metadata.EntryPoint(
+                name="PassRegistration",
+                value="plugins:TestPassRegistration2",
+                group="edutap.wallet_apple.handlers.fastapi.router",
+            ),
+            metadata.EntryPoint(
                 name="PassDataAcquisition",
                 value="plugins:TestPassDataAcquisition",
                 group="edutap.wallet_apple.handlers.fastapi.router",
@@ -214,6 +219,11 @@ def entrypoints_testing(monkeypatch) -> Callable:
             metadata.EntryPoint(
                 name="Logging",
                 value="plugins:TestLogging",
+                group="edutap.wallet_apple.handlers.fastapi.router",
+            ),
+            metadata.EntryPoint(
+                name="Logging",
+                value="plugins:TestLogging2",
                 group="edutap.wallet_apple.handlers.fastapi.router",
             ),
         ]

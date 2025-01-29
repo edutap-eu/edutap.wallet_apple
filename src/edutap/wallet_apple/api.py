@@ -7,7 +7,7 @@ from typing import BinaryIO
 from typing import Optional
 
 import cryptography.fernet
-import httpx  # type: ignore
+import httpx
 import ssl
 
 

@@ -56,6 +56,10 @@ class SettingsTest(Settings):
         )
 
 
+settings = SettingsTest()
+logger = settings.get_logger()
+
+
 class TestPassRegistration:
     """
     test plugin implementation for the `PassRegistration` protocol
@@ -69,11 +73,43 @@ class TestPassRegistration:
         pass_type_id: str,
         serial_number: str,
         push_token: handlers.PushToken,
-    ) -> None: ...
+    ) -> None:
+        logger.info(
+            "register_pass",
+            realm="handlers",
+            klass="TestPassRegistration",
+            testing=True,
+        )
 
     async def unregister_pass(
         self, device_id: str, pass_type_id: str, serial_number: str
-    ) -> None: ...
+    ) -> None:
+        logger.info(
+            "unregister_pass",
+            realm="handlers",
+            klass="TestPassRegistration",
+            testing=True,
+        )
+
+
+class TestPassRegistration2:
+    """
+    second plugin implementation to test multiple plugins
+    """
+
+    async def register_pass(
+        self,
+        device_id: str,
+        pass_type_id: str,
+        serial_number: str,
+        push_token: handlers.PushToken,
+    ) -> None:
+        logger.info("register_pass", realm="handlers", klass="TestPassRegistration2")
+
+    async def unregister_pass(
+        self, device_id: str, pass_type_id: str, serial_number: str
+    ) -> None:
+        logger.info("unregister_pass", realm="handlers", klass="TestPassRegistration2")
 
 
 class TestPassDataAcquisition:
@@ -142,4 +178,14 @@ class TestLogging:
 
     async def log(self, entries: handlers.LogEntries) -> None:
         for entry in entries.logs:
-            print(f"logger :{entry}")
+            logger.info("log", message=entry, realm="handlers", klass="TestLogging")
+
+
+class TestLogging2:
+    """
+    test plugin implementation for the `Logging` protocol
+    """
+
+    async def log(self, entries: handlers.LogEntries) -> None:
+        for entry in entries.logs:
+            logger.info("log", message=entry, realm="handlers", klass="TestLogging2")
