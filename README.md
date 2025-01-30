@@ -27,6 +27,12 @@ This package provides
 
 Read the [complete edutap.wallet_apple documentation](https://docs.edutap.eu/packages/edutap_wallet_apple/index.html) to get started.
 
+## Source Code
+
+The sources are in a GIT DVCS with its main branches at the [GitHub edutap-eu/edutap.wallet_google repository](https://github.com/edutap-eu/edutap.wallet_google) .
+
+We are looking forward to see many issue reports, forks and pull requests to make the package even better.
+
 ## Credits
 
 - Initiated and initially financed by [LMU München](https://www.lmu.de).
@@ -39,3 +45,9 @@ Contributors:
 - Philipp Auersperg-Castell (BlueDynamics Alliance)
 - Jens Klein (BlueDynamics Alliance)
 - Robert Niederreiter (BlueDynamics Alliance)
+
+## License
+
+The code is copyright by eduTAP - EUGLOH Working Package - Campus Life and contributors.
+
+It is licensed under the [EUROPEAN UNION PUBLIC LICENCE v. 1.2](https://opensource.org/license/eupl-1-2/), a free and OpenSource software license.
