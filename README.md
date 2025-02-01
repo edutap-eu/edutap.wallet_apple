@@ -176,6 +176,10 @@ flowchart TD
     Manifest --> PassFile
 ```
 
+# Apple Wallet Design Guideline
+
+- [Apple Wallet Design Guideline](https://developer.apple.com/design/human-interface-guidelines/wallet)
+
 # Notification
 
 TODO document it
