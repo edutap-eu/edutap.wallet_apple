@@ -33,7 +33,9 @@ TODO document it
 
 - [apple doc for updating passes](https://developer.apple.com/documentation/walletpasses/adding_a_web_service_to_update_passes)
 
-- [apple doc for pass design - specifies the image file names](https://developer.apple.com/library/archive/documentation/UserExperience/Conceptual/PassKit_PG/Creating.html#//apple_ref/doc/uid/TP40012195-CH4-SW1)
+- [Apple Wallet Design Guideline](https://developer.apple.com/design/human-interface-guidelines/wallet)
+
+- [Old Apple Documentation for pass design - specifies the image file names and dimensions](https://developer.apple.com/library/archive/documentation/UserExperience/Conceptual/PassKit_PG/Creating.html#//apple_ref/doc/uid/TP40012195-CH4-SW1)
 
 - [apple instructions for building passes](https://developer.apple.com/documentation/walletpasses/building-a-pass)
 
