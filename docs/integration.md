@@ -23,7 +23,7 @@ EDUTAP_WALLET_APPLE_FERNET_KEY=<your fernet key>
 
 ## Storing Certificates
 
-The certificates are stored in the directory specified in the `EDUTAP_WALLET_APPLE_CERT_DIR` environment variable. 
+The certificates are stored in the directory specified in the `EDUTAP_WALLET_APPLE_CERT_DIR` environment variable.
 
 you need to store the following files in the directory:
 
@@ -31,7 +31,7 @@ you need to store the following files in the directory:
 - `certificate-{pass type identifier}.pem` (for each pass type identifier)
 - `wwdr_certificate.pem`    (the Apple root certificate)
 
-A detailled description how to create and get the certificates can be found in the [installation documentation](installation.md)
+A detailed description how to create and get the certificates can be found in the [installation documentation](installation.md)
 
 ## Entry Points
 
