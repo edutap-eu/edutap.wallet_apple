@@ -9,6 +9,7 @@ caption: Contents
 ---
 
 installation
+integration
 lifecycle
 reference
 
