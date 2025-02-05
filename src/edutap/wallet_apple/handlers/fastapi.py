@@ -381,7 +381,7 @@ async def download_pass(request: Request, token: str, settings=Depends(get_setti
     fh = api.pkpass(res)
 
     headers = {
-        "Content-Disposition": 'attachment; filename="blurb.pkpass"',
+        "Content-Disposition": f'attachment; filename="{serial_number}.pkpass"',
         "Content-Type": "application/octet-stream",
         "Last-Modified": f"{datetime.datetime.now()}",
     }

@@ -1,4 +1,3 @@
-import platform
 from conftest import certs
 from conftest import create_shell_pass
 from conftest import key_files_exist
@@ -17,6 +16,7 @@ from plugins import SettingsTest
 
 import conftest
 import json
+import platform
 import pytest
 import uuid
 
@@ -330,7 +330,9 @@ def test_passbook_creation_integration_eventticket(
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
-@pytest.mark.skipif(platform.system() != "Darwin", reason="tampering with the manifest is not possible")
+@pytest.mark.skipif(
+    platform.system() != "Darwin", reason="tampering with the manifest is not possible"
+)
 @pytest.mark.integration
 def test_passbook_creation_integration_eventticket_unsigned(
     generated_passes_dir, settings_test, pass_type_id
@@ -385,7 +387,9 @@ def test_passbook_creation_integration_eventticket_unsigned(
 
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
-@pytest.mark.skipif(platform.system() != "Darwin", reason="tampering with the manifest is not possible")
+@pytest.mark.skipif(
+    platform.system() != "Darwin", reason="tampering with the manifest is not possible"
+)
 @pytest.mark.integration
 def test_passbook_creation_integration_eventticket_tampered(
     generated_passes_dir, settings_test, pass_type_id
