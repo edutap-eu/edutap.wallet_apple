@@ -145,11 +145,26 @@ async def register_pass(
     )
     await check_authorization(authorization, passTypeIdentifier, serialNumber)
 
-    for pass_registration_handler in get_pass_registrations():
-        await pass_registration_handler.register_pass(
-            deviceLibraryIdentifier, passTypeIdentifier, serialNumber, data
+    try:
+        for pass_registration_handler in get_pass_registrations():
+            await pass_registration_handler.register_pass(
+                deviceLibraryIdentifier, passTypeIdentifier, serialNumber, data
+            )
+    except Exception as e:
+        logger.error(
+            "register_pass",
+            deviceLibraryIdentifier=deviceLibraryIdentifier,
+            passTypeIdentifier=passTypeIdentifier,
+            serialNumber=serialNumber,
+            authorization=authorization,
+            realm="fastapi",
+            url=request.url,
+            push_token=data,
+            error=str(e),
         )
 
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+    
     logger.info(
         "register_pass done",
         deviceLibraryIdentifier=deviceLibraryIdentifier,
@@ -199,11 +214,24 @@ async def unregister_pass(
         realm="fastapi",
         url=request.url,
     )
-    for pass_registration_handler in get_pass_registrations():
-        await pass_registration_handler.unregister_pass(
-            deviceLibraryIdentifier, passTypeIdentifier, serialNumber
+    try:
+        for pass_registration_handler in get_pass_registrations():
+            await pass_registration_handler.unregister_pass(
+                deviceLibraryIdentifier, passTypeIdentifier, serialNumber
+            )
+    except Exception as e:
+        logger.error(
+            "unregister_pass",
+            deviceLibraryIdentifier=deviceLibraryIdentifier,
+            passTypeIdentifier=passTypeIdentifier,
+            serialNumber=serialNumber,
+            authorization=authorization,
+            realm="fastapi",
+            url=request.url,
+            error=str(e),
         )
 
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @router_apple_wallet.post("/log")
 async def device_log(
@@ -255,22 +283,35 @@ async def get_updated_pass(
         realm="fastapi",
         url=request.url,
     )
-    res = await prepare_pass(passTypeIdentifier, serialNumber, update=True)
-    fh = api.pkpass(res)
 
-    headers = {
-        "Content-Disposition": 'attachment; filename="blurb.pkpass"',
-        "Content-Type": "application/octet-stream",
-        "Last-Modified": f"{datetime.datetime.now()}",
-    }
+    try:
+        res = await prepare_pass(passTypeIdentifier, serialNumber, update=True)
+        fh = api.pkpass(res)
 
-    # Erstelle eine StreamingResponse mit dem BytesIO-Objekt
-    return StreamingResponse(
-        fh,
-        headers=headers,
-        media_type="application/vnd.apple.pkpass",
-    )
+        headers = {
+            "Content-Disposition": 'attachment; filename="blurb.pkpass"',
+            "Content-Type": "application/octet-stream",
+            "Last-Modified": f"{datetime.datetime.now()}",
+        }
 
+        # Erstelle eine StreamingResponse mit dem BytesIO-Objekt
+        return StreamingResponse(
+            fh,
+            headers=headers,
+            media_type="application/vnd.apple.pkpass",
+        )
+    except Exception as e:
+        logger.error(
+            "get_updated_pass",
+            passTypeIdentifier=passTypeIdentifier,
+            serialNumber=serialNumber,
+            authorization=authorization,
+            realm="fastapi",
+            url=request.url,
+            error=str(e),
+        )
+
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 async def prepare_pass(
     passTypeIdentifier: str, serialNumber: str, update: bool
@@ -336,24 +377,37 @@ async def list_updatable_passes(
         realm="fastapi",
         url=request.url,
     )
-    for pass_registration_handler in get_pass_data_acquisitions():
-        serial_numbers = await pass_registration_handler.get_update_serial_numbers(
-            deviceLibraryIdentifier, passTypeIdentifier, passesUpdatedSince
-        )
+
+    try:
+        for pass_registration_handler in get_pass_data_acquisitions():
+            serial_numbers = await pass_registration_handler.get_update_serial_numbers(
+                deviceLibraryIdentifier, passTypeIdentifier, passesUpdatedSince
+            )
+
+            logger.info(
+                "list_updatable_passes", realm="fastapi", serial_numbers=serial_numbers
+            )
+            return serial_numbers
 
         logger.info(
-            "list_updatable_passes", realm="fastapi", serial_numbers=serial_numbers
+            "list_updatable_passes",
+            realm="fastapi",
+            serial_numbers=serial_numbers,
+            empty=True,
         )
-        return serial_numbers
+        return SerialNumbers(serialNumbers=[], lastUpdated="")
+    except Exception as e:
+        logger.error(
+            "list_updatable_passes",
+            deviceLibraryIdentifier=deviceLibraryIdentifier,
+            passTypeIdentifier=passTypeIdentifier,
+            passesUpdatedSince=passesUpdatedSince,
+            realm="fastapi",
+            url=request.url,
+            error=str(e),
+        )
 
-    logger.info(
-        "list_updatable_passes",
-        realm="fastapi",
-        serial_numbers=serial_numbers,
-        empty=True,
-    )
-    return SerialNumbers(serialNumbers=[], lastUpdated="")
-
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @router_download_pass.get("/download-pass/{token}")
 async def download_pass(request: Request, token: str, settings=Depends(get_settings)):
@@ -373,21 +427,32 @@ async def download_pass(request: Request, token: str, settings=Depends(get_setti
         realm="fastapi",
         url=request.url,
     )
-    pass_type_identifier, serial_number = api.extract_auth_token(
-        token, settings.fernet_key
-    )
-    res = await prepare_pass(pass_type_identifier, serial_number, update=False)
 
-    fh = api.pkpass(res)
+    try:
+        pass_type_identifier, serial_number = api.extract_auth_token(
+            token, settings.fernet_key
+        )
+        res = await prepare_pass(pass_type_identifier, serial_number, update=False)
 
-    headers = {
-        "Content-Disposition": f'attachment; filename="{serial_number}.pkpass"',
-        "Content-Type": "application/octet-stream",
-        "Last-Modified": f"{datetime.datetime.now()}",
-    }
+        fh = api.pkpass(res)
 
-    return StreamingResponse(
-        fh,
-        headers=headers,
-        media_type="application/vnd.apple.pkpass",
-    )
+        headers = {
+            "Content-Disposition": f'attachment; filename="{serial_number}.pkpass"',
+            "Content-Type": "application/octet-stream",
+            "Last-Modified": f"{datetime.datetime.now()}",
+        }
+
+        return StreamingResponse(
+            fh,
+            headers=headers,
+            media_type="application/vnd.apple.pkpass",
+        )
+    except Exception as e:
+        logger.error(
+            "download_pass",
+            realm="fastapi",
+            url=request.url,
+            error=str(e),
+        )
+
+        raise HTTPException(status_code=500, detail="Internal Server Error")
