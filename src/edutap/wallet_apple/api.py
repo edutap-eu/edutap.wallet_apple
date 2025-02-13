@@ -115,14 +115,15 @@ def extract_auth_token(
         token = token.encode()
     fernet = cryptography.fernet.Fernet(fernet_key)
     decrypted = fernet.decrypt(token)
-    return decrypted.decode().split(":")
+    pass_type_id, serial_number = decrypted.decode().split(":")
+    return pass_type_id, serial_number
 
 
 def save_link(
     pass_type_id: str,
     serial_number: str,
     settings: Settings | None = None,
-    url_prefix: str = "/apple_update_service/v1",
+    url_prefix: str = "/apple_update_service/v1",  # TODO: fetch from settings
     schema: str = "https",
 ) -> str:
     """

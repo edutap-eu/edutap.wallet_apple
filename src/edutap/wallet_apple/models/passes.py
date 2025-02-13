@@ -313,7 +313,7 @@ class Pass(BaseModel):
     """Optional. The URL of a web service that conforms to the API described
     in PassKit Web Service Reference.
     Must not be changed after creation"""
-    authenticationToken: str | None = None
+    authenticationToken: bytes | None = None
     """Optional. The authentication token to use with the web service.
     Minimum 16 chars
     Must not be changed after creation."""
@@ -335,7 +335,17 @@ class Pass(BaseModel):
     # TODO: check if this is correct
     expirationDate: str | DateField | None = None
     """Optional. Date and time when the pass expires."""
+
     voided: bool = False
+    """experimental/reverse engineered"""
+    sharingProhibited: bool = False
+    "experimental/reverse engineered, can be extracted from boarding pass"
+    isShellPass: bool = False
+    "experimental/reverse engineered"
+    groupingID: str | None = None
+    "experimental/reverse engineered"
+    revoked: bool = False
+    "experimental/reverse engineered"
 
     nfc: NFC | None = None
     """Optional. Information used for Value Added Service Protocol transactions."""

@@ -13,7 +13,7 @@ class PassRegistration(Protocol):
 
     async def register_pass(
         self,
-        device_id: str,
+        device_libray_id: str,
         pass_type_id: str,
         serial_number: str,
         push_token: handlers.PushToken | None,
@@ -23,7 +23,7 @@ class PassRegistration(Protocol):
         """
 
     async def unregister_pass(
-        self, device_id: str, pass_type_id: str, serial_number: str
+        self, device_library_id: str, pass_type_id: str, serial_number: str
     ) -> None:
         """
         see https://developer.apple.com/documentation/walletpasses/unregister-a-pass-for-update-notifications

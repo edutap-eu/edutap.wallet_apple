@@ -3,6 +3,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
+import os
 import structlog  # type: ignore
 
 
@@ -19,7 +20,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="EDUTAP_WALLET_APPLE_",
         case_sensitive=False,
-        env_file=".env",
+        # env_file=(".env", ".env.testing"),
+        env_file=os.environ.get("EDUTAP_WALLET_APPLE_ENV_FILE", ".env"),
         # env_file_encoding="utf-8",
         extra="allow",
     )
