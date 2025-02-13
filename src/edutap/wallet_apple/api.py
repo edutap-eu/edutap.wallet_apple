@@ -145,7 +145,9 @@ def save_link(
     return f"{schema}://{settings.domain}:{settings.https_port}{url_prefix}/download-pass/{token}"
 
 
-async def trigger_update(passTypeIdentifier, serialNumber, settings: Settings | None):
+async def trigger_update(
+    passTypeIdentifier, serialNumber, settings: Settings | None = None
+):
     """
     performs a APNs call to push an update to a pass/device
     """

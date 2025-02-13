@@ -58,6 +58,8 @@ class PassDataAcquisition(Protocol):
         returns a push token
         see https://developer.apple.com/documentation/walletpasses/pushtoken
         and https://developer.apple.com/documentation/usernotifications/sending-notification-requests-to-apns
+        XXX: device_library_id appears to always be None, double check and
+            remove from plugin contract if so
         """
 
     async def get_update_serial_numbers(

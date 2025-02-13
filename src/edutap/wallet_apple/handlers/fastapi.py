@@ -163,8 +163,8 @@ async def register_pass(
             error=str(e),
         )
 
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-    
+        raise
+
     logger.info(
         "register_pass done",
         deviceLibraryIdentifier=deviceLibraryIdentifier,
@@ -231,7 +231,8 @@ async def unregister_pass(
             error=str(e),
         )
 
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        raise
+
 
 @router_apple_wallet.post("/log")
 async def device_log(
@@ -311,7 +312,8 @@ async def get_updated_pass(
             error=str(e),
         )
 
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        raise
+
 
 async def prepare_pass(
     passTypeIdentifier: str, serialNumber: str, update: bool
@@ -407,7 +409,8 @@ async def list_updatable_passes(
             error=str(e),
         )
 
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        raise
+
 
 @router_download_pass.get("/download-pass/{token}")
 async def download_pass(request: Request, token: str, settings=Depends(get_settings)):
@@ -455,4 +458,4 @@ async def download_pass(request: Request, token: str, settings=Depends(get_setti
             error=str(e),
         )
 
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        raise
