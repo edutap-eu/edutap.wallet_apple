@@ -23,8 +23,8 @@ def get_settings() -> Settings:
 
 
 # router that handles the apple wallet api:
-#   POST register pass: /devices/{deviceLibraryIdentitfier}/registrations/{passTypeIdentifier}/{serialNumber}
-#   DELETE unregister pass: /devices/{deviceLibraryIdentitfier}/registrations/{passTypeIdentifier}/{serialNumber}
+#   POST register pass: /devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}
+#   DELETE unregister pass: /devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}
 #   GET get_updated_pass /passes/{passTypeIdentifier}/{serialNumber}
 #   GET list_updatable_passes: /devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}
 #   POST logging info issued by handheld: /log
@@ -83,11 +83,11 @@ async def check_authorization(
 
 
 @router_apple_wallet.post(
-    "/devices/{deviceLibraryIdentitfier}/registrations/{passTypeIdentifier}/{serialNumber}"
+    "/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}"
 )
 async def register_pass(
     request: Request,
-    deviceLibraryIdentitfier: str,
+    deviceLibraryIdentifier: str,
     passTypeIdentifier: str,
     serialNumber: str,
     authorization: Annotated[str | None, Header()] = None,
@@ -113,7 +113,7 @@ async def register_pass(
         * pushToken: <push token, which the server needs to send push notifications to this device> }
 
     Params definition
-    :deviceLibraryIdentitfier      - the device's identifier
+    :deviceLibraryIdentifier      - the device's identifier
     :passTypeIdentifier   - the bundle identifier for a class of passes, sometimes referred to as the pass topic, e.g. pass.com.apple.backtoschoolgift, registered with WWDR
     :serialNumber  - the pass' serial number
     :pushToken      - the value needed for Apple Push Notification service
@@ -135,7 +135,7 @@ async def register_pass(
     logger = settings.get_logger()
     logger.info(
         "register_pass",
-        deviceLibraryIdentitfier=deviceLibraryIdentitfier,
+        deviceLibraryIdentifier=deviceLibraryIdentifier,
         passTypeIdentifier=passTypeIdentifier,
         serialNumber=serialNumber,
         authorization=authorization,
@@ -147,12 +147,12 @@ async def register_pass(
 
     for pass_registration_handler in get_pass_registrations():
         await pass_registration_handler.register_pass(
-            deviceLibraryIdentitfier, passTypeIdentifier, serialNumber, data
+            deviceLibraryIdentifier, passTypeIdentifier, serialNumber, data
         )
 
     logger.info(
         "register_pass done",
-        deviceLibraryIdentitfier=deviceLibraryIdentitfier,
+        deviceLibraryIdentifier=deviceLibraryIdentifier,
         passTypeIdentifier=passTypeIdentifier,
         serialNumber=serialNumber,
         authorization=authorization,
@@ -163,11 +163,11 @@ async def register_pass(
 
 
 @router_apple_wallet.delete(
-    "/devices/{deviceLibraryIdentitfier}/registrations/{passTypeIdentifier}/{serialNumber}"
+    "/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}"
 )
 async def unregister_pass(
     request: Request,
-    deviceLibraryIdentitfier: str,
+    deviceLibraryIdentifier: str,
     passTypeIdentifier: str,
     serialNumber: str,
     authorization: Annotated[str | None, Header()] = None,
@@ -193,7 +193,7 @@ async def unregister_pass(
     logger = settings.get_logger()
     logger.info(
         "unregister_pass",
-        deviceLibraryIdentitfier=deviceLibraryIdentitfier,
+        deviceLibraryIdentifier=deviceLibraryIdentifier,
         passTypeIdentifier=passTypeIdentifier,
         serialNumber=serialNumber,
         realm="fastapi",
@@ -201,7 +201,7 @@ async def unregister_pass(
     )
     for pass_registration_handler in get_pass_registrations():
         await pass_registration_handler.unregister_pass(
-            deviceLibraryIdentitfier, passTypeIdentifier, serialNumber
+            deviceLibraryIdentifier, passTypeIdentifier, serialNumber
         )
 
 

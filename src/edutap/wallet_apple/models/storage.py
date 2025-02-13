@@ -6,7 +6,7 @@ from pydantic import Field
 
 # Based on: https://developer.apple.com/documentation/walletpasses/adding-a-web-service-to-update-passes#Store-Information
 
-
+# TODO: rename it to AppleDevice
 class AppleDeviceRegistry(BaseModel):  # type: ignore[call-arg]
     """
     Contains the devices that contain updatable passes. Information for a device includes
@@ -19,6 +19,7 @@ class AppleDeviceRegistry(BaseModel):  # type: ignore[call-arg]
     registrationTime: datetime = Field(default=datetime.now(tz=timezone.utc))
 
 
+# TODO: rename it to ApplePass
 class ApplePassData(BaseModel):  # type: ignore[call-arg]
     """
     Contains the updatable passes. Information for a pass includes the pass type
