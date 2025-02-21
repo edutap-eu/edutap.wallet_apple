@@ -22,6 +22,13 @@ def get_settings() -> Settings:
     return res
 
 
+def get_prefix() -> str:
+    prefix = f"{get_settings().handler_prefix}/v1"
+    if prefix[0] != "/":
+        prefix = f"/{prefix}"
+    return prefix
+
+
 # router that handles the apple wallet api:
 #   POST register pass: /devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}
 #   DELETE unregister pass: /devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}
@@ -29,13 +36,13 @@ def get_settings() -> Settings:
 #   GET list_updatable_passes: /devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}
 #   POST logging info issued by handheld: /log
 router_apple_wallet = APIRouter(
-    prefix=f"/{get_settings().handler_prefix}/v1",
+    prefix=get_prefix(),
     tags=["edutap.wallet_apple"],
 )
 
 # download pass: /download-pass/{token}
 router_download_pass = APIRouter(
-    prefix=f"/{get_settings().handler_prefix}/v1",
+    prefix=get_prefix(),
     tags=["edutap.wallet_apple"],
 )
 

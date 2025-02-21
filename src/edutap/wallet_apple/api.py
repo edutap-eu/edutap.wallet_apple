@@ -123,7 +123,7 @@ def save_link(
     pass_type_id: str,
     serial_number: str,
     settings: Settings | None = None,
-    url_prefix: str = "/apple_update_service/v1",  # TODO: fetch from settings
+    url_prefix: str | None = None,
     schema: str = "https",
 ) -> str:
     """
@@ -136,13 +136,17 @@ def save_link(
     if settings is None:
         settings = Settings()
 
+    url_prefix = settings.handler_prefix
+    if url_prefix[0] != "/":
+        url_prefix = f"/{url_prefix}"
+
     token = create_auth_token(pass_type_id, serial_number, settings.fernet_key).decode(
         "utf-8"
     )
     if settings.https_port == 443 or not settings.https_port:
-        return f"{schema}://{settings.domain}{url_prefix}/download-pass/{token}"
+        return f"{schema}://{settings.domain}{url_prefix}/v1/download-pass/{token}"
 
-    return f"{schema}://{settings.domain}:{settings.https_port}{url_prefix}/download-pass/{token}"
+    return f"{schema}://{settings.domain}:{settings.https_port}{url_prefix}/v1/download-pass/{token}"
 
 
 async def trigger_update(
