@@ -153,13 +153,9 @@ It creates some `.pkpass`-files.
 Those are located under `tests/data/generated_passes`.
 
 
-
-
-
-
-
 Format code and run checks:
 
 ```bash
 uvx --with tox-uv tox -e lint
 ```
+

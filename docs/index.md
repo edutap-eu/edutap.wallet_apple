@@ -11,6 +11,7 @@ caption: Contents
 installation
 integration
 lifecycle
+nfc
 reference
 
 ```
