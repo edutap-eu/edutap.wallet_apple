@@ -25,6 +25,21 @@ def test_load_pass_from_json():
         pkpass = api.new(data=data)
         assert pkpass is not None
 
+def test_load_pass_with_extra_fields_from_json(settings_test: Settings):
+    """
+    test if the pass has fields not
+    specified in the pass schema attributes
+    in this case a field named 'semantics'
+    """
+    with open(conftest.jsons / "semantic-fields-pass.json", encoding="utf-8") as fh:
+        buf = fh.read()
+        data = json.loads(buf)
+        pkpass = api.new(data=data)
+        semantics = pkpass.pass_object.semantics
+        assert semantics is not None
+        if conftest.key_files_exist() and pkpass.pass_object.passTypeIdentifier in settings_test.get_available_passtype_ids():
+            api.sign(pkpass, settings=settings_test)
+        assert pkpass is not None
 
 def test_load_pass_from_zip():
     with open(conftest.resources / "basic_pass.pkpass", "rb") as fh:

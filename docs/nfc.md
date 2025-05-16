@@ -21,10 +21,24 @@ openssl ec -in private.pem -pubout -conv_form compressed -out apple_public.pem
 In the corresponding sample project, this key must then be saved in the directory
 `data/certs/nfc/{pass_type_id}/apple_public.pem`.
 
+During the pass creation this public key lands in the pass.json in the pkpass in
+the `nfc` section in the `encryptionPublicKey` field like so:
+
+```json 
+    "nfc": {
+        "message": "Hello NFC pass.demo.lmu.de 56c972a7-c3ca-4415-885c-42496ee3e58",
+        "encryptionPublicKey": "MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgAC5l2N1kcSduIFf/DYrmcqL45V8ExdtYQK0LjUs8wiBNA=",
+        "requiresAuthentication": false
+    },
+```
+
 So in the example of pass.demo.lmu.de, the file path would be:
 `data/certs/nfc/pass.demo.lmu.de/apple_public.pem`
 
-The private key must then be stored on the reader.
+The private key `private.pem` must then be stored on the reader, see the reader documentation how to do that.
+
+When the user taps the pass on the reader this ECC pair will be used to decrypt the answer from the 
+phone that holds the pass to the reader.
 
 ### dotorigin VTAP
 

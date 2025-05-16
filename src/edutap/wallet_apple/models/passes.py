@@ -145,6 +145,9 @@ class NFC(BaseModel):
 
 
 class PassInformation(BaseModel):
+    class Config:
+        extra = "allow"  # Erlaubt zusätzliche Felder
+
     headerFields: typing.List[Field] = PydanticField(
         default_factory=list
     )  # Optional. Additional fields to be displayed in the header of the pass
@@ -243,6 +246,9 @@ class StoreCard(PassInformation):
 
 
 class Pass(BaseModel):
+    class Config:
+        extra = "allow"  # Erlaubt zusätzliche Felder
+
     # standard keys
     teamIdentifier: str
     """
