@@ -314,6 +314,7 @@ class Pass(BaseModel):
     suppressStripShine: bool = False
     """Optional. If true, the strip image is displayed."""
 
+
     # Web Service Keys
     webServiceURL: str | None = None
     """Optional. The URL of a web service that conforms to the API described
@@ -342,13 +343,16 @@ class Pass(BaseModel):
     expirationDate: str | DateField | None = None
     """Optional. Date and time when the pass expires."""
 
+    useAutomaticColors: bool = False
+    semantics: dict | None = None
+
     voided: bool = False
-    """experimental/reverse engineered"""
     sharingProhibited: bool = False
+
     "experimental/reverse engineered, can be extracted from boarding pass"
     isShellPass: bool = False
     "experimental/reverse engineered"
-    groupingID: str | None = None
+    groupingIdenitfier: str | None = None
     "experimental/reverse engineered"
     revoked: bool = False
     "experimental/reverse engineered"
