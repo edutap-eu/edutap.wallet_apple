@@ -158,4 +158,3 @@ Format code and run checks:
 ```bash
 uvx --with tox-uv tox -e lint
 ```
-
