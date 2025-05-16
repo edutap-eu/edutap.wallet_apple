@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from edutap.wallet_apple import crypto
-from enum import Enum
 from io import BytesIO
 from pathlib import Path
 from pydantic import BaseModel
@@ -33,11 +32,13 @@ def base64_to_bytearray(base64_str):
     return decoded_data
 
 
-from .enums import Alignment
-from .enums import BarcodeFormat
-from .enums import DateStyle
-from .enums import NumberStyle
-from .enums import TransitType
+from edutap.wallet_apple.models.enums import Alignment
+from edutap.wallet_apple.models.enums import BarcodeFormat
+from edutap.wallet_apple.models.enums import DateStyle
+from edutap.wallet_apple.models.enums import NumberStyle
+from edutap.wallet_apple.models.enums import TransitType
+
+
 
 # Barcode formats that are supported by iOS 6 and 7
 legacy_barcode_formats = [BarcodeFormat.PDF417, BarcodeFormat.QR, BarcodeFormat.AZTEC]
@@ -54,6 +55,35 @@ class Field(BaseModel):
     textAlignment: Alignment | None = None
     # Optional. Alignment for the field’s contents
     # textAlignment: MyEnum | None = None  # Optional. Alignment for the field’s contents
+
+
+class RelevantDate(BaseModel):
+    """
+    An object that represents a date interval that the system uses to show a relevant pass.
+
+    see: https://developer.apple.com/documentation/walletpasses/pass/relevantdates-data.dictionary
+    """
+
+    # Attribute order as in Apple's documentation to make future changes easier!
+    # last checked: 2025-05-16
+
+    date: str | None = None
+    """
+    Optional. ISO 8601 date as string
+    The date and time when the pass becomes relevant.
+    Wallet automatically calculates a relevancy interval from this date.
+    """
+    endDate: str | None = None
+    """
+    Optional. ISO 8601 date as string
+    Date and time when the pass becomes irrelevant
+    """
+    startDate: str | None = None
+    """
+    Optional. ISO 8601 date as string
+    The date and time for the pass relevancy interval to end.
+    Required when providing startDate.
+    """
 
 
 class DateField(Field):
@@ -435,10 +465,11 @@ class Pass(BaseModel):
     If you don’t provide a value, the system determines the label color.
     """
 
-    locations: list[Location] | None = Field(
-        default=None,
-        max_length=10,
-    )
+    locations: list[Location] | None = None
+    # Field(
+    #     default=None,
+    #     # max_length=10,
+    # )
     """
     Optional.
     An array of up to 10 objects that represent geographic locations the system uses to show a relevant pass.
@@ -483,66 +514,152 @@ class Pass(BaseModel):
     Required. Display name of the organization that originated and
     signed the pass."""
 
+    parkingInformationURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL that links to parking information for the event that the pass represents.
+    This key works only for poster event tickets.
+    """
 
+    passTypeIdentifier: str
+    """
+    Required.
+    The pass type identifier that’s registered with Apple.
+    The value needs to be the same as the distribution certificate that signs the pass.
+    """
 
+    preferredStyleSchemes: list[str] | None = None
+    """
+    Optional.
+    An array of schemes to validate the pass with. The system validates the pass and its contents to ensure they meet the schemes’ requirements, falling back to the designed type if validation fails for all the provided schemes.
+    """
 
+    purchaseParkingURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL that links to a site to purchase parking for the event that the pass represents.
+    This key works only for poster event tickets.
+    """
 
+    relevantDate: str | DateField | None = None  # Deprecated: use relevantDates instead
+    """
+    Optional.
+    The date and time when the pass becomes relevant, as a W3C timestamp, such as the start time of a movie. The value needs to be a complete date that includes hours and minutes, and may optionally include seconds.
+    For information about the W3C timestamp format, see Time and Date Formats on the W3C website.
+    This object is deprecated. Use relevantDates instead.
+    """
+
+    relevantDates: list[DateField] | None = None
+    """
+    Optional.
+    An array of objects that represent date intervals that the system uses to show a relevant pass.
+    """
+
+    sellURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL that links to the selling flow for the ticket the pass represents.
+    This key works only for poster event tickets.
+    """
+
+    semantics: dict[str, Any] | None = None
+    """
+    Optional.
+    An object that contains machine-readable metadata the system uses to offer a pass and suggest related actions.
+    For example, setting Don’t Disturb mode for the duration of a movie.
+    """
+
+    serialNumber: str
+    """
+    Required.
+    An alphanumeric serial number.
+    The combination of the serial number and pass type identifier needs to be unique for each pass.
+    """
+
+    sharingProhibited: bool = False
+    """
+    Optional.
+    A Boolean value introduced in iOS 11 that controls whether to show the Share button on the back of a pass.
+    A value of true removes the button. The default value is false.
+    This flag has no effect in earlier versions of iOS, nor does it prevent sharing the pass in some other way.
+    """
+
+    # storeCard: StoreCard | None = None
+    """
+    Optional.
+    An object that contains the information for a store card.
+    """
+
+    suppressStripShine: bool = True
+    """
+    Optional.
+    A Boolean value that controls whether to display the strip image without a shine effect.
+    The default value is true.
+    """
+
+    suppressHeaderDarkening: bool = False
+    """
+    Optional.
+    A Boolean value that controls whether to display the header darkening gradient on poster event tickets.
+    The default value is false.
+    """
 
     teamIdentifier: str
     """
     Required.
-    Team identifier of the organization that originated and signed the pass, as issued by Apple.
+    The Team ID for the Apple Developer Program account that registered the pass type identifier.
     """
-    passTypeIdentifier: str
+
+    transferURL: AnyUrl | None = None
     """
-    Required. Pass type identifier, as issued by Apple. The value must
-    correspond with your signing certificate. used for grouping."""
+    Optional.
+    A URL that links to the transferring flow for the ticket that the pass represents.
+    This key works only for poster event tickets.
+    """
 
-    serialNumber: str
-    """Required. Serial number that uniquely identifies the pass.
-    Must not be changed after creation"""
+    transitInformationURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL that links to information about transit options in the area of the event that the pass represents.
+    This key works only for poster event tickets.
+    """
 
-    # Visual Appearance Keys
+    useAutomaticColors: bool | None = None
+    """
+    Optional.
+    A Boolean value that controls whether Wallet computes the foreground and label color that the pass uses. The system derives the background color from the background image of the pass.
+    This key works only for poster event tickets.
+    This key ignores the values that foregroundColor and labelColor specify.
+    """
 
-
-
-    suppressStripShine: bool = False
-    """Optional. If true, the strip image is displayed."""
-
-
-    # Web Service Keys
-    webServiceURL: str | None = None
-    """Optional. The URL of a web service that conforms to the API described
-    in PassKit Web Service Reference.
-    Must not be changed after creation"""
-
-
-    # Relevance Keys
-    ibeacons: list[IBeacon] | None = None
-    """Optional. IBeacons data"""
-    relevantDate: str | DateField | None = None
-    """Optional. Date and time when the pass becomes relevant."""
-    associatedStoreIdentifiers: list[str] | None = None
-    """Optional. Identifies which merchants’ locations accept the pass."""
-
-    appLaunchURL: str | None = None
-    """Optional. A URL to be passed to the associated app when launching it."""
     userInfo: dict | None = None
-    """Optional. Custom information for the pass."""
-    # TODO: check if this is correct
-
-    useAutomaticColors: bool = False
-    semantics: dict | None = None
+    """
+    Optional.
+    A JSON dictionary that contains any custom information for companion apps.
+    The data doesn’t appear to the user.
+    For example, a pass for a cafe might include information about the customer’s favorite drink and sandwich in a machine-readable form.
+    The companion app uses the data for placing an order for the usual.
+    """
 
     voided: bool = False
-    sharingProhibited: bool = False
+    """
+    Optional.
+    A Boolean value that indicates that the pass is void, such as a redeemed, one-time-use coupon.
+    The default value is false.
+    """
 
-    "experimental/reverse engineered, can be extracted from boarding pass"
+    webServiceURL: str | None = None
+    """
+    Optional.
+    The URL for a web service that you use to update or personalize the pass.
+    The URL can include an optional port number.
+    """
+
+    # experimental/reverse engineered, can be extracted from boarding pass
     isShellPass: bool = False
-    "experimental/reverse engineered"
-    "experimental/reverse engineered"
+
+    # experimental/reverse engineered
     revoked: bool = False
-    "experimental/reverse engineered"
 
 
     @property
