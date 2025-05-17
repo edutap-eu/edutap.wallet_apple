@@ -661,7 +661,7 @@ class Pass(BaseModel):
     The value needs to be the same as the distribution certificate that signs the pass.
     """
 
-    preferredStyleSchemes: list[Literal["posterEventTicker", "eventTicket"]] | None = (
+    preferredStyleSchemes: list[Literal["posterEventTicket", "eventTicket"]] | None = (
         None
     )
     """

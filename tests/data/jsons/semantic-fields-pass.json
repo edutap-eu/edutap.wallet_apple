@@ -1,24 +1,12 @@
 {
-    "teamIdentifier": "JG943677ZY",
-    "passTypeIdentifier": "pass.demo.lmu.de",
-    "organizationName": "European Campus Card Association",
-    "serialNumber": "45c4e0c8-45db-47e7-9712-395e194a7b87-galadinner",
-    "description": "ECCA Conference 2025 Ticket",
-    "formatVersion": 1,
-    "backgroundColor": "#1A80C3",
-    "foregroundColor": "#FFFFFF",
-    "labelColor": "#F5F5F5",
-    "barcodes": [
-        {
-            "format": "PKBarcodeFormatQR",
-            "message": "45c4e0c8-45db-47e7-9712-395e194a7b87",
-            "messageEncoding": "iso-8859-1",
-            "altText": "45c4e0c8-45db-47e7-9712-395e194a7b87"
-        }
-    ],
-    "suppressStripShine": false,
-    "webServiceURL": "https://demo.edutap.eu/apple_update_service",
     "authenticationToken": "b5b2597a1c5aa2c6019aa065922785d54760a784b98731c344b4fd1eb6dd8eed",
+    "backgroundColor": "#1A80C3",
+    "description": "ECCA Conference 2025 Ticket",
+    "eventLogoText": "ECCA Conference 2025 - Gala Dinner",
+    "footerBackgroundColor": "#1A80C3",
+    "foregroundColor": "#FFFFFF",
+    "formatVersion": 1,
+    "labelColor": "#F5F5F5",
     "locations": [
         {
             "latitude": 48.1508563,
@@ -28,55 +16,76 @@
             "relevantText": "Welcome to ECCA Conference 2025"
         }
     ],
-    "relevantDate": "2025-05-26T17:00+02:00",
-    "expirationDate": "2025-05-28T18:00+02:00",
-    "voided": false,
     "nfc": {
         "message": "45c4e0c8-45db-47e7-9712-395e194a7b87",
-        "encryptionPublicKey": "MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgAC0utmUaTA6mrvZoALBTpaKI0xIoQxHXtWj37OtiSttY4=",
+        "encryptionPublicKey": "MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACWpF1zC3h+dCh+eWyqV8unVddh2LQaUoV8LQrgb3BKkM=",
         "requiresAuthentication": false
     },
+    "organizationName": "European Campus Card Association",
+    "passTypeIdentifier": "pass.demo.lmu.de",
+    "preferredStyleSchemes": [
+        "posterEventTicket",
+        "eventTicket"
+    ],
+    "relevantDate": "2025-05-27T19:00+02:00",
     "semantics": {
         "eventType": "PKEventTypeSocialGathering",
         "silenceRequest": true,
-        "enventName": "ECCA Conference 2025 - Gala Dinner",
+        "eventName": "ECCA Conference 2025 - Gala Dinner",
+        "eventStartDate": "2025-05-27T19:00+02:00",
+        "eventEndDate": "2025-05-27T23:00+02:00",
         "venueLocation": {
             "latitude": 48.1371,
             "longitude": 11.5753
         },
+        "relevantDates": [
+            {
+                "startDate": "2025-05-27T19:00+02:00",
+                "endDate": "2025-05-27T23:00+02:00"
+            }
+        ],
         "venueName": "Hofbräuhaus München",
+        "venueRoom": "Wappensaal",
         "venueAddress": "Platzl 9, 80331 München",
-        "eventStartDate": "2025-05-27T19:00+02:00",
-        "eventEndDate": "2025-05-27T23:00+02:00"
+        "attendeeName": "Alexander Loechel",
+        "admissionLevel": "ECCA Conference 2025 - Gala Dinner"
     },
+    "serialNumber": "45c4e0c8-45db-47e7-9712-395e194a7b87-galadinner",
+    "sharingProhibited": true,
+    "suppressStripShine": false,
+    "suppressHeaderDarkening": false,
+    "teamIdentifier": "JG943677ZY",
+    "useAutomaticColors": true,
+    "voided": false,
+    "webServiceURL": "https://demo.edutap.eu/apple_update_service",
+    "isShellPass": false,
+    "revoked": false,
     "eventTicket": {
         "headerFields": [
             {
-                "key": "eventdate",
-                "value": "27 May, 2025 19:00",
+                "key": "eventDate",
+                "value": "2025-05-27T19:00+02:00",
                 "label": "Date",
-                "dateStyle": "PKDateStyleMedium",
-                "timeStyle": "PKDateStyleShort",
                 "changeMessage": ""
             }
         ],
         "primaryFields": [
             {
-                "key": "title",
-                "label": "Hofbräuhaus München",
-                "value": "ECCA Conference 2025 - Gala Dinner"
+                "key": "eventName",
+                "value": "Gala Dinner",
+                "label": "ECCA Conference 2025",
+                "changeMessage": ""
             }
         ],
         "secondaryFields": [
             {
-                "key": "nameorg",
-                "value": "Donald Duck",
+                "key": "holder",
+                "value": "Alexander Loechel",
                 "label": "Ticketholder",
                 "changeMessage": ""
             }
         ],
         "backFields": [
-
             {
                 "key": "address",
                 "value": "Hofbräuhaus München\nPlatzl 9\n80331 München\nGermany",
@@ -126,19 +135,25 @@
                 "changeMessage": ""
             }
         ],
-        "auxiliaryFields": [
-            {
-                "key": "nameorg",
-                "value": "Ludwig-Maximilians-Universität München",
-                "label": "Organization",
-                "changeMessage": ""
-            }
-        ]
+        "auxiliaryFields": [],
+        "additionalInfoFields": [],
+        "semantics": {
+            "eventType": "PKEventTypeSocialGathering",
+            "silenceRequest": true,
+            "eventName": "ECCA Conference 2025 - Gala Dinner",
+            "eventStartDate": "2025-05-27T19:00+02:00",
+            "eventEndDate": "2025-05-27T23:00+02:00",
+            "venueLocation": {
+                "latitude": 48.1371,
+                "longitude": 11.5753
+            },
+            "venueName": "Hofbräuhaus München",
+            "venueRoom": "Wappensaal",
+            "venueAddress": "Platzl 9, 80331 München",
+            "attendeeName": "Alexander Loechel"
+        }
     },
-    "barcode": {
-        "format": "PKBarcodeFormatPDF417",
-        "message": "45c4e0c8-45db-47e7-9712-395e194a7b87",
-        "messageEncoding": "iso-8859-1",
-        "altText": "45c4e0c8-45db-47e7-9712-395e194a7b87"
+    "expirationDates": {
+        "date": "2025-05-27T23:30+02:00"
     }
 }
