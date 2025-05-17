@@ -26,13 +26,15 @@ def test_load_pass_from_json():
         assert pkpass is not None
 
 
-def test_load_pass_with_extra_fields_from_json(settings_test: Settings):
+@pytest.mark.parametrize(
+    "json_file",["semantic-fields-pass.json", "semantic-fields-pass1.json"])
+def test_load_pass_with_extra_fields_from_json(json_file:str, settings_test: Settings):
     """
     test if the pass has fields not
     specified in the pass schema attributes
     in this case a field named 'semantics'
     """
-    with open(conftest.jsons / "semantic-fields-pass.json", encoding="utf-8") as fh:
+    with open(conftest.jsons / json_file, encoding="utf-8") as fh:
         buf = fh.read()
         data = json.loads(buf)
         pkpass = api.new(data=data)

@@ -12,7 +12,7 @@ from edutap.wallet_apple.models.enums import TransitType
 from edutap.wallet_apple.models.semantic_tags import *  # noqa: F401, F403
 from io import BytesIO
 from pathlib import Path
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, ConfigDict
 from pydantic import AnyUrl
 from pydantic import BaseModel
 from pydantic import computed_field
@@ -54,6 +54,7 @@ class PassFieldContent(BaseModel):
     An object that represents the information to display in a field on a pass.
     see: https://developer.apple.com/documentation/walletpasses/passfieldcontent
     """
+    model_config = ConfigDict(extra="forbid") # verbietet zusätzliche Felder
 
     # Attribute order as in Apple's documentation to make future changes easier!
     # last checked: 2025-05-16
@@ -243,6 +244,23 @@ class PassFieldContent(BaseModel):
     A date or time value needs to include a time zone.
     """
 
+# temporary for type hinting
+Semantics = dict[str, Any]
+
+class SemanticPassFieldContent(PassFieldContent):
+    """
+    An object that represents the information to display in a field on a pass.
+    see: https://developer.apple.com/documentation/walletpasses/passfieldcontent
+    """
+
+    # Attribute order as in Apple's documentation to make future changes easier!
+    # last checked: 2025-05-16
+
+    semantics: Semantics | None = None
+    """
+    Optional. string
+    The semantic tag for the field.
+    """
 
 Field = PassFieldContent  # Alias for backward compatibility
 
@@ -260,8 +278,7 @@ IBeacon = Beacon  # Alias for backward compatibility
 
 
 class PassInformation(BaseModel):
-    class Config:
-        extra = "allow"  # Erlaubt zusätzliche Felder
+    model_config = ConfigDict(extra="forbid")# verbietet zusätzliche Felder
 
     headerFields: typing.List[PassFieldContent] = PydanticField(
         default_factory=list
@@ -381,6 +398,7 @@ class StoreCard(PassInformation):
     """
 
 
+
 class Pass(BaseModel):
     """
     Represents a pass object. This is the base class for all pass types.
@@ -391,8 +409,8 @@ class Pass(BaseModel):
     # Attribute order as in Apple's documentation to make future changes easier!
     # last checked: 2025-05-16
 
-    class Config:
-        extra = "allow"  # Erlaubt zusätzliche Felder
+    # class Config:
+    #     extra = "allow"  # Erlaubt zusätzliche Felder
 
     # standard keys
     accessibilityURL: str | None = None
@@ -699,7 +717,7 @@ class Pass(BaseModel):
     This key works only for poster event tickets.
     """
 
-    semantics: dict[str, Any] | None = None
+    semantics: Semantics | None = None
     """
     Optional.
     An object that contains machine-readable metadata the system uses to offer a pass and suggest related actions.
