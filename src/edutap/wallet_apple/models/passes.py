@@ -1,13 +1,18 @@
 from collections import OrderedDict
 from edutap.wallet_apple import crypto
+from edutap.wallet_apple.models.datatypes import *
+from edutap.wallet_apple.models.enums import *
+from edutap.wallet_apple.models.semantic_tags import *
 from io import BytesIO
 from pathlib import Path
+from pydantic import AnyHttpUrl
+from pydantic import AnyUrl
 from pydantic import BaseModel
 from pydantic import computed_field
+from pydantic import EmailStr
 from pydantic import Field as PydanticField
 from pydantic import model_serializer
 from pydantic import SerializationInfo
-from pydantic import AnyUrl, EmailStr, AnyHttpUrl
 from pydantic.fields import FieldInfo
 from typing import Any
 from typing import Dict
@@ -32,14 +37,6 @@ def base64_to_bytearray(base64_str):
     return decoded_data
 
 
-from edutap.wallet_apple.models.enums import Alignment
-from edutap.wallet_apple.models.enums import BarcodeFormat
-from edutap.wallet_apple.models.enums import DateStyle
-from edutap.wallet_apple.models.enums import NumberStyle
-from edutap.wallet_apple.models.enums import TransitType
-
-
-
 # Barcode formats that are supported by iOS 6 and 7
 legacy_barcode_formats = [BarcodeFormat.PDF417, BarcodeFormat.QR, BarcodeFormat.AZTEC]
 
@@ -55,35 +52,6 @@ class Field(BaseModel):
     textAlignment: Alignment | None = None
     # Optional. Alignment for the field’s contents
     # textAlignment: MyEnum | None = None  # Optional. Alignment for the field’s contents
-
-
-class RelevantDate(BaseModel):
-    """
-    An object that represents a date interval that the system uses to show a relevant pass.
-
-    see: https://developer.apple.com/documentation/walletpasses/pass/relevantdates-data.dictionary
-    """
-
-    # Attribute order as in Apple's documentation to make future changes easier!
-    # last checked: 2025-05-16
-
-    date: str | None = None
-    """
-    Optional. ISO 8601 date as string
-    The date and time when the pass becomes relevant.
-    Wallet automatically calculates a relevancy interval from this date.
-    """
-    endDate: str | None = None
-    """
-    Optional. ISO 8601 date as string
-    Date and time when the pass becomes irrelevant
-    """
-    startDate: str | None = None
-    """
-    Optional. ISO 8601 date as string
-    The date and time for the pass relevancy interval to end.
-    Required when providing startDate.
-    """
 
 
 class DateField(Field):
@@ -122,19 +90,8 @@ class Location(BaseModel):
     )
 
 
-class Beacon(BaseModel):
-    """
-    An object that represents the identifier of a Bluetooth Low Energy beacon the system uses to show a relevant pass.
-    see: https://developer.apple.com/documentation/walletpasses/pass/beacons-data.dictionary
-    """
-    major: int  # Required. Major identifier of a Bluetooth Low Energy location beacon.
-    minor: int  # Required. Minor identifier of a Bluetooth Low Energy location beacon.
-    proximityUUID: str  # Required. Unique identifier of a Bluetooth Low Energy location beacon.
-
-    relevantText: str | None = None  # Optional. Text displayed on the lock screen when the pass is currently relevant
-
-
 IBeacon = Beacon  # Alias for backward compatibility
+
 
 class NFC(BaseModel):
     message: str  # Required. Message to be displayed on the lock screen when the pass is currently relevant
@@ -163,6 +120,10 @@ class PassInformation(BaseModel):
         default_factory=list
     )  # Optional. Fields to be displayed on the back of the pass
     auxiliaryFields: typing.List[Field] = PydanticField(
+        default_factory=list
+    )  # Optional. Additional fields to be displayed on the front of the pass
+
+    additionalInfoFields: typing.List[Field] = PydanticField(
         default_factory=list
     )  # Optional. Additional fields to be displayed on the front of the pass
 
@@ -253,7 +214,6 @@ class Pass(BaseModel):
 
     see: https://developer.apple.com/documentation/walletpasses/pass
     """
-
 
     # Attribute order as in Apple's documentation to make future changes easier!
     # last checked: 2025-05-16
@@ -528,7 +488,7 @@ class Pass(BaseModel):
     The value needs to be the same as the distribution certificate that signs the pass.
     """
 
-    preferredStyleSchemes: list[str] | None = None
+    preferredStyleSchemes: list[Literal["posterEventTicker", "eventTicket"]] | None = None
     """
     Optional.
     An array of schemes to validate the pass with. The system validates the pass and its contents to ensure they meet the schemes’ requirements, falling back to the designed type if validation fails for all the provided schemes.
@@ -660,7 +620,6 @@ class Pass(BaseModel):
 
     # experimental/reverse engineered
     revoked: bool = False
-
 
     @property
     def pass_information(self):

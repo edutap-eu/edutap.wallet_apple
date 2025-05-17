@@ -1,5 +1,8 @@
 from typing import Literal
 
+# Attribute order as in Apple's documentation to make future changes easier!
+# last checked: 2025-05-16
+
 EventType: Literal[
     "PKEventTypeGeneric",
     "PKEventTypeLivePerformance",
@@ -10,6 +13,7 @@ EventType: Literal[
     "PKEventTypeWorkshop",
     "PKEventTypeSocialGathering",
 ]
+
 
 SemanticTagType: Literal[
     "additionalTicketAttributes",  # localizable string  # Additional ticket attributes that other tags or keys in the pass don’t include. Use this key for any type of event ticket.

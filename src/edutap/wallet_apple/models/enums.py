@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Alignment(Enum):
     LEFT = "PKTextAlignmentLeft"
     CENTER = "PKTextAlignmentCenter"
