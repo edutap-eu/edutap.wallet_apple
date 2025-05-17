@@ -281,19 +281,19 @@ IBeacon = Beacon  # Alias for backward compatibility
 class PassInformation(BaseModel):
     model_config = ConfigDict(extra="forbid")# verbietet zusätzliche Felder
 
-    headerFields: typing.List[SemanticPassFieldContent] = PydanticField(
+    headerFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Additional fields to be displayed in the header of the pass
-    primaryFields: typing.List[SemanticPassFieldContent] = PydanticField(
+    primaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Fields to be displayed prominently in the pass
-    secondaryFields: typing.List[SemanticPassFieldContent] = PydanticField(
+    secondaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Fields to be displayed on the front of the pass
-    backFields: typing.List[SemanticPassFieldContent] = PydanticField(
+    backFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Fields to be displayed on the back of the pass
-    auxiliaryFields: typing.List[SemanticPassFieldContent] = PydanticField(
+    auxiliaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Additional fields to be displayed on the front of the pass
 
