@@ -245,6 +245,7 @@ class PassFieldContent(BaseModel):
     """
 
 # temporary for type hinting
+# TODO: specify more exactly with semantic_tags
 Semantics = dict[str, Any]
 
 class SemanticPassFieldContent(PassFieldContent):
@@ -280,19 +281,19 @@ IBeacon = Beacon  # Alias for backward compatibility
 class PassInformation(BaseModel):
     model_config = ConfigDict(extra="forbid")# verbietet zusätzliche Felder
 
-    headerFields: typing.List[PassFieldContent] = PydanticField(
+    headerFields: typing.List[SemanticPassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Additional fields to be displayed in the header of the pass
-    primaryFields: typing.List[PassFieldContent] = PydanticField(
+    primaryFields: typing.List[SemanticPassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Fields to be displayed prominently in the pass
-    secondaryFields: typing.List[PassFieldContent] = PydanticField(
+    secondaryFields: typing.List[SemanticPassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Fields to be displayed on the front of the pass
-    backFields: typing.List[PassFieldContent] = PydanticField(
+    backFields: typing.List[SemanticPassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Fields to be displayed on the back of the pass
-    auxiliaryFields: typing.List[PassFieldContent] = PydanticField(
+    auxiliaryFields: typing.List[SemanticPassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Additional fields to be displayed on the front of the pass
 
