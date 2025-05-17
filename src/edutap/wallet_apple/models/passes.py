@@ -49,9 +49,109 @@ def base64_to_bytearray(base64_str):
 legacy_barcode_formats = [BarcodeFormat.PDF417, BarcodeFormat.QR, BarcodeFormat.AZTEC]
 
 
-class Field(BaseModel):
+class PassFieldContent(BaseModel):
+    """
+    An object that represents the information to display in a field on a pass.
+    see: https://developer.apple.com/documentation/walletpasses/passfieldcontent
+    """
+
+    # Attribute order as in Apple's documentation to make future changes easier!
+    # last checked: 2025-05-16
+
+    attributedValue: str | None = None
+    """
+    Optional. localizable string, ISO 8601 date, or number
+    The value of the field, including HTML markup for links.
+    The only supported tag is the <a> tag and its href attribute.
+    The value of this key overrides that of the value key.
+
+    For example, the following is a key-value pair that specifies a link with the text “Edit my profile”:
+    ”attributedValue”: “<a href=’http://example.com/customers/123’>Edit my profile</a>”
+
+    The attributed value isn’t used for watchOS; use the value field instead.
+    """
+
+    changeMessage: str | None = None
+    """
+    Optional. Localizable format string
+    A format string for the alert text to display when the pass updates.
+    The format string needs to contain the escape %@, which the field’s new value replaces.
+    For example, Gate changed to %@.
+
+    You need to provide a value for the system to show a change notification.
+    This field isn’t used for watchOS.
+    """
+
+    dataDetectorTypes: (
+        list[
+            Literal[
+                "PKDataDetectorTypePhoneNumber",
+                "PKDataDetectorTypeLink",
+                "PKDataDetectorTypeAddress",
+                "PKDataDetectorTypeCalendarEvent",
+            ]
+        ]
+        | None
+    ) = None
+    """
+    Optional. [string]
+    The data detectors to apply to the value of a field on the back of the pass.
+    The default is to apply all data detectors.
+    To use no data detectors, specify an empty array.
+
+    You don’t use data detectors for fields on the front of the pass.
+
+    This field isn’t used for watchOS.
+    Possible Values:
+    * PKDataDetectorTypePhoneNumber,
+    * PKDataDetectorTypeLink,
+    * PKDataDetectorTypeAddress,
+    * PKDataDetectorTypeCalendarEvent
+    """
+
+    dateStyle: (
+        DateStyle
+        | Literal[
+            "PKDateStyleNone",
+            "PKDateStyleShort",
+            "PKDateStyleMedium",
+            "PKDateStyleLong",
+            "PKDateStyleFull",
+        ]
+        | None
+    ) = None
+    """
+    Optional. string
+    The style of the date to display in the field.
+    Possible Values:
+    * PKDateStyleNone,
+    * PKDateStyleShort,
+    * PKDateStyleMedium,
+    * PKDateStyleLong,
+    * PKDateStyleFull
+    --> as DateStyle enum
+    """
+
+    ignoresTimeZone: bool | None = None
+    """
+    Optional. boolean
+    A Boolean value that controls the time zone for the time and date to display in the field.
+    The default value is false, which displays the time and date using the current device’s time zone.
+    Otherwise, the time and date appear in the time zone associated with the date and time of value.
+
+    This key doesn’t affect the pass relevance calculation.
+    """
+
+    isRelative: bool | None = None
+    """
+    Optional. boolean
+    A Boolean value that controls whether the date appears as a relative date.
+    The default value is false, which displays the date as an absolute date.
+
+    This key doesn’t affect the pass relevance calculation.
+    """
+
     key: str  # Required. The key must be unique within the scope
-    value: str | int | float  # Required. Value of the field. For example, 42
     label: str = ""  # Optional. Label text for the field.
     changeMessage: str = (
         ""  # Optional. Format string for the alert text that is displayed when the pass is updated
@@ -61,19 +161,45 @@ class Field(BaseModel):
     # Optional. Alignment for the field’s contents
     # textAlignment: MyEnum | None = None  # Optional. Alignment for the field’s contents
 
+    timeStyle: (
+        DateStyle
+        | Literal[
+            "PKDateStyleNone",
+            "PKDateStyleShort",
+            "PKDateStyleMedium",
+            "PKDateStyleLong",
+            "PKDateStyleFull",
+        ]
+        | None
+    ) = None
+    """
+    Optional. string
+    The style of the time displayed in the field.
+    Possible Values:
+    * PKDateStyleNone,
+    * PKDateStyleShort,
+    * PKDateStyleMedium,
+    * PKDateStyleLong,
+    * PKDateStyleFull
+    --> as DateStyle enum
+    """
 
-class DateField(Field):
-    dateStyle: DateStyle = DateStyle.SHORT
-    timeStyle: DateStyle = DateStyle.SHORT
-    isRelative: bool = False
-    ignoresTimeZone: bool = False
+    value: str | int | float
+    """
+    Required.
+    The value to use for the field; for example, 42.
+    A date or time value needs to include a time zone.
+    """
 
 
-class NumberField(Field):
+Field = PassFieldContent  # Alias for backward compatibility
+
+
+class NumberField(PassFieldContent):
     numberStyle: NumberStyle = NumberStyle.DECIMAL
 
 
-class CurrencyField(Field):
+class CurrencyField(PassFieldContent):
     currencyCode: str = "USD"
 
 
@@ -93,54 +219,66 @@ class PassInformation(BaseModel):
     class Config:
         extra = "allow"  # Erlaubt zusätzliche Felder
 
-    headerFields: typing.List[Field] = PydanticField(
+    headerFields: typing.List[PassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Additional fields to be displayed in the header of the pass
-    primaryFields: typing.List[Field] = PydanticField(
+    primaryFields: typing.List[PassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Fields to be displayed prominently in the pass
-    secondaryFields: typing.List[Field] = PydanticField(
+    secondaryFields: typing.List[PassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Fields to be displayed on the front of the pass
-    backFields: typing.List[Field] = PydanticField(
+    backFields: typing.List[PassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Fields to be displayed on the back of the pass
-    auxiliaryFields: typing.List[Field] = PydanticField(
+    auxiliaryFields: typing.List[PassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Additional fields to be displayed on the front of the pass
 
-    additionalInfoFields: typing.List[Field] = PydanticField(
+    additionalInfoFields: typing.List[PassFieldContent] = PydanticField(
         default_factory=list
     )  # Optional. Additional fields to be displayed on the front of the pass
 
     def addHeaderField(self, key, value, label, textAlignment=None):
         self.headerFields.append(
-            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+            PassFieldContent(
+                key=key, value=value, label=label, textAlignment=textAlignment
+            )
         )
 
     def addPrimaryField(self, key, value, label, textAlignment=None):
         self.primaryFields.append(
-            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+            PassFieldContent(
+                key=key, value=value, label=label, textAlignment=textAlignment
+            )
         )
 
     def addSecondaryField(self, key, value, label, textAlignment=None):
         self.secondaryFields.append(
-            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+            PassFieldContent(
+                key=key, value=value, label=label, textAlignment=textAlignment
+            )
         )
 
     def addBackField(self, key, value, label, textAlignment=None):
         self.backFields.append(
-            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+            PassFieldContent(
+                key=key, value=value, label=label, textAlignment=textAlignment
+            )
         )
 
     def addAuxiliaryField(self, key, value, label, textAlignment=None):
         self.auxiliaryFields.append(
-            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+            PassFieldContent(
+                key=key, value=value, label=label, textAlignment=textAlignment
+            )
         )
 
     def addAadditionalInfoFields(self, key, value, label, textAlignment=None):
         self.additionalInfoFields.append(
-            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+            PassFieldContent(
+                key=key, value=value, label=label, textAlignment=textAlignment
+            )
         )
 
 
@@ -369,9 +507,9 @@ class Pass(BaseModel):
     An object that contains the information for an event ticket.
     """
 
-    expirationDate: str | DateField | None = None
+    expirationDate: str | None = None
     """
-    Optional.
+    Optional. string
     The date and time the pass expires.
     The value needs to be a complete date that includes hours and minutes, and may optionally include seconds.
     """
@@ -494,7 +632,9 @@ class Pass(BaseModel):
     This key works only for poster event tickets.
     """
 
-    relevantDate: str | DateField | None = None  # Deprecated: use relevantDates instead
+    relevantDate: str | None = PydanticField(
+        default=None, deprecated="Use relevantDates instead"
+    )
     """
     Optional.
     The date and time when the pass becomes relevant, as a W3C timestamp, such as the start time of a movie. The value needs to be a complete date that includes hours and minutes, and may optionally include seconds.
@@ -502,9 +642,9 @@ class Pass(BaseModel):
     This object is deprecated. Use relevantDates instead.
     """
 
-    relevantDates: list[DateField] | None = None
+    relevantDates: list[RelevantDate] | None = None
     """
-    Optional.
+    Optional. [Pass.RelevantDates]
     An array of objects that represent date intervals that the system uses to show a relevant pass.
     """
 
