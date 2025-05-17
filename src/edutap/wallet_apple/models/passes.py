@@ -82,6 +82,12 @@ class PassFieldContent(BaseModel):
     This field isn’t used for watchOS.
     """
 
+    currencyCode: str | None = None
+    """
+    Optional. ISO 4217 currency code as a string
+    The currency code to use for the value of the field.
+    """
+
     dataDetectorTypes: (
         list[
             Literal[
@@ -184,9 +190,6 @@ class PassFieldContent(BaseModel):
     --> as NumberStyle enum
     """
 
-    textAlignment: Alignment | None = None
-    # Optional. Alignment for the field’s contents
-    # textAlignment: MyEnum | None = None  # Optional. Alignment for the field’s contents
     textAlignment: (
         Alignment
         | Literal[
@@ -242,14 +245,6 @@ class PassFieldContent(BaseModel):
 
 
 Field = PassFieldContent  # Alias for backward compatibility
-
-
-class NumberField(PassFieldContent):
-    numberStyle: NumberStyle = NumberStyle.DECIMAL
-
-
-class CurrencyField(PassFieldContent):
-    currencyCode: str = "USD"
 
 
 class Barcode(BaseModel):
