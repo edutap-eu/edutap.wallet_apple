@@ -1,8 +1,15 @@
 from collections import OrderedDict
 from edutap.wallet_apple import crypto
-from edutap.wallet_apple.models.datatypes import *
-from edutap.wallet_apple.models.enums import *
-from edutap.wallet_apple.models.semantic_tags import *
+from edutap.wallet_apple.models.datatypes import Beacon
+from edutap.wallet_apple.models.datatypes import Location as Pass_Location
+from edutap.wallet_apple.models.datatypes import NFC
+from edutap.wallet_apple.models.datatypes import RelevantDate  # noqa: F401
+from edutap.wallet_apple.models.enums import Alignment
+from edutap.wallet_apple.models.enums import BarcodeFormat
+from edutap.wallet_apple.models.enums import DateStyle
+from edutap.wallet_apple.models.enums import NumberStyle
+from edutap.wallet_apple.models.enums import TransitType
+from edutap.wallet_apple.models.semantic_tags import *  # noqa: F401, F403
 from io import BytesIO
 from pathlib import Path
 from pydantic import AnyHttpUrl
@@ -16,6 +23,7 @@ from pydantic import SerializationInfo
 from pydantic.fields import FieldInfo
 from typing import Any
 from typing import Dict
+from typing import Literal
 from typing_extensions import deprecated
 
 import base64
@@ -78,29 +86,7 @@ class Barcode(BaseModel):
     altText: str = ""  # Optional. Text displayed near the barcode
 
 
-class Location(BaseModel):
-    latitude: float = 0.0  # Required. Latitude, in degrees, of the location
-    longitude: float = 0.0  # Required. Longitude, in degrees, of the location
-    altitude: float | None = None  # Optional. Altitude, in meters, of the location
-    distance: float = (
-        0  # Optional. Maximum distance, in meters, from the location that the pass is relevant
-    )
-    relevantText: str = (
-        ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
-    )
-
-
 IBeacon = Beacon  # Alias for backward compatibility
-
-
-class NFC(BaseModel):
-    message: str  # Required. Message to be displayed on the lock screen when the pass is currently relevant
-    encryptionPublicKey: (
-        str  # Required. Public encryption key used by the Value Added Services protocol
-    )
-    requiresAuthentication: bool = (
-        False  # Optional. Indicates that the pass is not valid unless it contains a valid signature
-    )
 
 
 class PassInformation(BaseModel):
@@ -149,6 +135,11 @@ class PassInformation(BaseModel):
 
     def addAuxiliaryField(self, key, value, label, textAlignment=None):
         self.auxiliaryFields.append(
+            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+        )
+
+    def addAadditionalInfoFields(self, key, value, label, textAlignment=None):
+        self.additionalInfoFields.append(
             Field(key=key, value=value, label=label, textAlignment=textAlignment)
         )
 
@@ -225,7 +216,7 @@ class Pass(BaseModel):
     accessibilityURL: str | None = None
     """
     Optional.
-    A URL that links to your accessiblity content, or the venue’s.
+    A URL that links to your accessibility content, or the venue’s.
     This key works only for poster event tickets.
     """
 
@@ -425,7 +416,7 @@ class Pass(BaseModel):
     If you don’t provide a value, the system determines the label color.
     """
 
-    locations: list[Location] | None = None
+    locations: list[Pass_Location] | None = None
     # Field(
     #     default=None,
     #     # max_length=10,
@@ -488,7 +479,9 @@ class Pass(BaseModel):
     The value needs to be the same as the distribution certificate that signs the pass.
     """
 
-    preferredStyleSchemes: list[Literal["posterEventTicker", "eventTicket"]] | None = None
+    preferredStyleSchemes: list[Literal["posterEventTicker", "eventTicket"]] | None = (
+        None
+    )
     """
     Optional.
     An array of schemes to validate the pass with. The system validates the pass and its contents to ensure they meet the schemes’ requirements, falling back to the designed type if validation fails for all the provided schemes.
