@@ -1,10 +1,15 @@
 from collections import OrderedDict
 from edutap.wallet_apple import crypto
 from edutap.wallet_apple.models.datatypes import Beacon
+from edutap.wallet_apple.models.datatypes import Location as Pass_Location
 from edutap.wallet_apple.models.datatypes import NFC
-from edutap.wallet_apple.models.datatypes import RelevantDate
-from edutap.wallet_apple.models.enums import *
-from edutap.wallet_apple.models.semantic_tags import *
+from edutap.wallet_apple.models.datatypes import RelevantDate  # noqa: F401
+from edutap.wallet_apple.models.enums import Alignment
+from edutap.wallet_apple.models.enums import BarcodeFormat
+from edutap.wallet_apple.models.enums import DateStyle
+from edutap.wallet_apple.models.enums import NumberStyle
+from edutap.wallet_apple.models.enums import TransitType
+from edutap.wallet_apple.models.semantic_tags import *  # noqa: F401, F403
 from io import BytesIO
 from pathlib import Path
 from pydantic import AnyHttpUrl
@@ -79,18 +84,6 @@ class Barcode(BaseModel):
         "iso-8859-1"  # Required. Text encoding that is used to convert the message
     )
     altText: str = ""  # Optional. Text displayed near the barcode
-
-
-class Location(BaseModel):
-    latitude: float = 0.0  # Required. Latitude, in degrees, of the location
-    longitude: float = 0.0  # Required. Longitude, in degrees, of the location
-    altitude: float | None = None  # Optional. Altitude, in meters, of the location
-    distance: float = (
-        0  # Optional. Maximum distance, in meters, from the location that the pass is relevant
-    )
-    relevantText: str = (
-        ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
-    )
 
 
 IBeacon = Beacon  # Alias for backward compatibility
@@ -423,7 +416,7 @@ class Pass(BaseModel):
     If you don’t provide a value, the system determines the label color.
     """
 
-    locations: list[Location] | None = None
+    locations: list[Pass_Location] | None = None
     # Field(
     #     default=None,
     #     # max_length=10,

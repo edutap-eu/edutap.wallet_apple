@@ -1,6 +1,41 @@
 from pydantic import BaseModel
 
 
+class Location(BaseModel):
+    """
+    An object that represents a location that the system uses to show a relevant pass.
+    see: https://developer.apple.com/documentation/walletpasses/pass/locations-data.dictionary
+    """
+
+    # Attribute order as in Apple's documentation to make future changes easier!
+    # last checked: 2025-05-16
+
+    altitude: float | None = None
+    """
+    Optional.
+    Altitude, in meters, of the location.
+    """
+
+    latitude: float = 0.0
+    """
+    Required.
+    Latitude, in degrees, of the location.
+    """
+
+    longitude: float = 0.0
+    """
+    Required.
+    Longitude, in degrees, of the location.
+    """
+
+    relevantText: str | None = None
+    """
+    Optional.
+    The text to display on the lock screen when the pass is relevant.
+    For example, a description of a nearby location, such as “Store nearby on 1st and Main”.
+    """
+
+
 class Beacon(BaseModel):
     """
     An object that represents the identifier of a Bluetooth Low Energy beacon the system uses to show a relevant pass.
