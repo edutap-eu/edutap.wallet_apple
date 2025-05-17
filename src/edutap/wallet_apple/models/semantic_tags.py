@@ -924,85 +924,84 @@ class SemanticTags(EventTicketSemanticTags, BoardingPassSemanticTags):
 
     venueCloseDate: str | None = None
     """
-    Optional.
-    ISO 8601 date as string  # The date when the venue closes.
+    Optional. ISO 8601 date as string
+    The date when the venue closes.
     Use this key for any type of event ticket.
     """
 
     venueDoorsOpenDate: str | None = None
     """
-    Optional.
-    ISO 8601 date as string  # The date the doors to the venue open.
+    Optional. ISO 8601 date as string
+    The date the doors to the venue open.
     Use this key for any type of event ticket.
     """
 
     venueEntrance: str | None = None
     """
-    Optional.
-    localizable string  # The full name of the entrance, such as Gate A, to use to gain access to the ticketed event.
+    Optional. localizable string
+    The full name of the entrance, such as Gate A, to use to gain access to the ticketed event.
     Use this key for any type of event ticket.
     """
 
     venueEntranceDoor: str | None = None
     """
-    Optional.
-    localizable string  # The venue entrance door.
+    Optional. localizable string
+    The venue entrance door.
     Use this key for any type of event ticket.
     """
 
     venueEntranceGate: str | None = None
     """
-    Optional.
-    localizable string  # The venue entrance gate.
+    Optional. localizable string
+    The venue entrance gate.
     Use this key for any type of event ticket.
     """
 
     venueEntrancePortal: str | None = None
     """
-    Optional.
-    localizable string  # The venue entrance portal.
+    Optional. localizable string
+    The venue entrance portal.
     Use this key for any type of event ticket.
     """
 
     venueFanZoneOpenDate: str | None = None
     """
-    Optional.
-    ISO 8601 date as string  # The date the fan zone opens.
+    Optional. ISO 8601 date as string
+    The date the fan zone opens.
     Use this key for any type of event ticket.
     """
 
     venueGatesOpenDate: str | None = None
     """
-    Optional.
-    ISO 8601 date as string  # The date the gates to the venue open.
+    Optional. ISO 8601 date as string
+    The date the gates to the venue open.
     Use this key for any type of event ticket.
     """
 
-    venueLocation: str | None = None
+    venueLocation: Location | None = None
     """
-    Optional.
-    SemanticTagType.Location  # An object that represents the geographic coordinates of the venue.
+    Optional. SemanticTagType.Location
+    An object that represents the geographic coordinates of the venue.
     Use this key for any type of event ticket.
     """
 
     venueName: str | None = None
     """
-    Optional.
-    localizable string  # The full name of the venue.
+    Optional. localizable string
+    The full name of the venue.
     Use this key for any type of event ticket.
     """
 
     venueOpenDate: str | None = None
     """
-    Optional.
-    ISO 8601 date as string  # The date when the venue opens. Use this if none of the more specific venue open tags apply.
+    Optional. ISO 8601 date as string  # The date when the venue opens. Use this if none of the more specific venue open tags apply.
     Use this key for any type of event ticket.
     """
 
     venueParkingLotsOpenDate: str | None = None
     """
-    Optional.
-    ISO 8601 date as string  # The date the parking lots open.
+    Optional. ISO 8601 date as string
+    The date the parking lots open.
     Use this key for any type of event ticket.
     """
 
