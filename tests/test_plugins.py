@@ -87,6 +87,6 @@ def test_add_plugin():
     add_plugin("PassDataAcquisition", DummyPassDataAcquisition)
     add_plugin("Logging", DummyLogging)
 
-    assert len(get_pass_registrations()) == 1
-    assert len(get_pass_data_acquisitions()) == 1
+    assert len(get_pass_registrations()) == 2
+    assert len(get_pass_data_acquisitions()) == 2
     assert len(get_logging_handlers()) == 1
