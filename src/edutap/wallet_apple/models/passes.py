@@ -152,14 +152,63 @@ class PassFieldContent(BaseModel):
     """
 
     key: str  # Required. The key must be unique within the scope
-    label: str = ""  # Optional. Label text for the field.
-    changeMessage: str = (
-        ""  # Optional. Format string for the alert text that is displayed when the pass is updated
-    )
-    # textAlignment: Alignment = Alignment.LEFT
+    """
+    Required.
+    A unique key that identifies a field in the pass; for example, “departure-gate”.
+    """
+
+    label: str | None = None
+    """
+    Optional. localizable string
+    The text for a field label.
+    """
+
+    numberStyle: (
+        NumberStyle
+        | Literal[
+            "PKNumberStyleDecimal",
+            "PKNumberStylePercent",
+            "PKNumberStyleScientific",
+            "PKNumberStyleSpellOut",
+        ]
+        | None
+    ) = None
+    """
+    Optional. string
+    The style of the number to display in the field. Formatter styles have the same meaning as the formats with corresponding names in NumberFormatter.Style.
+    Possible Values:
+    * PKNumberStyleDecimal,
+    * PKNumberStylePercent,
+    * PKNumberStyleScientific,
+    * PKNumberStyleSpellOut
+    --> as NumberStyle enum
+    """
+
     textAlignment: Alignment | None = None
     # Optional. Alignment for the field’s contents
     # textAlignment: MyEnum | None = None  # Optional. Alignment for the field’s contents
+    textAlignment: (
+        Alignment
+        | Literal[
+            "PKTextAlignmentLeft",
+            "PKTextAlignmentCenter",
+            "PKTextAlignmentRight",
+            "PKTextAlignmentNatural",
+        ]
+        | None
+    ) = None
+    """
+    Optional. string
+    The alignment for the content of a field.
+    The default is natural alignment, which aligns the text based on its script direction.
+    This key is invalid for primary and back fields.
+    Possible Values:
+    * PKTextAlignmentLeft,
+    * PKTextAlignmentCenter,
+    * PKTextAlignmentRight,
+    * PKTextAlignmentNatural
+    -> as Alignment enum
+    """
 
     timeStyle: (
         DateStyle
