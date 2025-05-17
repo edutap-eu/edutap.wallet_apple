@@ -12,10 +12,11 @@ from edutap.wallet_apple.models.enums import TransitType
 from edutap.wallet_apple.models.semantic_tags import *  # noqa: F401, F403
 from io import BytesIO
 from pathlib import Path
-from pydantic import AnyHttpUrl, ConfigDict
+from pydantic import AnyHttpUrl
 from pydantic import AnyUrl
 from pydantic import BaseModel
 from pydantic import computed_field
+from pydantic import ConfigDict
 from pydantic import EmailStr
 from pydantic import Field as PydanticField
 from pydantic import model_serializer
@@ -54,7 +55,8 @@ class PassFieldContent(BaseModel):
     An object that represents the information to display in a field on a pass.
     see: https://developer.apple.com/documentation/walletpasses/passfieldcontent
     """
-    model_config = ConfigDict(extra="forbid") # verbietet zusätzliche Felder
+
+    model_config = ConfigDict(extra="forbid")  # verbietet zusätzliche Felder
 
     # Attribute order as in Apple's documentation to make future changes easier!
     # last checked: 2025-05-16
@@ -244,9 +246,11 @@ class PassFieldContent(BaseModel):
     A date or time value needs to include a time zone.
     """
 
+
 # temporary for type hinting
 # TODO: specify more exactly with semantic_tags
 Semantics = dict[str, Any]
+
 
 class SemanticPassFieldContent(PassFieldContent):
     """
@@ -262,6 +266,7 @@ class SemanticPassFieldContent(PassFieldContent):
     Optional. string
     The semantic tag for the field.
     """
+
 
 Field = PassFieldContent  # Alias for backward compatibility
 
@@ -279,22 +284,22 @@ IBeacon = Beacon  # Alias for backward compatibility
 
 
 class PassInformation(BaseModel):
-    model_config = ConfigDict(extra="forbid")# verbietet zusätzliche Felder
+    model_config = ConfigDict(extra="forbid")  # verbietet zusätzliche Felder
 
-    headerFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
-        default_factory=list
+    headerFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        PydanticField(default_factory=list)
     )  # Optional. Additional fields to be displayed in the header of the pass
-    primaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
-        default_factory=list
+    primaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        PydanticField(default_factory=list)
     )  # Optional. Fields to be displayed prominently in the pass
-    secondaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
-        default_factory=list
+    secondaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        PydanticField(default_factory=list)
     )  # Optional. Fields to be displayed on the front of the pass
-    backFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
-        default_factory=list
+    backFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        PydanticField(default_factory=list)
     )  # Optional. Fields to be displayed on the back of the pass
-    auxiliaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
-        default_factory=list
+    auxiliaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        PydanticField(default_factory=list)
     )  # Optional. Additional fields to be displayed on the front of the pass
 
     additionalInfoFields: typing.List[PassFieldContent] = PydanticField(
@@ -397,7 +402,6 @@ class StoreCard(PassInformation):
     """
     see https://developer.apple.com/documentation/walletpasses/pass/storecard
     """
-
 
 
 class Pass(BaseModel):

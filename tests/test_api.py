@@ -27,8 +27,9 @@ def test_load_pass_from_json():
 
 
 @pytest.mark.parametrize(
-    "json_file",["semantic-fields-pass.json", "semantic-fields-pass1.json"])
-def test_load_pass_with_extra_fields_from_json(json_file:str, settings_test: Settings):
+    "json_file", ["semantic-fields-pass.json", "semantic-fields-pass1.json"]
+)
+def test_load_pass_with_extra_fields_from_json(json_file: str, settings_test: Settings):
     """
     test if the pass has fields not
     specified in the pass schema attributes
