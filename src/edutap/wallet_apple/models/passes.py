@@ -17,7 +17,6 @@ from pydantic import AnyUrl
 from pydantic import BaseModel
 from pydantic import computed_field
 from pydantic import EmailStr
-from pydantic import Field as PydanticField
 from pydantic import model_serializer
 from pydantic import SerializationInfo
 from pydantic.fields import FieldInfo
@@ -30,6 +29,7 @@ import base64
 import functools
 import hashlib
 import json
+import pydantic
 import typing
 import yaml
 import zipfile
@@ -279,25 +279,23 @@ IBeacon = Beacon  # Alias for backward compatibility
 
 
 class PassInformation(BaseModel):
-    model_config = ConfigDict(extra="forbid")# verbietet zusätzliche Felder
+    model_config = ConfigDict(extra="forbid")  # verbietet zusätzliche Felder
 
-    headerFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
+    headerFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
         default_factory=list
     )  # Optional. Additional fields to be displayed in the header of the pass
-    primaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
+    primaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
         default_factory=list
     )  # Optional. Fields to be displayed prominently in the pass
-    secondaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
+    secondaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
         default_factory=list
     )  # Optional. Fields to be displayed on the front of the pass
-    backFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
+    backFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
         default_factory=list
     )  # Optional. Fields to be displayed on the back of the pass
-    auxiliaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = PydanticField(
-        default_factory=list
-    )  # Optional. Additional fields to be displayed on the front of the pass
+    auxiliaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
 
-    additionalInfoFields: typing.List[PassFieldContent] = PydanticField(
+    additionalInfoFields: typing.List[PassFieldContent] = pydantic.Field(
         default_factory=list
     )  # Optional. Additional fields to be displayed on the front of the pass
 
@@ -695,7 +693,7 @@ class Pass(BaseModel):
     This key works only for poster event tickets.
     """
 
-    relevantDate: str | None = PydanticField(
+    relevantDate: str | None = pydantic.Field(
         default=None, deprecated="Use relevantDates instead"
     )
     """
@@ -860,7 +858,7 @@ class PkPass(BaseModel):
             raise ValueError("Pass object is not set")
         return self.pass_object
 
-    files: dict = PydanticField(default_factory=dict, exclude=True)
+    files: dict = pydantic.Field(default_factory=dict, exclude=True)
     """# Holds the files to include in the .pkpass"""
 
     @classmethod
