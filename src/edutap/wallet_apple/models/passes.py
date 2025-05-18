@@ -267,6 +267,7 @@ class SemanticPassFieldContent(PassFieldContent):
     The semantic tag for the field.
     """
 
+
 class AuxiliaryFields(PassFieldContent):
     """
     An object that represents the fields that display additional information on the front of a pass.
@@ -303,20 +304,20 @@ IBeacon = Beacon  # Alias for backward compatibility
 class PassInformation(BaseModel):
     model_config = ConfigDict(extra="forbid")  # verbietet zusätzliche Felder
 
-    headerFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
-        default_factory=list
+    headerFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        pydantic.Field(default_factory=list)
     )  # Optional. Additional fields to be displayed in the header of the pass
-    primaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
-        default_factory=list
+    primaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        pydantic.Field(default_factory=list)
     )  # Optional. Fields to be displayed prominently in the pass
-    secondaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
-        default_factory=list
+    secondaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        pydantic.Field(default_factory=list)
     )  # Optional. Fields to be displayed on the front of the pass
-    backFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
-        default_factory=list
+    backFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        pydantic.Field(default_factory=list)
     )  # Optional. Fields to be displayed on the back of the pass
-    auxiliaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
-        default_factory=list
+    auxiliaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        pydantic.Field(default_factory=list)
     )
     """
     Optional.
