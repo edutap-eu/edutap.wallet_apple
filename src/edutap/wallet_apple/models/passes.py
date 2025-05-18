@@ -18,7 +18,6 @@ from pydantic import BaseModel
 from pydantic import computed_field
 from pydantic import ConfigDict
 from pydantic import EmailStr
-from pydantic import Field as PydanticField
 from pydantic import model_serializer
 from pydantic import SerializationInfo
 from pydantic.fields import FieldInfo
@@ -31,6 +30,7 @@ import base64
 import functools
 import hashlib
 import json
+import pydantic
 import typing
 import yaml
 import zipfile
@@ -267,6 +267,23 @@ class SemanticPassFieldContent(PassFieldContent):
     The semantic tag for the field.
     """
 
+class AuxiliaryFields(PassFieldContent):
+    """
+    An object that represents the fields that display additional information on the front of a pass.
+    see: https://developer.apple.com/documentation/walletpasses/passfieldcontent
+    """
+
+    # Attribute order as in Apple's documentation to make future changes easier!
+    # last checked: 2025-05-16
+
+    row: int | None = None
+    """
+    Optional. int
+    A number you use to add a row to the auxiliary field in an event ticket pass type.
+    Set the value to 1 to add an auxiliary row. Each row displays up to four fields.
+    Possible Values: 0, 1
+    """
+
 
 Field = PassFieldContent  # Alias for backward compatibility
 
@@ -286,23 +303,27 @@ IBeacon = Beacon  # Alias for backward compatibility
 class PassInformation(BaseModel):
     model_config = ConfigDict(extra="forbid")  # verbietet zusätzliche Felder
 
-    headerFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
-        PydanticField(default_factory=list)
+    headerFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
+        default_factory=list
     )  # Optional. Additional fields to be displayed in the header of the pass
-    primaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
-        PydanticField(default_factory=list)
+    primaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
+        default_factory=list
     )  # Optional. Fields to be displayed prominently in the pass
-    secondaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
-        PydanticField(default_factory=list)
+    secondaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
+        default_factory=list
     )  # Optional. Fields to be displayed on the front of the pass
-    backFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
-        PydanticField(default_factory=list)
+    backFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
+        default_factory=list
     )  # Optional. Fields to be displayed on the back of the pass
-    auxiliaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
-        PydanticField(default_factory=list)
-    )  # Optional. Additional fields to be displayed on the front of the pass
+    auxiliaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = pydantic.Field(
+        default_factory=list
+    )
+    """
+    Optional.
+    An object that represents the fields that display additional information on the front of a pass.
+    """
 
-    additionalInfoFields: typing.List[PassFieldContent] = PydanticField(
+    additionalInfoFields: typing.List[PassFieldContent] = pydantic.Field(
         default_factory=list
     )  # Optional. Additional fields to be displayed on the front of the pass
 
@@ -341,12 +362,8 @@ class PassInformation(BaseModel):
             )
         )
 
-    def addAadditionalInfoFields(self, key, value, label, textAlignment=None):
-        self.additionalInfoFields.append(
-            PassFieldContent(
-                key=key, value=value, label=label, textAlignment=textAlignment
-            )
-        )
+    def addAdditionalInfoFields(self, field_data: PassFieldContent | dict):
+        self.additionalInfoFields.append(field_data)
 
 
 # this registry identifies the different apple pass types by their name
@@ -699,7 +716,7 @@ class Pass(BaseModel):
     This key works only for poster event tickets.
     """
 
-    relevantDate: str | None = PydanticField(
+    relevantDate: str | None = pydantic.Field(
         default=None, deprecated="Use relevantDates instead"
     )
     """
@@ -864,7 +881,7 @@ class PkPass(BaseModel):
             raise ValueError("Pass object is not set")
         return self.pass_object
 
-    files: dict = PydanticField(default_factory=dict, exclude=True)
+    files: dict = pydantic.Field(default_factory=dict, exclude=True)
     """# Holds the files to include in the .pkpass"""
 
     @classmethod
