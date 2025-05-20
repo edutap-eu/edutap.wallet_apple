@@ -84,6 +84,13 @@ def apple_passes_dir():
 
 
 @pytest.fixture
+def passes_json_dir():
+    target = data / "jsons"
+    # os.makedirs(target, exist_ok=True)
+    return target
+
+
+@pytest.fixture
 def settings_test():
     settings = Settings(
         root_dir=cwd / "data",

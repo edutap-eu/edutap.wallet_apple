@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from edutap.wallet_apple import crypto
+from edutap.wallet_apple.models import semantic_tags
 from edutap.wallet_apple.models.datatypes import Beacon
 from edutap.wallet_apple.models.datatypes import Location as Pass_Location
 from edutap.wallet_apple.models.datatypes import NFC
@@ -9,7 +10,6 @@ from edutap.wallet_apple.models.enums import BarcodeFormat
 from edutap.wallet_apple.models.enums import DateStyle
 from edutap.wallet_apple.models.enums import NumberStyle
 from edutap.wallet_apple.models.enums import TransitType
-from edutap.wallet_apple.models.semantic_tags import *  # noqa: F401, F403
 from io import BytesIO
 from pathlib import Path
 from pydantic import AnyHttpUrl
@@ -249,7 +249,7 @@ class PassFieldContent(BaseModel):
 
 # temporary for type hinting
 # TODO: specify more exactly with semantic_tags
-Semantics = dict[str, Any]
+Semantics = dict[str, Any] | semantic_tags.SemanticTags
 
 
 class SemanticPassFieldContent(PassFieldContent):
@@ -324,7 +324,7 @@ class PassInformation(BaseModel):
     An object that represents the fields that display additional information on the front of a pass.
     """
 
-    additionalInfoFields: typing.List[PassFieldContent] = pydantic.Field(
+    additionalInfoFields: typing.List[PassFieldContent | dict] = pydantic.Field(
         default_factory=list
     )  # Optional. Additional fields to be displayed on the front of the pass
 
