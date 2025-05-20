@@ -1,26 +1,10 @@
-from pydantic import BaseModel, create_model
-from typing import Literal, TypeVar
+from pydantic import BaseModel
+from pydantic import ConfigDict
+from pydantic.config import ExtraValues
+from typing import Literal
 
 
-# We need the ability to merge models in order
-# to specify the attributes of the SemanticTags model
-
-M = TypeVar('M', bound=BaseModel)
-
-def merge_models(name:str, *models:tuple[type[M], ...]) -> type[M]:
-    """
-    Merge multiple Pydantic models into a single model.
-    """
-    # Create a dictionary to hold the merged fields
-
-    merged_fields = {
-        fieldname:(fieldinfo.annotation, fieldinfo) for d in [
-            m.model_fields 
-            for m in models
-            ] 
-        for (fieldname,fieldinfo) in d.items()} 
-    # Create a new model with the merged fields
-    return create_model(name, **merged_fields)
+EXTRA_ATTRIBUTES_BEHAVIOR: ExtraValues = "forbid"
 
 # Attribute order as in Apple's documentation to make future changes easier!
 # last checked: 2025-05-16
@@ -266,79 +250,61 @@ class WifiNetwork(BaseModel):
     """
 
 
-class SportEventTypeSemanticTags(BaseModel):
+class SemanticTags(BaseModel):  # EventTicketSemanticTags, BoardingPassSemanticTags):
     """
-    Subclass of SemanticTags. with only the relevant attributes for event tickets.
+    An object that contains machine-readable metadata the system uses to offer a pass and suggest related actions.
+
+    see: https://developer.apple.com/documentation/WalletPasses/SemanticTags
+    """
+
+    model_config = ConfigDict(
+        extra=EXTRA_ATTRIBUTES_BEHAVIOR
+    )  # verbietet zusätzliche Felder
+
+    totalPrice: CurrencyAmount | None = None
+    """
+    Optional. SemanticTagType.CurrencyAmount
+    The total price for the pass.
+    Use this key for any pass type.
+    """
+
+    wifiAccess: str | None = None
+    """
+    Optional. [SemanticTagType.WifiNetwork]
+    An array of objects that represent the Wi-Fi networks associated with the event; for example, the network name and password associated with a developer conference.
+    Use this key for any type of pass.
+    """
+
+
+class SeatRelatedSemanticTags(BaseModel):
+    """
+    Subclass of SemanticTags. with only the relevant attributes for seat related passes.
     """
 
     # Attribute order as in Apple's documentation to make future changes easier!
     # last checked: 2025-05-16
 
-    awayTeamAbbreviation: str | None = None
+    seats: list[Seat] | None = None
     """
-    Optional. localizable string
-    The unique abbreviation of the away team’s name.
-    Use this key only for a sports event ticket.
-    """
-
-    awayTeamLocation: str | None = None
-    """
-    Optional.
-    localizable string
-    The home location of the away team.
-    Use this key only for a sports event ticket.
+    An array of objects that represent the details for each seat at an event or on a transit journey.
+    Use this key for any type of boarding pass or event ticket.
     """
 
-    awayTeamName: str | None = None
+    silenceRequested: bool | None = None
     """
-    Optional. localizable string
-    The name of the away team.
-    Use this key only for a sports event ticket.
-    """
-
-    homeTeamAbbreviation: str | None = None
-    """
-    Optional.
-    localizable string  # The unique abbreviation of the home team’s name.
-    Use this key only for a sports event ticket.
-    """
-
-    homeTeamLocation: str | None = None
-    """
-    Optional.
-    localizable string  # The home location of the home team.
-    Use this key only for a sports event ticket.
-    """
-
-    homeTeamName: str | None = None
-    """
-    Optional.
-    localizable string  # The name of the home team.
-    Use this key only for a sports event ticket.
-    """
-
-    leagueAbbreviation: str | None = None
-    """
-    Optional.
-    localizable string  # The abbreviated league name for a sports event.
-    Use this key only for a sports event ticket.
-    """
-
-    leagueName: str | None = None
-    """
-    Optional.
-    localizable string  # The unabbreviated league name for a sports event.
-    Use this key only for a sports event ticket.
+    Optional. boolean
+    A Boolean value that determines whether the person’s device remains silent during an event or transit journey. The system may override the key and determine the length of the period of silence.
+    Use this key for any type of boarding pass or event ticket.
     """
 
 
-class EventTicketSemanticTags(SportEventTypeSemanticTags):
+class EventTicketSemanticTags(
+    SemanticTags, SeatRelatedSemanticTags
+):  # (SportEventTypeSemanticTags):
     """
     Subclass of SemanticTags. with only the relevant attributes for event tickets.
     """
 
-    # Attribute order as in Apple's documentation to make future changes easier!
-    # last checked: 2025-05-16
     additionalTicketAttributes: str | None = None
     """
     Optional. localizable string
@@ -380,10 +346,6 @@ class EventTicketSemanticTags(SportEventTypeSemanticTags):
     The name of the person the ticket grants admission to.
     Use this key for any type of event ticket.
     """
-
-    # inherits awayTeamAbbreviation
-    # inherits awayTeamLocation
-    # inherits awayTeamName
 
     duration: int | None = None
     """
@@ -453,74 +415,322 @@ class EventTicketSemanticTags(SportEventTypeSemanticTags):
     Use this key for any type of event ticket.
     """
 
-
-class PKTransitTypeAirSemanticTags(BaseModel):
+    performerNames: list[str] | None = None
     """
-    Subclass of SemanticTags. with only the relevant attributes for Airline Boarding Passes.
+    Optional.
+    [localizable string]  # An array of the full names of the performers and opening acts at the event, in decreasing order of significance.
+    Use this key for any type of event ticket.
     """
 
-    # Attribute order as in Apple's documentation to make future changes easier!
-    # last checked: 2025-05-16
+    playlistIDs: str | None = None
+    """
+    Optional.
+    [localizable string]  # An array of the Apple Music persistent ID for each playlist corresponding to the event, in decreasing order of significance.
+    Use this key for any type of event ticket.
+    """
 
-    airlineCode: str | None = None
+    tailgatingAllowed: bool | None = None
+    """
+    Optional. boolean
+    A Boolean value that indicates whether tailgating is allowed at the event.
+    Use this key for any type of event ticket.
+    """
+
+    seats: list[Seat] | None = None
+    """
+    Optional. [SemanticTagType.Seat]
+    An array of objects that represent the details for each seat at an event or on a transit journey.
+    Use this key for any type of boarding pass or event ticket.
+    """
+
+    venueBoxOfficeOpenDate: str | None = None
+    """
+    Optional. ISO 8601 date as string
+    The date when the box office opens.
+    Use this key for any type of event ticket.
+    """
+
+    venueCloseDate: str | None = None
+    """
+    Optional. ISO 8601 date as string
+    The date when the venue closes.
+    Use this key for any type of event ticket.
+    """
+
+    venueDoorsOpenDate: str | None = None
+    """
+    Optional. ISO 8601 date as string
+    The date the doors to the venue open.
+    Use this key for any type of event ticket.
+    """
+
+    venueEntrance: str | None = None
     """
     Optional. localizable string
-    The IATA airline code, such as EX for flightCode EX123.
-    Use this key only for airline boarding passes.
+    The full name of the entrance, such as Gate A, to use to gain access to the ticketed event.
+    Use this key for any type of event ticket.
+    """
+
+    venueEntranceDoor: str | None = None
+    """
+    Optional. localizable string
+    The venue entrance door.
+    Use this key for any type of event ticket.
+    """
+
+    venueEntranceGate: str | None = None
+    """
+    Optional. localizable string
+    The venue entrance gate.
+    Use this key for any type of event ticket.
+    """
+
+    venueEntrancePortal: str | None = None
+    """
+    Optional. localizable string
+    The venue entrance portal.
+    Use this key for any type of event ticket.
+    """
+
+    venueFanZoneOpenDate: str | None = None
+    """
+    Optional. ISO 8601 date as string
+    The date the fan zone opens.
+    Use this key for any type of event ticket.
+    """
+
+    venueGatesOpenDate: str | None = None
+    """
+    Optional. ISO 8601 date as string
+    The date the gates to the venue open.
+    Use this key for any type of event ticket.
+    """
+
+    venueLocation: Location | None = None
+    """
+    Optional. SemanticTagType.Location
+    An object that represents the geographic coordinates of the venue.
+    Use this key for any type of event ticket.
+    """
+
+    venueName: str | None = None
+    """
+    Optional. localizable string
+    The full name of the venue.
+    Use this key for any type of event ticket.
+    """
+
+    venueOpenDate: str | None = None
+    """
+    Optional. ISO 8601 date as string  # The date when the venue opens. Use this if none of the more specific venue open tags apply.
+    Use this key for any type of event ticket.
+    """
+
+    venueParkingLotsOpenDate: str | None = None
+    """
+    Optional. ISO 8601 date as string
+    The date the parking lots open.
+    Use this key for any type of event ticket.
+    """
+
+    venuePhoneNumber: str | None = None
+    """
+    Optional. localizable string
+    The phone number for inquiries about the venue’s ticketed event.
+    Use this key for any type of event ticket.
+    """
+
+    venueRegionName: str | None = None
+    """
+    Optional. localizable string
+    The name of the city or hosting region of the venue.
+    Use this key for any type of event ticket.
+    """
+
+    venueRoom: str | None = None
+    """
+    Optional.  localizable string
+    The full name of the room where the ticketed event is to take place.
+    Use this key for any type of event ticket.
     """
 
 
-class PKTransitTypeBoatSemanticTags(BaseModel):
+class SportEventTypeSemanticTags(EventTicketSemanticTags):
     """
-    Subclass of SemanticTags. with only the relevant attributes for Boat Boarding Passes.
+    Subclass of SemanticTags. with only the relevant attributes for event tickets.
     """
 
     # Attribute order as in Apple's documentation to make future changes easier!
     # last checked: 2025-05-16
 
-
-class PKTransitTypeBusSemanticTags(BaseModel):
+    awayTeamAbbreviation: str | None = None
     """
-    Subclass of SemanticTags. with only the relevant attributes for Bus Boarding Passes.
-    """
-
-    # Attribute order as in Apple's documentation to make future changes easier!
-    # last checked: 2025-05-16
-
-
-class PKTransitTypeGenericSemanticTags(BaseModel):
-    """
-    Subclass of SemanticTags. with only the relevant attributes for Generic Boarding Passes.
+    Optional. localizable string
+    The unique abbreviation of the away team’s name.
+    Use this key only for a sports event ticket.
     """
 
-    # Attribute order as in Apple's documentation to make future changes easier!
-    # last checked: 2025-05-16
-
-
-class PKTransitTypeTrainSemanticTags(BaseModel):
+    awayTeamLocation: str | None = None
     """
-    Subclass of SemanticTags. with only the relevant attributes for Train Boarding Passes.
+    Optional.
+    localizable string
+    The home location of the away team.
+    Use this key only for a sports event ticket.
     """
 
-    # Attribute order as in Apple's documentation to make future changes easier!
-    # last checked: 2025-05-16
+    awayTeamName: str | None = None
+    """
+    Optional. localizable string
+    The name of the away team.
+    Use this key only for a sports event ticket.
+    """
+
+    homeTeamAbbreviation: str | None = None
+    """
+    Optional.
+    localizable string  # The unique abbreviation of the home team’s name.
+    Use this key only for a sports event ticket.
+    """
+
+    homeTeamLocation: str | None = None
+    """
+    Optional.
+    localizable string  # The home location of the home team.
+    Use this key only for a sports event ticket.
+    """
+
+    homeTeamName: str | None = None
+    """
+    Optional.
+    localizable string  # The name of the home team.
+    Use this key only for a sports event ticket.
+    """
+
+    leagueAbbreviation: str | None = None
+    """
+    Optional.
+    localizable string  # The abbreviated league name for a sports event.
+    Use this key only for a sports event ticket.
+    """
+
+    leagueName: str | None = None
+    """
+    Optional.
+    localizable string  # The unabbreviated league name for a sports event.
+    Use this key only for a sports event ticket.
+    """
+
+    sportName: str | None = None
+    """
+    Optional. localizable string
+    The commonly used name of the sport.
+    Use this key only for a sports event ticket.
+    """
 
 
-class BoardingPassSemanticTags(
-    PKTransitTypeAirSemanticTags,
-    PKTransitTypeBoatSemanticTags,
-    PKTransitTypeBusSemanticTags,
-    PKTransitTypeGenericSemanticTags,
-    PKTransitTypeTrainSemanticTags,
-):
+class BoardingPassSemanticTags(SemanticTags, SeatRelatedSemanticTags):
     """
     Subclass of SemanticTags. with only the relevant attributes for boarding passes.
     """
 
-    # Attribute order as in Apple's documentation to make future changes easier!
-    # last checked: 2025-05-16
+    priorityStatus: str | None = None
+    """
+    Optional.
+    localizable string  # The priority status the ticketed passenger holds, such as Gold or Silver.
+    Use this key for any type of boarding pass.
+    """
 
-    # inherits airlineCode
+    membershipProgramName: str | None = None
+    """
+    Optional.
+    localizable string  # The name of a frequent flyer or loyalty program.
+    Use this key for any type of boarding pass.
+    """
+
+    membershipProgramNumber: str | None = None
+    """
+    Optional.
+    localizable string  # The ticketed passenger’s frequent flyer or loyalty number.
+    Use this key for any type of boarding pass.
+    """
+
+    originalArrivalDate: str | None = None
+    """
+    Optional.
+    ISO 8601 date as string  # The originally scheduled date and time of arrival.
+    Use this key for any type of boarding pass.
+    """
+
+    originalBoardingDate: str | None = None
+    """
+    Optional.
+    ISO 8601 date as string  # The originally scheduled date and time of boarding.
+    Use this key for any type of boarding pass.
+    """
+
+    originalDepartureDate: str | None = None
+    """
+    Optional.
+    ISO 8601 date as string  # The originally scheduled date and time of departure.
+    Use this key for any type of boarding pass.
+    """
+
+    passengerName: str | None = None
+    """
+    Optional.
+    SemanticTagType.PersonNameComponents  # An object that represents the name of the passenger.
+    Use this key for any type of boarding pass.
+    """
+
+    securityScreening: str | None = None
+    """
+    Optional. localizable string
+    The type of security screening for the ticketed passenger, such as Priority.
+    Use this key for any type of boarding pass.
+    """
+
+    transitProvider: str | None = None
+    """
+    Optional. localizable string
+    The name of the transit company.
+    Use this key for any type of boarding pass.
+    """
+
+    transitStatus: str | None = None
+    """
+    Optional. localizable string
+    A brief description of the current boarding status for the vessel, such as On Time or Delayed.
+    For delayed status, provide currentBoardingDate, currentDepartureDate, and currentArrivalDate where available.
+    Use this key for any type of boarding pass.
+    """
+
+    transitStatusReason: str | None = None
+    """
+    Optional. localizable string
+    A brief description that explains the reason for the current transitStatus, such as Thunderstorms.
+    Use this key for any type of boarding pass.
+    """
+
+    vehicleName: str | None = None
+    """
+    Optional. localizable string
+    The name of the vehicle to board, such as the name of a boat.
+    Use this key for any type of boarding pass.
+    """
+
+    vehicleNumber: str | None = None
+    """
+    Optional. localizable string
+    The identifier of the vehicle to board, such as the aircraft registration number or train number.
+    Use this key for any type of boarding pass.
+    """
+
+    vehicleType: str | None = None
+    """
+    Optional. localizable string
+    A brief description of the type of vehicle to board, such as the model and manufacturer of a plane or the class of a boat.
+    Use this key for any type of boarding pass.
+    """
 
     boardingGroup: str | None = None
     """
@@ -536,12 +746,6 @@ class BoardingPassSemanticTags(
     Use this key for any type of boarding pass.
     """
 
-    carNumber: str | None = None
-    """
-    Optional. localizable string
-    The number of the passenger car. A train car is also called a carriage, wagon, coach, or bogie in some countries.
-    Use this key only for a train or other rail boarding pass.
-    """
     confirmationNumber: str | None = None
     """
     Optional. localizable string
@@ -703,13 +907,54 @@ class BoardingPassSemanticTags(
     """
 
 
-class StoreCardSemanticTags(BaseModel):
+class PKTransitTypeAirSemanticTags(BoardingPassSemanticTags):
+    """
+    Subclass of SemanticTags. with only the relevant attributes for Airline Boarding Passes.
+    """
+
+    airlineCode: str | None = None
+    """
+    Optional. localizable string
+    The IATA airline code, such as EX for flightCode EX123.
+    Use this key only for airline boarding passes.
+    """
+
+
+class PKTransitTypeBoatSemanticTags(BoardingPassSemanticTags):
+    """
+    Subclass of SemanticTags. with only the relevant attributes for Boat Boarding Passes.
+    """
+
+
+class PKTransitTypeBusSemanticTags(BoardingPassSemanticTags):
+    """
+    Subclass of SemanticTags. with only the relevant attributes for Bus Boarding Passes.
+    """
+
+
+class PKTransitTypeGenericSemanticTags(BoardingPassSemanticTags):
+    """
+    Subclass of SemanticTags. with only the relevant attributes for Generic Boarding Passes.
+    """
+
+
+class PKTransitTypeTrainSemanticTags(BoardingPassSemanticTags):
+    """
+    Subclass of SemanticTags. with only the relevant attributes for Train Boarding Passes.
+    """
+
+    carNumber: str | None = None
+    """
+    Optional. localizable string
+    The number of the passenger car. A train car is also called a carriage, wagon, coach, or bogie in some countries.
+    Use this key only for a train or other rail boarding pass.
+    """
+
+
+class StoreCardSemanticTags(SemanticTags):
     """
     Subclass of SemanticTags. with only the relevant attributes for store cards.
     """
-
-    # Attribute order as in Apple's documentation to make future changes easier!
-    # last checked: 2025-05-16
 
     balance: CurrencyAmount | None = None
     """
@@ -719,336 +964,16 @@ class StoreCardSemanticTags(BaseModel):
     """
 
 
-class SemanticTags(EventTicketSemanticTags, BoardingPassSemanticTags):
-    """
-    An object that contains machine-readable metadata the system uses to offer a pass and suggest related actions.
+# For validation from json
+EventTicketSemantics = EventTicketSemanticTags | SportEventTypeSemanticTags
+BoardingPassSemantics = (
+    BoardingPassSemanticTags
+    | PKTransitTypeAirSemanticTags
+    | PKTransitTypeBoatSemanticTags
+    | PKTransitTypeBusSemanticTags
+    | PKTransitTypeGenericSemanticTags
+    | PKTransitTypeTrainSemanticTags
+)
+StoreCardSemantics = StoreCardSemanticTags
 
-    see: https://developer.apple.com/documentation/WalletPasses/SemanticTags
-    """
-
-    # Attribute order as in Apple's documentation to make future changes easier!
-    # last checked: 2025-05-16
-
-    # inherits additionalTicketAttributes
-    # inherits admissionLevel
-    # inherits admissionLevelAbbreviation
-    # inherits airlineCode
-    # inherits albumIDs
-    # inherits artistIDs
-    # inherits attendeeName
-    # inherits awayTeamAbbreviation
-    # inherits awayTeamLocation
-    # inherits awayTeamName
-    # inherits balance
-    # inherits boardingGroup
-    # inherits boardingSequenceNumber
-    # inherits carNumber
-    # inherits confirmationNumber
-    # inherits currentArrivalDate
-    # inherits currentBoardingDate
-    # inherits currentDepartureDate
-    # inherits departureAirportCode
-    # inherits departureAirportName
-    # inherits departureGate
-    # inherits departureLocation
-    # inherits departureLocationDescription
-    # inherits departurePlatform
-    # inherits departureStationName
-    # inherits departureTerminal
-    # inherits destinationAirportCode
-    # inherits destinationAirportName
-    # inherits destinationGate
-    # inherits destinationLocation
-    # inherits destinationLocationDescription
-    # inherits destinationPlatform
-    # inherits destinationStationName
-    # inherits destinationTerminal
-    # inherits duration
-    # inherits entranceDescription
-    # inherits eventEndDate
-    # inherits eventName
-    # inherits eventStartDate
-    # inherits eventStartDateInfo
-    # inherits eventType
-    # inherits flightCode
-    # inherits flightNumber
-    # inherits genre
-    # inherits homeTeamAbbreviation
-    # inherits homeTeamLocation
-    # inherits homeTeamName
-    # inherits leagueAbbreviation
-    # inherits leagueName
-
-    # inherits membershipProgramName
-    # inherits membershipProgramNumber
-    # inherits originalArrivalDate
-    # inherits originalBoardingDate
-    # inherits originalDepartureDate
-    # inherits passengerName
-    # inherits performerNames
-
-    membershipProgramName: str | None = None
-    """
-    Optional.
-    localizable string  # The name of a frequent flyer or loyalty program.
-    Use this key for any type of boarding pass.
-    """
-
-    membershipProgramNumber: str | None = None
-    """
-    Optional.
-    localizable string  # The ticketed passenger’s frequent flyer or loyalty number.
-    Use this key for any type of boarding pass.
-    """
-
-    originalArrivalDate: str | None = None
-    """
-    Optional.
-    ISO 8601 date as string  # The originally scheduled date and time of arrival.
-    Use this key for any type of boarding pass.
-    """
-
-    originalBoardingDate: str | None = None
-    """
-    Optional.
-    ISO 8601 date as string  # The originally scheduled date and time of boarding.
-    Use this key for any type of boarding pass.
-    """
-
-    originalDepartureDate: str | None = None
-    """
-    Optional.
-    ISO 8601 date as string  # The originally scheduled date and time of departure.
-    Use this key for any type of boarding pass.
-    """
-
-    passengerName: str | None = None
-    """
-    Optional.
-    SemanticTagType.PersonNameComponents  # An object that represents the name of the passenger.
-    Use this key for any type of boarding pass.
-    """
-
-    performerNames: list[str] | None = None
-    """
-    Optional.
-    [localizable string]  # An array of the full names of the performers and opening acts at the event, in decreasing order of significance.
-    Use this key for any type of event ticket.
-    """
-
-    playlistIDs: str | None = None
-    """
-    Optional.
-    [localizable string]  # An array of the Apple Music persistent ID for each playlist corresponding to the event, in decreasing order of significance.
-    Use this key for any type of event ticket.
-    """
-
-    priorityStatus: str | None = None
-    """
-    Optional.
-    localizable string  # The priority status the ticketed passenger holds, such as Gold or Silver.
-    Use this key for any type of boarding pass.
-    """
-
-    seats: list[Seat] | None = None
-    """
-    Optional. [SemanticTagType.Seat]
-    An array of objects that represent the details for each seat at an event or on a transit journey.
-    Use this key for any type of boarding pass or event ticket.
-    """
-
-    securityScreening: str | None = None
-    """
-    Optional. localizable string
-    The type of security screening for the ticketed passenger, such as Priority.
-    Use this key for any type of boarding pass.
-    """
-
-    silenceRequested: bool | None = None
-    """
-    Optional. boolean
-    A Boolean value that determines whether the person’s device remains silent during an event or transit journey. The system may override the key and determine the length of the period of silence.
-    Use this key for any type of boarding pass or event ticket.
-    """
-
-    sportName: str | None = None
-    """
-    Optional. localizable string
-    The commonly used name of the sport.
-    Use this key only for a sports event ticket.
-    """
-
-    tailgatingAllowed: bool | None = None
-    """
-    Optional. boolean
-    A Boolean value that indicates whether tailgating is allowed at the event.
-    Use this key for any type of event ticket.
-    """
-
-    totalPrice: CurrencyAmount | None = None
-    """
-    Optional. SemanticTagType.CurrencyAmount
-    The total price for the pass.
-    Use this key for any pass type.
-    """
-
-    transitProvider: str | None = None
-    """
-    Optional. localizable string
-    The name of the transit company.
-    Use this key for any type of boarding pass.
-    """
-
-    transitStatus: str | None = None
-    """
-    Optional. localizable string
-    A brief description of the current boarding status for the vessel, such as On Time or Delayed.
-    For delayed status, provide currentBoardingDate, currentDepartureDate, and currentArrivalDate where available.
-    Use this key for any type of boarding pass.
-    """
-
-    transitStatusReason: str | None = None
-    """
-    Optional. localizable string
-    A brief description that explains the reason for the current transitStatus, such as Thunderstorms.
-    Use this key for any type of boarding pass.
-    """
-
-    vehicleName: str | None = None
-    """
-    Optional. localizable string
-    The name of the vehicle to board, such as the name of a boat.
-    Use this key for any type of boarding pass.
-    """
-
-    vehicleNumber: str | None = None
-    """
-    Optional. localizable string
-    The identifier of the vehicle to board, such as the aircraft registration number or train number.
-    Use this key for any type of boarding pass.
-    """
-
-    vehicleType: str | None = None
-    """
-    Optional. localizable string
-    A brief description of the type of vehicle to board, such as the model and manufacturer of a plane or the class of a boat.
-    Use this key for any type of boarding pass.
-    """
-
-    venueBoxOfficeOpenDate: str | None = None
-    """
-    Optional. ISO 8601 date as string
-    The date when the box office opens.
-    Use this key for any type of event ticket.
-    """
-
-    venueCloseDate: str | None = None
-    """
-    Optional. ISO 8601 date as string
-    The date when the venue closes.
-    Use this key for any type of event ticket.
-    """
-
-    venueDoorsOpenDate: str | None = None
-    """
-    Optional. ISO 8601 date as string
-    The date the doors to the venue open.
-    Use this key for any type of event ticket.
-    """
-
-    venueEntrance: str | None = None
-    """
-    Optional. localizable string
-    The full name of the entrance, such as Gate A, to use to gain access to the ticketed event.
-    Use this key for any type of event ticket.
-    """
-
-    venueEntranceDoor: str | None = None
-    """
-    Optional. localizable string
-    The venue entrance door.
-    Use this key for any type of event ticket.
-    """
-
-    venueEntranceGate: str | None = None
-    """
-    Optional. localizable string
-    The venue entrance gate.
-    Use this key for any type of event ticket.
-    """
-
-    venueEntrancePortal: str | None = None
-    """
-    Optional. localizable string
-    The venue entrance portal.
-    Use this key for any type of event ticket.
-    """
-
-    venueFanZoneOpenDate: str | None = None
-    """
-    Optional. ISO 8601 date as string
-    The date the fan zone opens.
-    Use this key for any type of event ticket.
-    """
-
-    venueGatesOpenDate: str | None = None
-    """
-    Optional. ISO 8601 date as string
-    The date the gates to the venue open.
-    Use this key for any type of event ticket.
-    """
-
-    venueLocation: Location | None = None
-    """
-    Optional. SemanticTagType.Location
-    An object that represents the geographic coordinates of the venue.
-    Use this key for any type of event ticket.
-    """
-
-    venueName: str | None = None
-    """
-    Optional. localizable string
-    The full name of the venue.
-    Use this key for any type of event ticket.
-    """
-
-    venueOpenDate: str | None = None
-    """
-    Optional. ISO 8601 date as string  # The date when the venue opens. Use this if none of the more specific venue open tags apply.
-    Use this key for any type of event ticket.
-    """
-
-    venueParkingLotsOpenDate: str | None = None
-    """
-    Optional. ISO 8601 date as string
-    The date the parking lots open.
-    Use this key for any type of event ticket.
-    """
-
-    venuePhoneNumber: str | None = None
-    """
-    Optional. localizable string
-    The phone number for inquiries about the venue’s ticketed event.
-    Use this key for any type of event ticket.
-    """
-
-    venueRegionName: str | None = None
-    """
-    Optional. localizable string
-    The name of the city or hosting region of the venue.
-    Use this key for any type of event ticket.
-    """
-
-    venueRoom: str | None = None
-    """
-    Optional.  localizable string
-    The full name of the room where the ticketed event is to take place.
-    Use this key for any type of event ticket.
-    """
-
-    wifiAccess: str | None = None
-    """
-    Optional. [SemanticTagType.WifiNetwork]
-    An array of objects that represent the Wi-Fi networks associated with the event; for example, the network name and password associated with a developer conference.
-    Use this key for any type of pass.
-    """
+Semantics = SemanticTags | EventTicketSemantics | BoardingPassSemantics

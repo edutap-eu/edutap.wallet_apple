@@ -247,11 +247,6 @@ class PassFieldContent(BaseModel):
     """
 
 
-# temporary for type hinting
-# TODO: specify more exactly with semantic_tags
-Semantics = dict[str, Any] | semantic_tags.SemanticTags
-
-
 class SemanticPassFieldContent(PassFieldContent):
     """
     An object that represents the information to display in a field on a pass.
@@ -261,7 +256,7 @@ class SemanticPassFieldContent(PassFieldContent):
     # Attribute order as in Apple's documentation to make future changes easier!
     # last checked: 2025-05-16
 
-    semantics: Semantics | None = None
+    semantics: semantic_tags.Semantics | None = None
     """
     Optional. string
     The semantic tag for the field.
@@ -740,7 +735,7 @@ class Pass(BaseModel):
     This key works only for poster event tickets.
     """
 
-    semantics: Semantics | None = None
+    semantics: semantic_tags.Semantics | None = None
     """
     Optional.
     An object that contains machine-readable metadata the system uses to offer a pass and suggest related actions.

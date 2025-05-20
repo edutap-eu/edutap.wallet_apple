@@ -30,7 +30,7 @@
     "relevantDate": "2025-05-27T19:00+02:00",
     "semantics": {
         "eventType": "PKEventTypeSocialGathering",
-        "silenceRequest": true,
+        "silenceRequested": true,
         "eventName": "ECCA Conference 2025 - Gala Dinner",
         "eventStartDate": "2025-05-27T19:00+02:00",
         "eventEndDate": "2025-05-27T23:00+02:00",
@@ -38,15 +38,8 @@
             "latitude": 48.1371,
             "longitude": 11.5753
         },
-        "relevantDates": [
-            {
-                "startDate": "2025-05-27T19:00+02:00",
-                "endDate": "2025-05-27T23:00+02:00"
-            }
-        ],
         "venueName": "Hofbräuhaus München",
         "venueRoom": "Wappensaal",
-        "venueAddress": "Platzl 9, 80331 München",
         "attendeeName": "Alexander Loechel",
         "admissionLevel": "ECCA Conference 2025 - Gala Dinner"
     },
