@@ -1,6 +1,26 @@
-from pydantic import BaseModel
-from typing import Literal
+from pydantic import BaseModel, create_model
+from typing import Literal, TypeVar
 
+
+# We need the ability to merge models in order
+# to specify the attributes of the SemanticTags model
+
+M = TypeVar('M', bound=BaseModel)
+
+def merge_models(name:str, *models:tuple[type[M], ...]) -> type[M]:
+    """
+    Merge multiple Pydantic models into a single model.
+    """
+    # Create a dictionary to hold the merged fields
+
+    merged_fields = {
+        fieldname:(fieldinfo.annotation, fieldinfo) for d in [
+            m.model_fields 
+            for m in models
+            ] 
+        for (fieldname,fieldinfo) in d.items()} 
+    # Create a new model with the merged fields
+    return create_model(name, **merged_fields)
 
 # Attribute order as in Apple's documentation to make future changes easier!
 # last checked: 2025-05-16
