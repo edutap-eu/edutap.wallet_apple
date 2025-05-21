@@ -1,6 +1,7 @@
 from edutap.wallet_apple import api as apple_api
 from edutap.wallet_apple.models import datatypes as apple_datatypes
 from edutap.wallet_apple.models import passes
+from edutap.wallet_apple.models import semantic_tags
 from edutap.wallet_apple.models.semantic_tags import EventTicketSemanticTags
 from edutap.wallet_apple.models.semantic_tags import Location
 from pydantic import ValidationError
@@ -72,6 +73,21 @@ def test_semantic_tags1():
     }
 
     EventTicketSemanticTags.model_validate(d)
+
+
+def test_semantic_tags2():
+    passes.SemanticPassFieldContent(
+        key="address",
+        value="Ludwig-Maximilians-Universität München\nGeschwister-Scholl-Platz 1\n80539 München",
+        label="Address / Venue",
+        semantics=EventTicketSemanticTags(
+            venueLocation=semantic_tags.Location(
+                latitude=48.1508563, longitude=11.5800829
+            ),
+            venueName="Ludwig-Maximilians-Universität München",
+            venueRoom="Senatssaal",
+        ),
+    )
 
 
 def test_event_pass_semantic_tags(passes_json_dir):

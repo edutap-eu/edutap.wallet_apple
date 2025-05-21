@@ -27,7 +27,8 @@ def test_load_pass_from_json():
 
 
 @pytest.mark.parametrize(
-    "json_file", ["semantic-fields-pass.json", "semantic-fields-pass1.json"]
+    "json_file",
+    ["semantic-fields-pass.json", "semantic-fields-pass1.json", "ecca25-gala.json"],
 )
 def test_load_pass_with_extra_fields_from_json(json_file: str, settings_test: Settings):
     """
@@ -47,6 +48,7 @@ def test_load_pass_with_extra_fields_from_json(json_file: str, settings_test: Se
             in settings_test.get_available_passtype_ids()
         ):
             api.sign(pkpass, settings=settings_test)
+            assert pkpass.is_signed
         assert pkpass is not None
 
 
