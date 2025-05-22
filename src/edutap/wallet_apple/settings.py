@@ -26,6 +26,9 @@ class Settings(BaseSettings):
         # env_file_encoding="utf-8",
         extra="allow",
     )
+
+    environment: Literal["development", "testing", "production"] = "testing"
+
     root_dir: Path = Field(default_factory=lambda dd: dd.get("root_dir", ROOT_DIR))
     cert_dir_relative: str = "certs"
     """Relative path to the root directory, can be overridden
