@@ -153,11 +153,6 @@ It creates some `.pkpass`-files.
 Those are located under `tests/data/generated_passes`.
 
 
-
-
-
-
-
 Format code and run checks:
 
 ```bash

@@ -2,6 +2,7 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
+from typing import Literal
 
 import os
 import structlog  # type: ignore
@@ -49,6 +50,9 @@ class Settings(BaseSettings):
     team_identifier: str | None = None
     handler_prefix: str = "apple_update_service"
     fernet_key: str | None = None
+
+    pydantic_extra: Literal["allow", "ignore", "forbid"] = "forbid"
+    """how to handle extra fields in the pass data"""
 
     def get_certificate_path(self, pass_type_identifier: str) -> Path:
         """

@@ -1,0 +1,161 @@
+{
+    "backgroundColor": "#1A80C3",
+    "description": "ECCA Conference 2025 Gala Dinner Ticket",
+    "expirationDate": "2025-05-27T23:30+02:00",
+    "foregroundColor": "#FFFFFF",
+    "formatVersion": 1,
+    "groupingIdentifier": "2025.ecca.eu",
+    "labelColor": "#F5F5F5",
+    "locations": [
+        {
+            "latitude": 48.1371,
+            "longitude": 11.5753,
+            "relevantText": "Welcome to the Gala Dinner of the ECCA Conference 2025"
+        }
+    ],
+    "nfc": {
+        "encryptionPublicKey": "MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACjAjiWfWMSPxNXZvxyaSgsg7bPmUpnd9BVoGUwryk7m0=",
+        "message": "12345",
+        "requiresAuthentication": false
+    },
+    "organizationName": "European Campus Card Association",
+    "passTypeIdentifier": "pass.demo.lmu.de",
+    "semantics": {
+        "silenceRequested": true,
+        "attendeeName": "Sepp Unterwurzacher",
+        "eventEndDate": "2025-05-27T23:00+02:00",
+        "eventName": "ECCA Conference 2025 - Gala Dinner",
+        "eventStartDate": "2025-05-27T19:00+02:00",
+        "eventType": "PKEventTypeSocialGathering",
+        "venueLocation": {
+            "latitude": 48.1371,
+            "longitude": 11.5753
+        },
+        "venueName": "Hofbräuhaus München"
+    },
+    "serialNumber": "d958e522-e78f-4cd8-8107-d8755af8038c",
+    "sharingProhibited": true,
+    "suppressStripShine": true,
+    "suppressHeaderDarkening": false,
+    "teamIdentifier": "JG943677ZY",
+    "useAutomaticColors": true,
+    "voided": false,
+    "isShellPass": false,
+    "revoked": false,
+    "eventTicket": {
+        "headerFields": [
+            {
+                "dateStyle": "PKDateStyleLong",
+                "key": "eventdate",
+                "label": "Date",
+                "timeStyle": "PKDateStyleShort",
+                "value": "2025-05-27T19:30+02:00",
+                "semantics": {
+                    "eventEndDate": "2025-05-27T23:00+02:00",
+                    "eventStartDate": "2025-05-27T19:30+02:00"
+                }
+            }
+        ],
+        "primaryFields": [
+            {
+                "key": "title",
+                "label": "Hofbräuhaus München",
+                "value": "ECCA Conference 2025 - Gala Dinner",
+                "semantics": {
+                    "venueLocation": {
+                        "latitude": 48.1371,
+                        "longitude": 11.5753
+                    },
+                    "venueName": "Hofbräuhaus München"
+                }
+            }
+        ],
+        "secondaryFields": [
+            {
+                "key": "holder",
+                "label": "Ticketholder",
+                "value": "Sepp Unterwurzacher"
+            }
+        ],
+        "backFields": [
+            {
+                "dateStyle": "PKDateStyleLong",
+                "key": "start",
+                "label": "Event start",
+                "timeStyle": "PKDateStyleShort",
+                "value": "2025-05-27T19:30+02:00",
+                "semantics": {
+                    "eventStartDate": "2025-05-26T19:00+02:00"
+                }
+            },
+            {
+                "dateStyle": "PKDateStyleLong",
+                "key": "end",
+                "label": "Event end",
+                "timeStyle": "PKDateStyleShort",
+                "value": "2025-05-27T23:00+02:00",
+                "semantics": {
+                    "eventEndDate": "2025-05-26T21:00+02:00"
+                }
+            },
+            {
+                "key": "address",
+                "label": "Address / Venue",
+                "value": "Hofbräuhaus München\nPlatzl 9\n80331 München",
+                "semantics": {
+                    "venueLocation": {
+                        "latitude": 48.1371,
+                        "longitude": 11.5753
+                    },
+                    "venueName": "Hofbräuhaus München",
+                    "venueRoom": "Wappensaal"
+                }
+            },
+            {
+                "key": "homepage_conference",
+                "label": "Conference Information",
+                "value": "<a href=\"https://conference.ecca.eu/\">Homepage ECCA Conference 2025</a>"
+            },
+            {
+                "key": "program",
+                "label": "Program",
+                "value": "<a href=\"https://conference.ecca.eu/conference#timeline\">Program ECCA Conference 2025</a>"
+            },
+            {
+                "key": "homepage_ecca",
+                "label": "Homepage ECCA",
+                "value": "<a href=\"https://ecca.eu/\">Homepage ECCA</a>"
+            },
+            {
+                "key": "homepage_edutap",
+                "label": "issued using eduTAP",
+                "value": "<a href=\"https://eduTAP.eu/\">eduTAP Homepage</a>"
+            },
+            {
+                "key": "contact_sinead_mail",
+                "label": "Organizer Contact",
+                "value": "<a href=\"mailto:info@ecca.eu\">info@ecca.eu</a>"
+            },
+            {
+                "key": "contact_sinead_phone",
+                "value": "<a href=\"tel:+353872572418\">Call Organizer Contact (Sinead Nealon; ECCA)</a>"
+            },
+            {
+                "key": "contact_alexander",
+                "value": "<a href=\"tel:+4915203516751\">Call Organizer Contact (Alexander Loechel; LMU München)</a>"
+            },
+            {
+                "key": "contact_group",
+                "value": "<a href=\"https://chat.whatsapp.com/F76MRvZxuz6K9zLWdLctrf\">ECCA 2025 Munich - WhatsApp Community</a>"
+            }
+        ],
+        "auxiliaryFields": [
+            {
+                "key": "org",
+                "label": "Organization",
+                "value": "Organization"
+            }
+        ],
+        "additionalInfoFields": []
+    }
+}

@@ -1,22 +1,36 @@
 from collections import OrderedDict
 from edutap.wallet_apple import crypto
-from enum import Enum
+from edutap.wallet_apple.models import semantic_tags
+from edutap.wallet_apple.models.datatypes import Beacon
+from edutap.wallet_apple.models.datatypes import Location as Pass_Location
+from edutap.wallet_apple.models.datatypes import NFC
+from edutap.wallet_apple.models.datatypes import RelevantDate  # noqa: F401
+from edutap.wallet_apple.models.enums import Alignment
+from edutap.wallet_apple.models.enums import BarcodeFormat
+from edutap.wallet_apple.models.enums import DateStyle
+from edutap.wallet_apple.models.enums import NumberStyle
+from edutap.wallet_apple.models.enums import TransitType
 from io import BytesIO
 from pathlib import Path
+from pydantic import AnyHttpUrl
+from pydantic import AnyUrl
 from pydantic import BaseModel
 from pydantic import computed_field
-from pydantic import Field as PydanticField
+from pydantic import ConfigDict
+from pydantic import EmailStr
 from pydantic import model_serializer
 from pydantic import SerializationInfo
 from pydantic.fields import FieldInfo
 from typing import Any
 from typing import Dict
+from typing import Literal
 from typing_extensions import deprecated
 
 import base64
 import functools
 import hashlib
 import json
+import pydantic
 import typing
 import yaml
 import zipfile
@@ -32,74 +46,242 @@ def base64_to_bytearray(base64_str):
     return decoded_data
 
 
-class Alignment(Enum):
-    LEFT = "PKTextAlignmentLeft"
-    CENTER = "PKTextAlignmentCenter"
-    RIGHT = "PKTextAlignmentRight"
-    JUSTIFIED = "PKTextAlignmentJustified"
-    NATURAL = "PKTextAlignmentNatural"
-
-
-class BarcodeFormat(Enum):
-    PDF417 = "PKBarcodeFormatPDF417"
-    QR = "PKBarcodeFormatQR"
-    AZTEC = "PKBarcodeFormatAztec"
-    CODE128 = "PKBarcodeFormatCode128"
-
-
 # Barcode formats that are supported by iOS 6 and 7
 legacy_barcode_formats = [BarcodeFormat.PDF417, BarcodeFormat.QR, BarcodeFormat.AZTEC]
 
 
-class TransitType(Enum):
-    AIR = "PKTransitTypeAir"
-    TRAIN = "PKTransitTypeTrain"
-    BUS = "PKTransitTypeBus"
-    BOAT = "PKTransitTypeBoat"
-    GENERIC = "PKTransitTypeGeneric"
+class PassFieldContent(BaseModel):
+    """
+    An object that represents the information to display in a field on a pass.
+    see: https://developer.apple.com/documentation/walletpasses/passfieldcontent
+    """
 
+    model_config = ConfigDict(extra="forbid")  # verbietet zusätzliche Felder
 
-class DateStyle(Enum):
-    NONE = "PKDateStyleNone"
-    SHORT = "PKDateStyleShort"
-    MEDIUM = "PKDateStyleMedium"
-    LONG = "PKDateStyleLong"
-    FULL = "PKDateStyleFull"
+    # Attribute order as in Apple's documentation to make future changes easier!
+    # last checked: 2025-05-16
 
+    attributedValue: str | None = None
+    """
+    Optional. localizable string, ISO 8601 date, or number
+    The value of the field, including HTML markup for links.
+    The only supported tag is the <a> tag and its href attribute.
+    The value of this key overrides that of the value key.
 
-class NumberStyle(Enum):
-    DECIMAL = "PKNumberStyleDecimal"
-    PERCENT = "PKNumberStylePercent"
-    SCIENTIFIC = "PKNumberStyleScientific"
-    SPELLOUT = "PKNumberStyleSpellOut"
+    For example, the following is a key-value pair that specifies a link with the text “Edit my profile”:
+    ”attributedValue”: “<a href=’http://example.com/customers/123’>Edit my profile</a>”
 
+    The attributed value isn’t used for watchOS; use the value field instead.
+    """
 
-class Field(BaseModel):
+    changeMessage: str | None = None
+    """
+    Optional. Localizable format string
+    A format string for the alert text to display when the pass updates.
+    The format string needs to contain the escape %@, which the field’s new value replaces.
+    For example, Gate changed to %@.
+
+    You need to provide a value for the system to show a change notification.
+    This field isn’t used for watchOS.
+    """
+
+    currencyCode: str | None = None
+    """
+    Optional. ISO 4217 currency code as a string
+    The currency code to use for the value of the field.
+    """
+
+    dataDetectorTypes: (
+        list[
+            Literal[
+                "PKDataDetectorTypePhoneNumber",
+                "PKDataDetectorTypeLink",
+                "PKDataDetectorTypeAddress",
+                "PKDataDetectorTypeCalendarEvent",
+            ]
+        ]
+        | None
+    ) = None
+    """
+    Optional. [string]
+    The data detectors to apply to the value of a field on the back of the pass.
+    The default is to apply all data detectors.
+    To use no data detectors, specify an empty array.
+
+    You don’t use data detectors for fields on the front of the pass.
+
+    This field isn’t used for watchOS.
+    Possible Values:
+    * PKDataDetectorTypePhoneNumber,
+    * PKDataDetectorTypeLink,
+    * PKDataDetectorTypeAddress,
+    * PKDataDetectorTypeCalendarEvent
+    """
+
+    dateStyle: (
+        DateStyle
+        | Literal[
+            "PKDateStyleNone",
+            "PKDateStyleShort",
+            "PKDateStyleMedium",
+            "PKDateStyleLong",
+            "PKDateStyleFull",
+        ]
+        | None
+    ) = None
+    """
+    Optional. string
+    The style of the date to display in the field.
+    Possible Values:
+    * PKDateStyleNone,
+    * PKDateStyleShort,
+    * PKDateStyleMedium,
+    * PKDateStyleLong,
+    * PKDateStyleFull
+    --> as DateStyle enum
+    """
+
+    ignoresTimeZone: bool | None = None
+    """
+    Optional. boolean
+    A Boolean value that controls the time zone for the time and date to display in the field.
+    The default value is false, which displays the time and date using the current device’s time zone.
+    Otherwise, the time and date appear in the time zone associated with the date and time of value.
+
+    This key doesn’t affect the pass relevance calculation.
+    """
+
+    isRelative: bool | None = None
+    """
+    Optional. boolean
+    A Boolean value that controls whether the date appears as a relative date.
+    The default value is false, which displays the date as an absolute date.
+
+    This key doesn’t affect the pass relevance calculation.
+    """
+
     key: str  # Required. The key must be unique within the scope
-    value: str | int | float  # Required. Value of the field. For example, 42
-    label: str = ""  # Optional. Label text for the field.
-    changeMessage: str = (
-        ""  # Optional. Format string for the alert text that is displayed when the pass is updated
-    )
-    # textAlignment: Alignment = Alignment.LEFT
-    textAlignment: Alignment | None = None
-    # Optional. Alignment for the field’s contents
-    # textAlignment: MyEnum | None = None  # Optional. Alignment for the field’s contents
+    """
+    Required.
+    A unique key that identifies a field in the pass; for example, “departure-gate”.
+    """
+
+    label: str | None = None
+    """
+    Optional. localizable string
+    The text for a field label.
+    """
+
+    numberStyle: (
+        NumberStyle
+        | Literal[
+            "PKNumberStyleDecimal",
+            "PKNumberStylePercent",
+            "PKNumberStyleScientific",
+            "PKNumberStyleSpellOut",
+        ]
+        | None
+    ) = None
+    """
+    Optional. string
+    The style of the number to display in the field. Formatter styles have the same meaning as the formats with corresponding names in NumberFormatter.Style.
+    Possible Values:
+    * PKNumberStyleDecimal,
+    * PKNumberStylePercent,
+    * PKNumberStyleScientific,
+    * PKNumberStyleSpellOut
+    --> as NumberStyle enum
+    """
+
+    textAlignment: (
+        Alignment
+        | Literal[
+            "PKTextAlignmentLeft",
+            "PKTextAlignmentCenter",
+            "PKTextAlignmentRight",
+            "PKTextAlignmentNatural",
+        ]
+        | None
+    ) = None
+    """
+    Optional. string
+    The alignment for the content of a field.
+    The default is natural alignment, which aligns the text based on its script direction.
+    This key is invalid for primary and back fields.
+    Possible Values:
+    * PKTextAlignmentLeft,
+    * PKTextAlignmentCenter,
+    * PKTextAlignmentRight,
+    * PKTextAlignmentNatural
+    -> as Alignment enum
+    """
+
+    timeStyle: (
+        DateStyle
+        | Literal[
+            "PKDateStyleNone",
+            "PKDateStyleShort",
+            "PKDateStyleMedium",
+            "PKDateStyleLong",
+            "PKDateStyleFull",
+        ]
+        | None
+    ) = None
+    """
+    Optional. string
+    The style of the time displayed in the field.
+    Possible Values:
+    * PKDateStyleNone,
+    * PKDateStyleShort,
+    * PKDateStyleMedium,
+    * PKDateStyleLong,
+    * PKDateStyleFull
+    --> as DateStyle enum
+    """
+
+    value: str | int | float
+    """
+    Required.
+    The value to use for the field; for example, 42.
+    A date or time value needs to include a time zone.
+    """
 
 
-class DateField(Field):
-    dateStyle: DateStyle = DateStyle.SHORT
-    timeStyle: DateStyle = DateStyle.SHORT
-    isRelative: bool = False
-    ignoresTimeZone: bool = False
+class SemanticPassFieldContent(PassFieldContent):
+    """
+    An object that represents the information to display in a field on a pass.
+    see: https://developer.apple.com/documentation/walletpasses/passfieldcontent
+    """
+
+    # Attribute order as in Apple's documentation to make future changes easier!
+    # last checked: 2025-05-16
+
+    semantics: semantic_tags.Semantics | None = None
+    """
+    Optional. string
+    The semantic tag for the field.
+    """
 
 
-class NumberField(Field):
-    numberStyle: NumberStyle = NumberStyle.DECIMAL
+class AuxiliaryFields(PassFieldContent):
+    """
+    An object that represents the fields that display additional information on the front of a pass.
+    see: https://developer.apple.com/documentation/walletpasses/passfieldcontent
+    """
+
+    # Attribute order as in Apple's documentation to make future changes easier!
+    # last checked: 2025-05-16
+
+    row: int | None = None
+    """
+    Optional. int
+    A number you use to add a row to the auxiliary field in an event ticket pass type.
+    Set the value to 1 to add an auxiliary row. Each row displays up to four fields.
+    Possible Values: 0, 1
+    """
 
 
-class CurrencyField(Field):
-    currencyCode: str = "USD"
+Field = PassFieldContent  # Alias for backward compatibility
 
 
 class Barcode(BaseModel):
@@ -111,80 +293,73 @@ class Barcode(BaseModel):
     altText: str = ""  # Optional. Text displayed near the barcode
 
 
-class Location(BaseModel):
-    latitude: float = 0.0  # Required. Latitude, in degrees, of the location
-    longitude: float = 0.0  # Required. Longitude, in degrees, of the location
-    altitude: float = 0  # Optional. Altitude, in meters, of the location
-    distance: float = (
-        0  # Optional. Maximum distance, in meters, from the location that the pass is relevant
-    )
-    relevantText: str = (
-        ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
-    )
-
-
-class IBeacon(BaseModel):
-    proximityUUID: (
-        str  # Required. Unique identifier of a Bluetooth Low Energy location beacon
-    )
-    major: int  # Required. Major identifier of a Bluetooth Low Energy location beacon
-    minor: int  # Required. Minor identifier of a Bluetooth Low Energy location beacon
-    relevantText: str = (
-        ""  # Optional. Text displayed on the lock screen when the pass is currently relevant
-    )
-
-
-class NFC(BaseModel):
-    message: str  # Required. Message to be displayed on the lock screen when the pass is currently relevant
-    encryptionPublicKey: (
-        str  # Required. Public encryption key used by the Value Added Services protocol
-    )
-    requiresAuthentication: bool = (
-        False  # Optional. Indicates that the pass is not valid unless it contains a valid signature
-    )
+IBeacon = Beacon  # Alias for backward compatibility
 
 
 class PassInformation(BaseModel):
-    headerFields: typing.List[Field] = PydanticField(
-        default_factory=list
+    model_config = ConfigDict(extra="forbid")  # verbietet zusätzliche Felder
+
+    headerFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        pydantic.Field(default_factory=list)
     )  # Optional. Additional fields to be displayed in the header of the pass
-    primaryFields: typing.List[Field] = PydanticField(
-        default_factory=list
+    primaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        pydantic.Field(default_factory=list)
     )  # Optional. Fields to be displayed prominently in the pass
-    secondaryFields: typing.List[Field] = PydanticField(
-        default_factory=list
+    secondaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        pydantic.Field(default_factory=list)
     )  # Optional. Fields to be displayed on the front of the pass
-    backFields: typing.List[Field] = PydanticField(
-        default_factory=list
+    backFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        pydantic.Field(default_factory=list)
     )  # Optional. Fields to be displayed on the back of the pass
-    auxiliaryFields: typing.List[Field] = PydanticField(
+    auxiliaryFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        pydantic.Field(default_factory=list)
+    )
+    """
+    Optional.
+    An object that represents the fields that display additional information on the front of a pass.
+    """
+
+    additionalInfoFields: typing.List[PassFieldContent | dict] = pydantic.Field(
         default_factory=list
     )  # Optional. Additional fields to be displayed on the front of the pass
 
     def addHeaderField(self, key, value, label, textAlignment=None):
         self.headerFields.append(
-            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+            PassFieldContent(
+                key=key, value=value, label=label, textAlignment=textAlignment
+            )
         )
 
     def addPrimaryField(self, key, value, label, textAlignment=None):
         self.primaryFields.append(
-            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+            PassFieldContent(
+                key=key, value=value, label=label, textAlignment=textAlignment
+            )
         )
 
     def addSecondaryField(self, key, value, label, textAlignment=None):
         self.secondaryFields.append(
-            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+            PassFieldContent(
+                key=key, value=value, label=label, textAlignment=textAlignment
+            )
         )
 
     def addBackField(self, key, value, label, textAlignment=None):
         self.backFields.append(
-            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+            PassFieldContent(
+                key=key, value=value, label=label, textAlignment=textAlignment
+            )
         )
 
     def addAuxiliaryField(self, key, value, label, textAlignment=None):
         self.auxiliaryFields.append(
-            Field(key=key, value=value, label=label, textAlignment=textAlignment)
+            PassFieldContent(
+                key=key, value=value, label=label, textAlignment=textAlignment
+            )
         )
+
+    def addAdditionalInfoFields(self, field_data: PassFieldContent | dict):
+        self.additionalInfoFields.append(field_data)
 
 
 # this registry identifies the different apple pass types by their name
@@ -243,37 +418,77 @@ class StoreCard(PassInformation):
 
 
 class Pass(BaseModel):
-    # standard keys
-    teamIdentifier: str
     """
-    Required. Team identifier of the organization that originated and
-    signed the pass, as issued by Apple.
-    """
-    passTypeIdentifier: str
-    """
-    Required. Pass type identifier, as issued by Apple. The value must
-    correspond with your signing certificate. used for grouping."""
-    organizationName: str
-    """
-    Required. Display name of the organization that originated and
-    signed the pass."""
-    serialNumber: str
-    """Required. Serial number that uniquely identifies the pass.
-    Must not be changed after creation"""
-    description: str
-    """Required. Brief description of the pass, used by the iOS accessibility technologies."""
-    formatVersion: int = 1
-    """Required. Version of the file format. The value must be 1."""
+    Represents a pass object. This is the base class for all pass types.
 
-    # Visual Appearance Keys
+    see: https://developer.apple.com/documentation/walletpasses/pass
+    """
+
+    # Attribute order as in Apple's documentation to make future changes easier!
+    # last checked: 2025-05-16
+
+    # class Config:
+    #     extra = "allow"  # Erlaubt zusätzliche Felder
+
+    # standard keys
+    accessibilityURL: str | None = None
+    """
+    Optional.
+    A URL that links to your accessibility content, or the venue’s.
+    This key works only for poster event tickets.
+    """
+
+    addOnURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL that can link to experiences that someone can add to the pass.
+    This key works only for poster event tickets.
+    """
+
+    appLaunchURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL the system passes to the associated app from associatedStoreIdentifiers during launch.
+    The app receives this URL in the application(_:didFinishLaunchingWithOptions:) and application(_:open:options:) methods of its app delegate.
+    This key isn’t supported for watchOS.
+    """
+
+    associatedStoreIdentifiers: list[str] | None = None  # [number]
+    """
+    Optional.
+    An array of App Store identifiers for apps associated with the pass. The associated app on a device is the first item in the array that’s compatible with that device.
+    A link to launch the app is on the back of the pass. If the app isn’t installed, the link opens the App Store.
+    This key works only for payment passes.
+    This key isn’t supported for watchOS.
+    """
+
+    auxiliaryStoreIdentifiers: list[str] | None = None  # [number]
+    """
+    Optional.
+    An array of additional App Store identifiers for apps associated with the pass. The associated app on a device is the first item in the array that’s compatible with that device.
+    This key works only for poster event tickets. A link to launch the app is in the event guide of the pass. If the app isn’t installed, the link opens the App Store.
+    This key isn’t supported for watchOS.
+    """
+
+    authenticationToken: bytes | None = None
+    """
+    Optional. The authentication token to use with the web service in the webServiceURL key.
+    Minimum 16 chars
+    Must not be changed after creation.
+    """
+
     backgroundColor: str | None = None
-    """Optional. Background color of the pass, specified as an CSS-style RGB triple. For example, rgb(23, 187, 82)."""
-    foregroundColor: str | None = None
-    """Optional. Foreground color of the pass, specified as a CSS-style RGB triple. For example, rgb(100, 10, 110)."""
-    labelColor: str | None = None
-    """Optional. Color of the label text, specified as a CSS-style RGB triple. For example, rgb(255, 255, 255)."""
-    logoText: str | None = None
-    """Optional. Text displayed next to the logo on the pass."""
+    """
+    Optional.
+    A background color for the pass, specified as a CSS-style RGB triple, such as rgb(23, 187, 82).
+    """
+
+    bagPolicyURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL that links to the bag policy of the venue for the event that the pass represents.
+    This key works only for poster event tickets.
+    """
 
     @computed_field  # type: ignore [no-redef]
     @deprecated("Use 'barcodes' instead")
@@ -304,51 +519,320 @@ class Pass(BaseModel):
         self.barcodes = [value] if value is not None else None
 
     barcodes: list[Barcode] | None = None
-    """Optional. Information specific to the pass’s barcode. The system uses the first valid"""
-    suppressStripShine: bool = False
-    """Optional. If true, the strip image is displayed."""
+    """
+    Optional.
+    An array of objects that represent possible barcodes on a pass.
+    The system uses the first displayable barcode for the device.
+    """
 
-    # Web Service Keys
-    webServiceURL: str | None = None
-    """Optional. The URL of a web service that conforms to the API described
-    in PassKit Web Service Reference.
-    Must not be changed after creation"""
-    authenticationToken: bytes | None = None
-    """Optional. The authentication token to use with the web service.
-    Minimum 16 chars
-    Must not be changed after creation."""
+    beacons: list[Beacon] | None = None
 
-    # Relevance Keys
-    locations: list[Location] | None = None
-    """Optional. Locations where the pass is relevant. For example, the location of your store."""
-    ibeacons: list[IBeacon] | None = None
-    """Optional. IBeacons data"""
-    relevantDate: str | DateField | None = None
-    """Optional. Date and time when the pass becomes relevant."""
-    associatedStoreIdentifiers: list[str] | None = None
-    """Optional. Identifies which merchants’ locations accept the pass."""
+    # boardingPass: BoardingPass | None = None
+    """
+    Optional.
+    An object that contains the information for a boarding pass
+    """
 
-    appLaunchURL: str | None = None
-    """Optional. A URL to be passed to the associated app when launching it."""
-    userInfo: dict | None = None
-    """Optional. Custom information for the pass."""
-    # TODO: check if this is correct
-    expirationDate: str | DateField | None = None
-    """Optional. Date and time when the pass expires."""
+    contactVenueEmail: EmailStr | None = None
+    """
+    Optional.
+    The preferred email address to contact the venue, event, or issuer.
+    This key works only for poster event tickets.
+    """
 
-    voided: bool = False
-    """experimental/reverse engineered"""
-    sharingProhibited: bool = False
-    "experimental/reverse engineered, can be extracted from boarding pass"
-    isShellPass: bool = False
-    "experimental/reverse engineered"
-    groupingID: str | None = None
-    "experimental/reverse engineered"
-    revoked: bool = False
-    "experimental/reverse engineered"
+    contactVenuePhoneNumber: str | None = None
+    """
+    Optional.
+    The phone number for contacting the venue, event, or issuer.
+    This key works only for poster event tickets.
+    """
+
+    contactVenueWebsite: AnyHttpUrl | None = None
+    """
+    Optional.
+    A URL that links to the website of the venue, event, or issuer.
+    This key works only for poster event tickets.
+    """
+
+    # coupon: Coupon | None = None
+    """
+    Optional.
+    An object that contains the information for a coupon.
+    """
+
+    description: str
+    """
+    Required.
+    A short description that iOS accessibility technologies use for a pass.
+    """
+
+    directionsInformationURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL that links to directions for the event.
+
+    This key works only for poster event tickets.
+    """
+
+    eventLogoText: str | None = None
+    """
+    Optional.
+    The text to display next to the logo on the pass.
+    This key works only for poster event tickets
+    """
+
+    # eventTicket = EventTicket | None = None
+    """
+    Optional.
+    An object that contains the information for an event ticket.
+    """
+
+    expirationDate: str | None = None
+    """
+    Optional. string
+    The date and time the pass expires.
+    The value needs to be a complete date that includes hours and minutes, and may optionally include seconds.
+    """
+
+    footerBackgroundColor: str | None = None
+    """
+    Optional.
+    A background color for the footer of the pass, specified as a CSS-style RGB triple, such as rgb(100, 10, 110).
+    This key works only for poster event tickets.
+    """
+
+    foregroundColor: str | None = None
+    """
+    Optional.
+    A foreground color for the pass, specified as a CSS-style RGB triple, such as rgb(100, 10, 110).
+    """
+
+    formatVersion: int = 1
+    """
+    Required.
+    The version of the file format. The value needs to be 1.
+    """
+
+    # generic: Generic | None = None
+    """
+    Optional.
+    An object that contains the information for a generic pass.
+    """
+
+    groupingIdentifier: str | None = None
+    """
+    Optional.
+    An identifier the system uses to group related boarding passes or event tickets.
+    Wallet displays passes with the same groupingIdentifier, passTypeIdentifier, and type as a group.
+    Use this identifier to group passes that are tightly related, such as boarding passes for different connections on the same trip.
+    """
+
+    labelColor: str | None = None
+    """
+    Optional.
+    A color for the label text of the pass, specified as a CSS-style RGB triple, such as rgb(100, 10, 110).
+    If you don’t provide a value, the system determines the label color.
+    """
+
+    locations: list[Pass_Location] | None = None
+    # Field(
+    #     default=None,
+    #     # max_length=10,
+    # )
+    """
+    Optional.
+    An array of up to 10 objects that represent geographic locations the system uses to show a relevant pass.
+    """
+
+    logoText: str | None = None
+    """
+    Optional.
+    The text to display next to the logo on the pass.
+    This key doesn’t work for poster event tickets.
+    """
+
+    maxDistance: int | None = None
+    """
+    Optional.
+    The maximum distance, in meters, from a location in the locations array at which the pass is relevant.
+    The system uses the smaller of this distance or the default distance.
+    """
+
+    merchandiseURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL that links to a site for ordering merchandise for the event that the pass represents.
+    This key works only for poster event tickets.
+    """
 
     nfc: NFC | None = None
-    """Optional. Information used for Value Added Service Protocol transactions."""
+    """
+    Optional.
+    An object that contains the information to use for Value-Added Services protocol transactions.
+    """
+
+    orderFoodURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL that links to the food ordering page for the event that the pass represents.
+    This key works only for poster event tickets.
+    """
+
+    organizationName: str
+    """
+    Required. Display name of the organization that originated and
+    signed the pass."""
+
+    parkingInformationURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL that links to parking information for the event that the pass represents.
+    This key works only for poster event tickets.
+    """
+
+    passTypeIdentifier: str
+    """
+    Required.
+    The pass type identifier that’s registered with Apple.
+    The value needs to be the same as the distribution certificate that signs the pass.
+    """
+
+    preferredStyleSchemes: list[Literal["posterEventTicket", "eventTicket"]] | None = (
+        None
+    )
+    """
+    Optional.
+    An array of schemes to validate the pass with. The system validates the pass and its contents to ensure they meet the schemes’ requirements, falling back to the designed type if validation fails for all the provided schemes.
+    """
+
+    purchaseParkingURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL that links to a site to purchase parking for the event that the pass represents.
+    This key works only for poster event tickets.
+    """
+
+    relevantDate: str | None = pydantic.Field(
+        default=None, deprecated="Use relevantDates instead"
+    )
+    """
+    Optional.
+    The date and time when the pass becomes relevant, as a W3C timestamp, such as the start time of a movie. The value needs to be a complete date that includes hours and minutes, and may optionally include seconds.
+    For information about the W3C timestamp format, see Time and Date Formats on the W3C website.
+    This object is deprecated. Use relevantDates instead.
+    """
+
+    relevantDates: list[RelevantDate] | None = None
+    """
+    Optional. [Pass.RelevantDates]
+    An array of objects that represent date intervals that the system uses to show a relevant pass.
+    """
+
+    sellURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL that links to the selling flow for the ticket the pass represents.
+    This key works only for poster event tickets.
+    """
+
+    semantics: semantic_tags.Semantics | None = None
+    """
+    Optional.
+    An object that contains machine-readable metadata the system uses to offer a pass and suggest related actions.
+    For example, setting Don’t Disturb mode for the duration of a movie.
+    """
+
+    serialNumber: str
+    """
+    Required.
+    An alphanumeric serial number.
+    The combination of the serial number and pass type identifier needs to be unique for each pass.
+    """
+
+    sharingProhibited: bool = False
+    """
+    Optional.
+    A Boolean value introduced in iOS 11 that controls whether to show the Share button on the back of a pass.
+    A value of true removes the button. The default value is false.
+    This flag has no effect in earlier versions of iOS, nor does it prevent sharing the pass in some other way.
+    """
+
+    # storeCard: StoreCard | None = None
+    """
+    Optional.
+    An object that contains the information for a store card.
+    """
+
+    suppressStripShine: bool = True
+    """
+    Optional.
+    A Boolean value that controls whether to display the strip image without a shine effect.
+    The default value is true.
+    """
+
+    suppressHeaderDarkening: bool = False
+    """
+    Optional.
+    A Boolean value that controls whether to display the header darkening gradient on poster event tickets.
+    The default value is false.
+    """
+
+    teamIdentifier: str
+    """
+    Required.
+    The Team ID for the Apple Developer Program account that registered the pass type identifier.
+    """
+
+    transferURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL that links to the transferring flow for the ticket that the pass represents.
+    This key works only for poster event tickets.
+    """
+
+    transitInformationURL: AnyUrl | None = None
+    """
+    Optional.
+    A URL that links to information about transit options in the area of the event that the pass represents.
+    This key works only for poster event tickets.
+    """
+
+    useAutomaticColors: bool | None = None
+    """
+    Optional.
+    A Boolean value that controls whether Wallet computes the foreground and label color that the pass uses. The system derives the background color from the background image of the pass.
+    This key works only for poster event tickets.
+    This key ignores the values that foregroundColor and labelColor specify.
+    """
+
+    userInfo: dict | None = None
+    """
+    Optional.
+    A JSON dictionary that contains any custom information for companion apps.
+    The data doesn’t appear to the user.
+    For example, a pass for a cafe might include information about the customer’s favorite drink and sandwich in a machine-readable form.
+    The companion app uses the data for placing an order for the usual.
+    """
+
+    voided: bool = False
+    """
+    Optional.
+    A Boolean value that indicates that the pass is void, such as a redeemed, one-time-use coupon.
+    The default value is false.
+    """
+
+    webServiceURL: str | None = None
+    """
+    Optional.
+    The URL for a web service that you use to update or personalize the pass.
+    The URL can include an optional port number.
+    """
+
+    # experimental/reverse engineered, can be extracted from boarding pass
+    isShellPass: bool = False
+
+    # experimental/reverse engineered
+    revoked: bool = False
 
     @property
     def pass_information(self):
@@ -393,7 +877,7 @@ class PkPass(BaseModel):
             raise ValueError("Pass object is not set")
         return self.pass_object
 
-    files: dict = PydanticField(default_factory=dict, exclude=True)
+    files: dict = pydantic.Field(default_factory=dict, exclude=True)
     """# Holds the files to include in the .pkpass"""
 
     @classmethod

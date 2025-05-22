@@ -9,6 +9,7 @@ from edutap.wallet_apple.crypto import VerificationError
 from edutap.wallet_apple.settings import Settings
 from io import BytesIO
 from plugins import SettingsTest
+from pydantic import ValidationError
 
 import conftest as conftest
 import json
@@ -23,6 +24,48 @@ def test_load_pass_from_json():
         buf = fh.read()
         data = json.loads(buf)
         pkpass = api.new(data=data)
+        assert pkpass is not None
+
+
+@pytest.mark.parametrize(
+    "json_file, is_valid",
+    [
+        ("semantic-fields-pass.json", True),
+        ("semantic-fields-pass1.json", True),
+        ("ecca25-gala.json", True),
+        ("ecca25-gala-broken.json", False),
+    ],
+)
+def test_load_pass_with_extra_fields_from_json(
+    json_file: str, is_valid: bool, settings_test: Settings
+):
+    """
+    test if the pass has fields not
+    specified in the pass schema attributes
+    in this case a field named 'semantics'
+    """
+    with open(conftest.jsons / json_file, encoding="utf-8") as fh:
+        buf = fh.read()
+        data = json.loads(buf)
+        if is_valid:
+            pkpass = api.new(data=data)
+        else:
+            with pytest.raises(ValidationError) as ex:
+                pkpass = api.new(data=data)
+
+            exception = ex.value
+            assert isinstance(exception, ValidationError)
+            return
+
+        semantics = getattr(pkpass.pass_object, "semantics")
+        assert semantics is not None
+        if (
+            conftest.key_files_exist()
+            and pkpass.pass_object_safe.passTypeIdentifier
+            in settings_test.get_available_passtype_ids()
+        ):
+            api.sign(pkpass, settings=settings_test)
+            assert pkpass.is_signed
         assert pkpass is not None
 
 

@@ -99,7 +99,7 @@ def test_basic_pass():
 
     passfile_json = passobject.model_dump(exclude_none=True)
     assert passfile_json is not None
-    assert passfile_json["suppressStripShine"] is False
+    assert passfile_json["suppressStripShine"] is True
     assert passfile_json["formatVersion"] == 1
     assert passfile_json["passTypeIdentifier"] == conftest.PASS_TYPE_IDENTIFIER
     assert passfile_json["serialNumber"] == "1234567"
