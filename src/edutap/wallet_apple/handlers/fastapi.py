@@ -10,6 +10,8 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Header
 from fastapi import HTTPException
+from starlette.status import HTTP_200_OK
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN,
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 from typing import Annotated
@@ -17,34 +19,40 @@ from typing import Annotated
 import datetime
 
 
-def get_settings() -> Settings:
-    res = Settings()
-    return res
+settings = Settings()
+
+# define routers for all use cases: wallet_web_service (update service), pass_download requested by Wallet
+# and the combined router (at bottom of file)
+
+# router that handles the Apple Wallet Web Service API (Update Service of Passes)
+# handling the following endpoints:
+#   POST register pass: https://yourpasshost.example.com/v1//devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}
+#   DELETE unregister pass: https://yourpasshost.example.com/v1//devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}
+#   GET get_updated_pass https://yourpasshost.example.com/v1//passes/{passTypeIdentifier}/{serialNumber}
+#   GET list_updatable_passes: https://yourpasshost.example.com/v1//devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}
+#   POST logging info issued by handheld: https://yourpasshost.example.com/v1//log
+router_webservice = APIRouter(
+    prefix=settings.handler_prefix_webservice,
+    tags=["edutap.wallet_apple"],
+)
+router_apple_wallet = router_webservice  # backward compatibility alias
+
+# router that handles the pass download request from the Wallet app
+# (e.g. when the user request a loyalty card from with the Wallet --> Loyalty onboarding process)
+# handling the following endpoints:
+#   POST https://yourpasshost.example.com/v1/passes/{passTypeIdentifier}/{serialNumber}/personalize
+router_wallet_requested_pass_download = APIRouter(
+    prefix=settings.handler_prefix_wallet_requested_pass_download,
+    tags=["edutap.wallet_apple"],
+)
+router_download_pass = router_wallet_requested_pass_download  # backward compatibility alias
 
 
 def get_prefix() -> str:
-    prefix = f"{get_settings().handler_prefix}/v1"
+    prefix = f"{settings.handler_prefix}/v1"
     if prefix[0] != "/":
         prefix = f"/{prefix}"
     return prefix
-
-
-# router that handles the apple wallet api:
-#   POST register pass: /devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}
-#   DELETE unregister pass: /devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}
-#   GET get_updated_pass /passes/{passTypeIdentifier}/{serialNumber}
-#   GET list_updatable_passes: /devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}
-#   POST logging info issued by handheld: /log
-router_apple_wallet = APIRouter(
-    prefix=get_prefix(),
-    tags=["edutap.wallet_apple"],
-)
-
-# download pass: /download-pass/{token}
-router_download_pass = APIRouter(
-    prefix=get_prefix(),
-    tags=["edutap.wallet_apple"],
-)
 
 
 async def check_authorization(
@@ -62,23 +70,48 @@ async def check_authorization(
     raises a 401 exception if the token is not correct
     """
 
-    for pass_registration_handler in get_pass_data_acquisitions():
-        if authorization is None:
-            get_settings().get_logger().warn(
-                "check_authorization_failure",
-                authorization=authorization,
-                pass_type_identifier=pass_type_identifier,
-                serial_number=serial_number,
-                reason="no token given",
-                realm="fastapi",
+    # check if the token is present
+    if authorization is None:
+        settings.get_logger().warn(
+            "check_authorization_failure",
+            authorization=authorization,
+            pass_type_identifier=pass_type_identifier,
+            serial_number=serial_number,
+            reason="no token given",
+            realm="fastapi",
+        )
+        if settings.env in ["development", "testing"]:
+            # in development and testing mode, we pass additional information
+            raise HTTPException(
+                status_code=HTTP_401_UNAUTHORIZED,
+                detail="UNAUTHORIZED - no token given",
             )
-            raise HTTPException(status_code=401, detail="Unauthorized - no token give")
-        token = authorization.split(" ")[1]
+        raise HTTPException(status_code=401, detail="UNAUTHORIZED")
+
+    auth_type, token = authorization.split(" ")
+    if auth_type != "ApplePass":
+        settings.get_logger().warn(
+            "check_authorization_failure",
+            authorization=authorization,
+            pass_type_identifier=pass_type_identifier,
+            serial_number=serial_number,
+            reason="wrong token type",
+            realm="fastapi",
+        )
+
+        if settings.env in ["development", "testing"]:
+            # in development and testing mode, we pass additional information
+            raise HTTPException(
+                status_code=HTTP_401_UNAUTHORIZED,
+                detail="UNAUTHORIZED - Not Supported Authentication Type",
+            )
+        raise HTTPException(status_code=401, detail="UNAUTHORIZED")
+    for pass_registration_handler in get_pass_data_acquisitions():
         check = await pass_registration_handler.check_authentication_token(
             pass_type_identifier, serial_number, token
         )
         if not check:
-            get_settings().get_logger().warn(
+            settings.get_logger().warn(
                 "check_authorization_failure",
                 authorization=authorization,
                 pass_type_identifier=pass_type_identifier,
@@ -245,8 +278,6 @@ async def unregister_pass(
 async def device_log(
     request: Request,
     data: LogEntries,
-    *,
-    settings: Settings = Depends(get_settings),
 ):
     """
     Logging/Debugging from the device, called by the handheld device
@@ -267,8 +298,6 @@ async def get_updated_pass(
     passTypeIdentifier: str,
     serialNumber: str,
     authorization: Annotated[str | None, Header()] = None,
-    # *,
-    settings: Settings = Depends(get_settings),
 ):
     """
     Pass delivery
@@ -368,8 +397,6 @@ async def list_updatable_passes(
     deviceLibraryIdentifier: str,
     passTypeIdentifier: str,
     passesUpdatedSince: str | None = None,
-    *,
-    settings: Settings = Depends(get_settings),
 ) -> SerialNumbers:
     """
     see https://developer.apple.com/documentation/walletpasses/get-the-list-of-updatable-passes
