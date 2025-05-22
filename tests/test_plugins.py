@@ -1,4 +1,5 @@
 from edutap.wallet_apple.models import handlers
+from edutap.wallet_apple.plugins import add_plugin
 from edutap.wallet_apple.plugins import get_logging_handlers
 from edutap.wallet_apple.plugins import get_pass_data_acquisitions
 from edutap.wallet_apple.plugins import get_pass_registrations
@@ -77,7 +78,18 @@ def test_get_logging_handlers(entrypoints_testing):
 
 
 def test_add_plugin():
-    from edutap.wallet_apple.plugins import add_plugin
+    try:
+        count_pass_registrations = len(get_pass_registrations())
+    except NotImplementedError:
+        count_pass_registrations = 0
+    try:
+        count_pass_data_acquisitions = len(get_pass_data_acquisitions())
+    except NotImplementedError:
+        count_pass_data_acquisitions = 0
+    try:
+        count_logging_handlers = len(get_logging_handlers())
+    except NotImplementedError:
+        count_logging_handlers = 0
 
     add_plugin("PassRegistration", DummyPassRegistration)
 
@@ -87,6 +99,6 @@ def test_add_plugin():
     add_plugin("PassDataAcquisition", DummyPassDataAcquisition)
     add_plugin("Logging", DummyLogging)
 
-    assert len(get_pass_registrations()) == 1
-    assert len(get_pass_data_acquisitions()) == 1
-    assert len(get_logging_handlers()) == 1
+    assert len(get_pass_registrations()) == count_pass_registrations + 1
+    assert len(get_pass_data_acquisitions()) == count_pass_data_acquisitions + 1
+    assert len(get_logging_handlers()) == count_logging_handlers + 1

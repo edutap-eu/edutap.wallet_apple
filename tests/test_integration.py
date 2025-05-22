@@ -2,7 +2,6 @@ from conftest import certs
 from conftest import create_shell_pass
 from conftest import key_files_exist
 from conftest import load_pass_viewer
-from conftest import only_test_if_crypto_supports_verification
 from conftest import resources
 from edutap.wallet_apple import crypto
 from edutap.wallet_apple.models.passes import Barcode
@@ -31,7 +30,10 @@ def test_get_available_pass_type_ids(settings_test):
     assert "pass.demo.lmu.de" in ids
 
 
-@only_test_if_crypto_supports_verification
+@pytest.mark.skipif(
+    not crypto.supports_verification(),
+    reason="pycryptography support for verification missing",
+)
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
 @pytest.mark.integration
@@ -66,7 +68,10 @@ def test_signing(settings_test, pass_type_id):
         crypto.verify_manifest(tampered_manifest, signature)
 
 
-@only_test_if_crypto_supports_verification
+@pytest.mark.skipif(
+    not crypto.supports_verification(),
+    reason="pycryptography support for verification missing",
+)
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
 @pytest.mark.integration
@@ -112,8 +117,11 @@ def test_signing1(settings_test, pass_type_id):
     assert zipfile is not None
 
 
+@pytest.mark.skipif(
+    not crypto.supports_verification(),
+    reason="pycryptography support for verification missing",
+)
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
-@only_test_if_crypto_supports_verification
 @pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
 @pytest.mark.integration
 def test_verification(settings_test, pass_type_id):
@@ -456,7 +464,10 @@ def test_passbook_creation_integration_eventticket_tampered(
             load_pass_viewer(pass_file_name)
 
 
-@only_test_if_crypto_supports_verification
+@pytest.mark.skipif(
+    not crypto.supports_verification(),
+    reason="pycryptography support for verification missing",
+)
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
 @pytest.mark.integration

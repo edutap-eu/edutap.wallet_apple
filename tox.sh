@@ -1,1 +1,1 @@
-uvx --with tox-uv tox -e lint
+uvx --with tox-uv tox

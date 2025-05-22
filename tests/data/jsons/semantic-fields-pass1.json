@@ -1,0 +1,140 @@
+{
+    "authenticationToken": "b5b2597a1c5aa2c6019aa065922785d54760a784b98731c344b4fd1eb6dd8eed",
+    "backgroundColor": "#1A80C3",
+    "description": "ECCA Conference 2025 Ticket",
+    "eventLogoText": "ECCA Conference 2025 - Gala Dinner",
+    "footerBackgroundColor": "#1A80C3",
+    "foregroundColor": "#FFFFFF",
+    "formatVersion": 1,
+    "labelColor": "#F5F5F5",
+    "locations": [
+        {
+            "latitude": 48.1508563,
+            "longitude": 11.5800829,
+            "altitude": 0.0,
+            "distance": 1000.0,
+            "relevantText": "Welcome to ECCA Conference 2025"
+        }
+    ],
+    "nfc": {
+        "message": "45c4e0c8-45db-47e7-9712-395e194a7b87",
+        "encryptionPublicKey": "MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACWpF1zC3h+dCh+eWyqV8unVddh2LQaUoV8LQrgb3BKkM=",
+        "requiresAuthentication": false
+    },
+    "organizationName": "European Campus Card Association",
+    "passTypeIdentifier": "pass.demo.lmu.de",
+    "preferredStyleSchemes": [
+        "posterEventTicket",
+        "eventTicket"
+    ],
+    "relevantDate": "2025-05-27T19:00+02:00",
+    "semantics": {
+        "eventType": "PKEventTypeSocialGathering",
+        "silenceRequested": true,
+        "eventName": "ECCA Conference 2025 - Gala Dinner",
+        "eventStartDate": "2025-05-27T19:00+02:00",
+        "eventEndDate": "2025-05-27T23:00+02:00",
+        "venueLocation": {
+            "latitude": 48.1371,
+            "longitude": 11.5753
+        },
+        "venueName": "Hofbräuhaus München",
+        "venueRoom": "Wappensaal",
+        "additionalTicketAttributes": "Platzl 9, 80331 München",
+        "attendeeName": "Alexander Loechel",
+        "admissionLevel": "ECCA Conference 2025 - Gala Dinner"
+    },
+    "serialNumber": "45c4e0c8-45db-47e7-9712-395e194a7b87-galadinner",
+    "sharingProhibited": true,
+    "suppressStripShine": false,
+    "suppressHeaderDarkening": false,
+    "teamIdentifier": "JG943677ZY",
+    "useAutomaticColors": true,
+    "voided": false,
+    "webServiceURL": "https://demo.edutap.eu/apple_update_service",
+    "isShellPass": false,
+    "revoked": false,
+    "eventTicket": {
+        "headerFields": [
+            {
+                "key": "eventDate",
+                "value": "2025-05-27T19:00+02:00",
+                "label": "Date",
+                "changeMessage": "",
+                "semantics":{}
+            }
+        ],
+        "primaryFields": [
+            {
+                "key": "eventName",
+                "value": "Gala Dinner",
+                "label": "ECCA Conference 2025",
+                "changeMessage": ""
+            }
+        ],
+        "secondaryFields": [
+            {
+                "key": "holder",
+                "value": "Alexander Loechel",
+                "label": "Ticketholder",
+                "changeMessage": ""
+            }
+        ],
+        "backFields": [
+            {
+                "key": "address",
+                "value": "Hofbräuhaus München\nPlatzl 9\n80331 München\nGermany",
+                "label": "Address / Venue",
+                "changeMessage": ""
+            },
+            {
+                "key": "homepage",
+                "value": "<a href=\"https://conference.ecca.eu/\">Homepage ECCA Conference 2025</a>",
+                "label": "Conference Information",
+                "changeMessage": ""
+            },
+            {
+                "key": "program",
+                "value": "<a href=\"https://conference.ecca.eu/conference#timeline\">Program ECCA Conference 2025</a>",
+                "label": "Program",
+                "changeMessage": ""
+            },
+            {
+                "key": "homepage",
+                "value": "<a href=\"https://ecca.eu/\">Homepage ECCA</a>",
+                "label": "Homepage ECCA",
+                "changeMessage": ""
+            },
+            {
+                "key": "edutap_homepage",
+                "value": "<a href=\"https://eduTAP.eu/\">eduTAP Homepage</a>",
+                "label": "issued using eduTAP",
+                "changeMessage": ""
+            },
+            {
+                "key": "contact_sinead_mail",
+                "value": "<a href=\"mailto:info@ecca.eu\">info@ecca.eu</a>",
+                "label": "Organizer Contact",
+                "changeMessage": ""
+            },
+            {
+                "key": "contact_sinead_phone",
+                "value": "<a href=\"tel:+353872572418\">Call Organizer Contact (Sinead Nealon; ECCA)</a>",
+                "label": "",
+                "changeMessage": ""
+            },
+            {
+                "key": "contact_alexander",
+                "value": "<a href=\"tel:+4915203516751\">Call Organizer Contact (Alexander Loechel; LMU München)</a>",
+                "label": "",
+                "changeMessage": ""
+            }
+        ],
+        "auxiliaryFields": [],
+        "additionalInfoFields": []
+
+    },
+    "expirationDates": {
+        "date": "2025-05-27T23:30+02:00"
+    }
+}
