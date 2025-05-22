@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     handler_prefix: str = "apple_update_service"
     fernet_key: str | None = None
 
+    pydantic_extra: Literal["allow", "ignore", "forbid"] = "forbid"
+    """how to handle extra fields in the pass data"""
+
     def get_certificate_path(self, pass_type_identifier: str) -> Path:
         """
         returns the path to the certificate file for the given pass type identifier
