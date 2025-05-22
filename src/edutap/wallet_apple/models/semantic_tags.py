@@ -1,10 +1,13 @@
+from edutap.wallet_apple.settings import Settings
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic.config import ExtraValues
 from typing import Literal
 
 
-EXTRA_ATTRIBUTES_BEHAVIOR: ExtraValues = "forbid"
+settings = Settings()
+
+EXTRA_ATTRIBUTES_BEHAVIOR: ExtraValues = settings.pydantic_extra
 
 # Attribute order as in Apple's documentation to make future changes easier!
 # last checked: 2025-05-16

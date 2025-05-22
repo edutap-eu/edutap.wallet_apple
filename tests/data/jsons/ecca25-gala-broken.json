@@ -31,7 +31,8 @@
             "latitude": 48.1371,
             "longitude": 11.5753
         },
-        "venueName": "Hofbräuhaus München"
+        "venueName": "Hofbräuhaus München",
+        "venueAddress": "Hofbräuhaus München\nPlatzl 9\n80331 München"
     },
     "serialNumber": "d958e522-e78f-4cd8-8107-d8755af8038c",
     "sharingProhibited": true,
