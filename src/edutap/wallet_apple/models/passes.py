@@ -1015,6 +1015,33 @@ class PkPass(BaseModel):
 
         self.files["signature"] = signature
 
+    def sign_direct(
+        self,
+        private_key: bytes,
+        certificate_path: bytes,
+        wwdr_certificate: bytes,
+    ):
+        """
+        same as sign, but we get the key and cert data direct as bytes instead
+        of file paths
+        """
+        private_key, certificate, wwdr_certificate = crypto.create_keys(
+            private_key, certificate_path, wwdr_certificate
+        )
+        self.files["pass.json"] = self._pass_json.encode("utf-8")
+
+        manifest = self._create_manifest()
+        # manifest = self.files["manifest.json"].decode("utf-8")
+        self.files["manifest.json"] = manifest.encode("utf-8")
+        signature = crypto.sign_manifest(
+            manifest,
+            private_key,
+            certificate,
+            wwdr_certificate,
+        )
+
+        self.files["signature"] = signature
+
     def _build_zip(self, fh: typing.BinaryIO | None = None) -> zipfile.ZipFile:
         """
         builds a zip file from file content and returns the zipfile object

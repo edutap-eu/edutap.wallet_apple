@@ -57,13 +57,15 @@ def fastapi_client_passthrough(entrypoints_testing, monkeypatch) -> TestClient:
     """
 
     monkeypatch.setenv(
-        "EDUTAP_WALLET_APPLE_PASS_DATA_PASSTHROUGH","true",
+        "EDUTAP_WALLET_APPLE_PASS_DATA_PASSTHROUGH",
+        "true",
     )
 
     app = FastAPI()
     app.include_router(router_apple_wallet)
     app.include_router(router_download_pass)
     return TestClient(app)
+
 
 @pytest.fixture
 def initial_unsigned_pass(generated_passes_dir) -> Path:
@@ -290,6 +292,7 @@ def test_get_updated_pass(
 
     print(pass2)
 
+
 @pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
 @pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
 def test_get_updated_pass_with_passdata_passthrough(
@@ -337,7 +340,7 @@ def test_get_updated_pass_with_passdata_passthrough(
     fh.seek(0)
     pass2 = api.new(file=fh)
 
-    # since we have pass_data_passthrough the pass is not yet 
+    # since we have pass_data_passthrough the pass is not yet
     assert not pass2.is_signed
 
     # check the logs

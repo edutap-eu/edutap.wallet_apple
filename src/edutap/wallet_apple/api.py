@@ -64,10 +64,17 @@ def sign(pkpass: passes.PkPass, settings: Settings | None = None):
 
     passtype_identifier = pkpass.pass_object_safe.passTypeIdentifier
 
-    pkpass.sign(
-        settings.private_key,
-        settings.get_certificate_path(passtype_identifier),
-        settings.wwdr_certificate,
+    with open(settings.private_key, "rb") as fh:
+        private_key_data = fh.read()
+    with open(settings.get_certificate_path(passtype_identifier), "rb") as fh:
+        certificate_data = fh.read()
+    with open(settings.wwdr_certificate, "rb") as fh:
+        wwdr_certificate_data = fh.read()
+
+    pkpass.sign_direct(
+        private_key_data,
+        certificate_data,
+        wwdr_certificate_data,
     )
 
 

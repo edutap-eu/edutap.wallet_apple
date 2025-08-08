@@ -68,6 +68,20 @@ def load_key_files(
     with open(wwdr_certificate_path, "rb") as fh:
         wwdr_certificate_data = fh.read()
 
+    return create_keys(
+        private_key_data, certificate_data, wwdr_certificate_data, password
+    )
+
+
+def create_keys(
+    private_key_data: bytes,
+    certificate_data: bytes,
+    wwdr_certificate_data: bytes,
+    password: str | None = None,
+) -> tuple[bytes, bytes, bytes]:
+    """
+    create keys out of bytes
+    """
     certificate = load_pem_x509_certificate(certificate_data, default_backend())
     private_key = load_pem_private_key(
         private_key_data, password=password, backend=default_backend()

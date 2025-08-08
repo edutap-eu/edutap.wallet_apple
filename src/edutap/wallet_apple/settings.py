@@ -68,9 +68,9 @@ class Settings(BaseSettings):
 
     def get_logger(self):
         return logger
-    
+
     pass_data_passthrough: bool = False
     """
-    if True, the pass data is passed through without signing. this flag is used 
+    if True, the pass data is passed through without signing. this flag is used
     in handlers.fastapi.prepare_pass.
     """

@@ -1,3 +1,4 @@
+from .protocols import DynamicSettings
 from .protocols import Logging
 from .protocols import PassDataAcquisition
 from .protocols import PassRegistration
@@ -8,12 +9,16 @@ _PLUGIN_CLASS_NAMES = {
     "PassDataAcquisition": PassDataAcquisition,
     "PassRegistration": PassRegistration,
     "Logging": Logging,
+    "DynamicSettings": DynamicSettings,
 }
-_PLUGIN_REGISTRY: dict[str, list[PassDataAcquisition | PassRegistration | Logging]] = {}
+_PLUGIN_REGISTRY: dict[
+    str, list[PassDataAcquisition | PassRegistration | Logging | DynamicSettings]
+] = {}
 
 
 def add_plugin(
-    name: str, plugin: PassDataAcquisition | PassRegistration | Logging
+    name: str,
+    plugin: PassDataAcquisition | PassRegistration | Logging | DynamicSettings,
 ) -> None:
 
     if not isinstance(plugin, _PLUGIN_CLASS_NAMES[name]):
@@ -62,4 +67,18 @@ def get_logging_handlers() -> list[Logging]:
     for plugin in plugins:
         if not isinstance(plugin, Logging):
             raise ValueError(f"{plugin} not implements Logging")
+    return [plugin() for plugin in plugins]
+
+
+def get_dynamic_settings_handlers() -> list[Logging]:
+    eps = entry_points(group="edutap.wallet_apple.plugins")
+    # allow multiple entries by searching for the prefix
+    plugins = [
+        ep.load() for ep in eps if ep.name.startswith("DynamicSettings")
+    ] + _PLUGIN_REGISTRY.get("DynamicSettings", [])
+    # if not plugins:
+    #     raise NotImplementedError("No logging plug-in found")
+    for plugin in plugins:
+        if not isinstance(plugin, DynamicSettings):
+            raise ValueError(f"{plugin} not implements DynamicSettings")
     return [plugin() for plugin in plugins]

@@ -88,3 +88,29 @@ class Logging(Protocol):
         """
         see https://developer.apple.com/documentation/walletpasses/log-a-message
         """
+
+
+@runtime_checkable
+class DynamicSettings(Protocol):
+    """
+    protocol for handling dynamic settings. Is intended for supporting
+    multi-tenancy for the wallet module
+    """
+
+    async def get_fernet_key(self, pass_type_identifier: str) -> bytes:
+        """
+        returns a fernet key. Is used by api.create_auth_token() and api.extract_auth_token()
+        """
+
+    async def get_private_key(self, pass_type_identifier: str) -> bytes:
+        """
+        returns a private key depending on a pass type identifier
+        """
+
+    async def get_pass_certificate(self, pass_type_identifier: str) -> bytes:
+        """
+        returns a private key depending on a pass type identifier
+        """
+
+    # async def get_available_passtype_ids(self) -> list[str]:
+    #     ...
