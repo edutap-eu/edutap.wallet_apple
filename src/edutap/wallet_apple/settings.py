@@ -57,6 +57,8 @@ class Settings(BaseSettings):
     def get_certificate_path(self, pass_type_identifier: str) -> Path:
         """
         returns the path to the certificate file for the given pass type identifier
+
+        TODO: if DynamicSettingsProtocol is present, get it from there
         """
         return self.cert_dir / f"certificate-{pass_type_identifier}.pem"
 

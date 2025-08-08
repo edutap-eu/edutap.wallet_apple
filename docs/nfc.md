@@ -1,5 +1,8 @@
 # NFC Support
 
+⚠️ **Note:**: If you do not have an NFC entitlement from Apple you cannot use NFC in your pass and 
+a pass configured for NFC will even not load!
+
 ## Generating an ECC Key Pair
 
 To be able to tap with a pass using a specific reader, an ECC key pair must be generated. The public key belongs in the NFC record of the pass, while the private key must be stored on the reader. This, of course, depends on the specific manufacturer.

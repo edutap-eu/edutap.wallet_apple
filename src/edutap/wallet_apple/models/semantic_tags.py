@@ -968,6 +968,9 @@ class StoreCardSemanticTags(SemanticTags):
 
 
 # For validation from json
+# Unfortunately pydantic does not support polymorphism during validation
+# see https://github.com/pydantic/pydantic/issues/503 and https://github.com/mlcommons/modelgauge/issues/109
+# Therefore we have to do that with explicit union types
 EventTicketSemantics = EventTicketSemanticTags | SportEventTypeSemanticTags
 BoardingPassSemantics = (
     BoardingPassSemanticTags

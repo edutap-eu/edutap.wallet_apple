@@ -1,0 +1,82 @@
+{
+    "teamIdentifier": "SSUX2R6S8X",
+    "passTypeIdentifier": "pass.com.passkit.pksamples.nfcdemo",
+    "organizationName": "PassKit, Inc",
+    "serialNumber": "6PDkGcdvkPtb7mpXP0kkRv",
+    "description": "description",
+    "formatVersion": 1,
+    "backgroundColor": "rgb(255,255,255)",
+    "foregroundColor": "rgb(237,118,47)",
+    "labelColor": "rgb(63,143,228)",
+    "barcodes": [
+        {
+            "format": "PKBarcodeFormatPDF417",
+            "message": "6PDkGcdvkPtb7mpXP0kkRv",
+            "messageEncoding": "iso-8859-1",
+            "altText": "6PDkGcdvkPtb7mpXP0kkRv"
+        }
+    ],
+    "suppressStripShine": false,
+    "webServiceURL": "https://europe-west1-passkit-io.cloudfunctions.net/pfr",
+    "authenticationToken": "4lL3y8fVQFNgreqoYkXBnV",
+    "voided": false,
+    "sharingProhibited": false,
+    "isShellPass": false,
+    "revoked": false,
+    "nfc": {
+        "message": "6PDkGcdvkPtb7mpXP0kkRv",
+        "encryptionPublicKey": "MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgADwKMBv29ByaSLiGF0FctuyB+Hs2oZ1kDIYhTVllPexNE=",
+        "requiresAuthentication": false
+    },
+    "storeCard": {
+        "headerFields": [],
+        "primaryFields": [],
+        "secondaryFields": [
+            {
+                "key": "custom.payload",
+                "value": "custom.payload.value",
+                "label": "custom.payload.label",
+                "changeMessage": "%@"
+            }
+        ],
+        "backFields": [
+            {
+                "key": "universal.info",
+                "value": "universal.info.value",
+                "label": "universal.info.label",
+                "changeMessage": "%@"
+            },
+            {
+                "key": "meta.payload",
+                "value": "meta.payload.value",
+                "label": "meta.payload.label",
+                "changeMessage": "%@"
+            },
+            {
+                "key": "custom.applePassTypeId",
+                "value": "custom.applePassTypeId.value",
+                "label": "custom.applePassTypeId.label",
+                "changeMessage": "%@"
+            },
+            {
+                "key": "custom.encryptionKey",
+                "value": "custom.encryptionKey.value",
+                "label": "custom.encryptionKey.label",
+                "changeMessage": "%@"
+            },
+            {
+                "key": "custom.pk",
+                "value": "custom.pk.value",
+                "label": "custom.pk.label",
+                "changeMessage": "%@"
+            }
+        ],
+        "auxiliaryFields": []
+    },
+    "barcode": {
+        "format": "PKBarcodeFormatPDF417",
+        "message": "6PDkGcdvkPtb7mpXP0kkRv",
+        "messageEncoding": "iso-8859-1",
+        "altText": "6PDkGcdvkPtb7mpXP0kkRv"
+    }
+}
