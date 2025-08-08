@@ -9,6 +9,7 @@ def test_settings_via_env_dict(monkeypatch):
     # Set the environment variables
     monkeypatch.delenv("EDUTAP_WALLET_APPLE_ROOT_DIR", raising=False)
     monkeypatch.delenv("EDUTAP_WALLET_APPLE_CERT_DIR", raising=False)
+    monkeypatch.setenv("EDUTAP_WALLET_APPLE_CERT_DIR_RELATIVE", str("certs"))
     monkeypatch.setenv(
         "EDUTAP_WALLET_APPLE_ROOT_DIR",
         str(conftest.cwd / "data"),
