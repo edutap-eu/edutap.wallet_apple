@@ -110,7 +110,24 @@ def testlog():
     from structlog.testing import capture_logs  # type: ignore
 
     with capture_logs() as logs:
+        logs.clear()
         yield logs
+        logs.clear()
+        return logs
+
+
+@pytest.fixture(scope="function")
+def testlog_empty():
+    """
+    create a logging handler that stores the log messages into a list
+    this logging handler will configured into logger
+    """
+    from structlog.testing import capture_logs  # type: ignore
+
+    with capture_logs() as logs:
+        logs.clear()
+        yield logs
+        logs.clear()
         return logs
 
 
@@ -247,3 +264,14 @@ def entrypoints_testing(monkeypatch) -> Callable:
     monkeypatch.setattr(metadata, "entry_points", mock_entry_points)
     monkeypatch.setattr(plugins, "entry_points", mock_entry_points)
     return mock_entry_points
+
+
+@pytest.fixture
+def pass_data_passthrough(monkeypatch):
+    """
+    fixture patch env with apple_passdata_passthrough
+    """
+    monkeypatch.setenv(
+        "EDUTAP_WALLET_APPLE_PASS_DATA_PASSTHROUGH",
+        "true",
+    )

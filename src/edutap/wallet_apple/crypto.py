@@ -51,7 +51,7 @@ def load_key_files(
     private_key_path: Union[str, Path],
     certificate_path: Union[str, Path],
     wwdr_certificate_path: Union[str, Path],
-    password: Optional[bytes] = None,
+    password: Optional[str] = None,
 ) -> tuple[bytes, bytes, bytes]:
     """
     :param private_key_path: path to private key

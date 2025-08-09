@@ -1,5 +1,6 @@
 from .models import passes
 from .models.passes import PkPass  # noqa: F401
+from edutap.wallet_apple.plugins import get_dynamic_settings_handler
 from edutap.wallet_apple.plugins import get_pass_data_acquisitions
 from edutap.wallet_apple.settings import Settings
 from typing import Any
@@ -64,10 +65,18 @@ def sign(pkpass: passes.PkPass, settings: Settings | None = None):
 
     passtype_identifier = pkpass.pass_object_safe.passTypeIdentifier
 
-    with open(settings.private_key, "rb") as fh:
-        private_key_data = fh.read()
-    with open(settings.get_certificate_path(passtype_identifier), "rb") as fh:
-        certificate_data = fh.read()
+    dynamic_settings_handler = get_dynamic_settings_handler()
+    if dynamic_settings_handler is not None:
+        private_key_data = dynamic_settings_handler.get_private_key(passtype_identifier)
+        certificate_data = dynamic_settings_handler.get_pass_certificate(
+            passtype_identifier
+        )
+    else:
+        with open(settings.private_key, "rb") as fh:
+            private_key_data = fh.read()
+        with open(settings.get_certificate_path(passtype_identifier), "rb") as fh:
+            certificate_data = fh.read()
+
     with open(settings.wwdr_certificate, "rb") as fh:
         wwdr_certificate_data = fh.read()
 
@@ -96,9 +105,13 @@ def create_auth_token(
     create an authentication token using cryptography.Fernet symmetric encryption
     """
     if fernet_key is None:
-        settings = Settings()
-        assert settings.fernet_key, "fernet_key is not set in the settings"
-        fernet_key = settings.fernet_key.encode("utf-8")
+        dynamic_settings_handler = get_dynamic_settings_handler()
+        if dynamic_settings_handler is not None:
+            fernet_key = dynamic_settings_handler.get_fernet_key(pass_type_identifier)
+        else:
+            settings = Settings()
+            assert settings.fernet_key, "fernet_key is not set in the settings"
+            fernet_key = settings.fernet_key.encode("utf-8")
 
     if not isinstance(fernet_key, bytes):
         fernet_key = fernet_key.encode("utf-8")
@@ -147,9 +160,11 @@ def save_link(
     if url_prefix[0] != "/":
         url_prefix = f"/{url_prefix}"
 
-    token = create_auth_token(pass_type_id, serial_number, settings.fernet_key).decode(
-        "utf-8"
-    )
+    token = create_auth_token(
+        pass_type_id,
+        serial_number,
+        #   settings.fernet_key
+    ).decode("utf-8")
     if settings.https_port == 443 or not settings.https_port:
         return f"{schema}://{settings.domain}{url_prefix}/v1/download-pass/{token}"
 

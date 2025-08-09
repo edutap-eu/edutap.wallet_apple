@@ -15,6 +15,8 @@ _PLUGIN_REGISTRY: dict[
     str, list[PassDataAcquisition | PassRegistration | Logging | DynamicSettings]
 ] = {}
 
+PLUGINS = PassDataAcquisition | PassRegistration | Logging | DynamicSettings
+
 
 def add_plugin(
     name: str,
@@ -28,14 +30,27 @@ def add_plugin(
         _PLUGIN_REGISTRY[name].append(plugin)
 
 
+def remove_plugins(*plugins: PLUGINS) -> None:
+    """
+    Remove plugins from the registry. Not performant, but it is not called often.
+    """
+    for plugin in plugins:
+        for name, plugin_list in list(_PLUGIN_REGISTRY.items()):
+            if plugin in plugin_list:
+                plugin_list.remove(plugin)
+                if not plugin_list:  # Clean up empty lists
+                    del _PLUGIN_REGISTRY[name]
+                break
+
+
 def get_pass_registrations() -> list[PassRegistration]:
     eps = entry_points(group="edutap.wallet_apple.plugins")
     # allow multiple entries by searching for the prefix
     plugins = [
         ep.load() for ep in eps if ep.name.startswith("PassRegistration")
     ] + _PLUGIN_REGISTRY.get("PassRegistration", [])
-    if not plugins:
-        raise NotImplementedError("No pass registration plug-in found")
+    # if not plugins:
+    #     raise NotImplementedError("No pass registration plug-in found")
     for plugin in plugins:
         if not isinstance(plugin, PassRegistration):
             raise ValueError(f"{plugin} not implements PassRegistration")
@@ -48,8 +63,6 @@ def get_pass_data_acquisitions() -> list[PassDataAcquisition]:
     plugins = [
         ep.load() for ep in eps if ep.name == "PassDataAcquisition"
     ] + _PLUGIN_REGISTRY.get("PassDataAcquisition", [])
-    if not plugins:
-        raise NotImplementedError("No pass data acquisition plug-in found")
     for plugin in plugins:
         if not isinstance(plugin, PassDataAcquisition):
             raise ValueError(f"{plugin} not implements PassDataAcquisition")
@@ -62,23 +75,29 @@ def get_logging_handlers() -> list[Logging]:
     plugins = [
         ep.load() for ep in eps if ep.name.startswith("Logging")
     ] + _PLUGIN_REGISTRY.get("Logging", [])
-    # if not plugins:
-    #     raise NotImplementedError("No logging plug-in found")
     for plugin in plugins:
         if not isinstance(plugin, Logging):
             raise ValueError(f"{plugin} not implements Logging")
     return [plugin() for plugin in plugins]
 
 
-def get_dynamic_settings_handlers() -> list[Logging]:
+def get_dynamic_settings_handlers() -> list[DynamicSettings]:
     eps = entry_points(group="edutap.wallet_apple.plugins")
     # allow multiple entries by searching for the prefix
     plugins = [
         ep.load() for ep in eps if ep.name.startswith("DynamicSettings")
     ] + _PLUGIN_REGISTRY.get("DynamicSettings", [])
-    # if not plugins:
-    #     raise NotImplementedError("No logging plug-in found")
     for plugin in plugins:
         if not isinstance(plugin, DynamicSettings):
             raise ValueError(f"{plugin} not implements DynamicSettings")
     return [plugin() for plugin in plugins]
+
+
+def get_dynamic_settings_handler() -> DynamicSettings | None:
+    """
+    Returns the first dynamic settings handler or None if no handler is found.
+    """
+    handlers = get_dynamic_settings_handlers()
+    if handlers:
+        return handlers[0]
+    return None

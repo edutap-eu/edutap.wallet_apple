@@ -97,17 +97,17 @@ class DynamicSettings(Protocol):
     multi-tenancy for the wallet module
     """
 
-    async def get_fernet_key(self, pass_type_identifier: str) -> bytes:
+    def get_fernet_key(self, pass_type_identifier: str) -> bytes:
         """
         returns a fernet key. Is used by api.create_auth_token() and api.extract_auth_token()
         """
 
-    async def get_private_key(self, pass_type_identifier: str) -> bytes:
+    def get_private_key(self, pass_type_identifier: str) -> bytes:
         """
         returns a private key depending on a pass type identifier
         """
 
-    async def get_pass_certificate(self, pass_type_identifier: str) -> bytes:
+    def get_pass_certificate(self, pass_type_identifier: str) -> bytes:
         """
         returns a private key depending on a pass type identifier
         """
