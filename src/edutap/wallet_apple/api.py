@@ -107,7 +107,7 @@ def create_auth_token(
     if fernet_key is None:
         dynamic_settings_handler = get_dynamic_settings_handler()
         if dynamic_settings_handler is not None:
-            fernet_key = dynamic_settings_handler.get_fernet_key(pass_type_identifier)
+            fernet_key = dynamic_settings_handler.get_fernet_key()
         else:
             settings = Settings()
             assert settings.fernet_key, "fernet_key is not set in the settings"
@@ -127,9 +127,15 @@ def extract_auth_token(
     extract the pass_type_identifier and serial_number from the authentication token
     """
     if fernet_key is None:
-        settings = Settings()
-        assert settings.fernet_key is not None, "fernet_key is not set in the settings"
-        fernet_key = settings.fernet_key.encode("utf-8")
+        dynamic_settings_handler = get_dynamic_settings_handler()
+        if dynamic_settings_handler is not None:
+            fernet_key = dynamic_settings_handler.get_fernet_key()
+        else:
+            settings = Settings()
+            assert (
+                settings.fernet_key is not None
+            ), "fernet_key is not set in the settings"
+            fernet_key = settings.fernet_key.encode("utf-8")
 
     if not isinstance(token, bytes):
         token = token.encode()

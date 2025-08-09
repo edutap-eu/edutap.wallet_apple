@@ -12,17 +12,18 @@ logger = settings.get_logger()
 
 
 class TestDynamicSettings:
-    def get_fernet_key(self, pass_type_identifier: str) -> bytes:
+    def get_fernet_key(self) -> bytes:
         """
         returns a fernet key. Is used by api.create_auth_token() and api.extract_auth_token()
         """
         logger.info(
             "get_fernet_key",
-            pass_type_identifier=pass_type_identifier,
             realm="dynamic-settings",
         )
 
-        return settings.fernet_key.encode("utf-8")
+        if settings.fernet_key:
+            return settings.fernet_key.encode("utf-8")
+        raise ValueError("settings.fernet_key is not set")
 
     def get_private_key(self, pass_type_identifier: str) -> bytes:
         """
@@ -59,12 +60,12 @@ def dynamic_settings():
     remove_plugins(TestDynamicSettings)
 
 
-def test_dynamic_settings_plugin(dynamic_settings, monkeypatch, testlog):
-    monkeypatch.setenv(
-        "EDUTAP_WALLET_APPLE_PASS_DATA_PASSTHROUGH",
-        "true",
-    )
-
+def test_dynamic_settings_plugin(dynamic_settings, monkeypatch, testlog, pass_data_passthrough):
+    """
+    Test the auth token handling with dynamic settings.
+    we check the successful call of dynamic settings plugins
+    by analysing the logs since the testing plugins write to the log.
+    """
     # check if the dynamic settings plugin is registered
     from edutap.wallet_apple.plugins import get_dynamic_settings_handler
 
@@ -72,9 +73,8 @@ def test_dynamic_settings_plugin(dynamic_settings, monkeypatch, testlog):
     assert dynamic_settings_handler is not None, "No dynamic settings plugin found"
 
     settings = SettingsTest()
-    logger = settings.get_logger()
-
-    key = api.create_auth_token("pass.demo.lmu.de", "1234567890")
+    assert settings.pass_data_passthrough 
+    token = api.create_auth_token("pass.demo.lmu.de", "1234")
 
     logs = [
         log
@@ -83,7 +83,21 @@ def test_dynamic_settings_plugin(dynamic_settings, monkeypatch, testlog):
     ]
 
     # if DynamicSettings are called correctly there should be some logs
-    assert len(logs) > 0
+    assert len(logs) == 1
+
+    passtype_identifier, serial_number = api.extract_auth_token(token)
+    assert passtype_identifier == "pass.demo.lmu.de"
+    assert serial_number == "1234"
+
+    logs = [
+        log
+        for log in testlog
+        if log["realm"] == "dynamic-settings" and log["event"] == "get_fernet_key"
+    ]
+
+    # if DynamicSettings are called correctly there should be some logs
+    assert len(logs) == 2
+
     print(settings)
 
     # test signing a pass and check the logs for the dynamic settings for get_private_key and get_pass_certificate
@@ -98,6 +112,11 @@ def test_dynamic_settings_sign_existing_generic_pass_and_get_bytes(
     # pass_type_id: str,
     testlog,
 ):
+    """
+    test signing a pass with dynamic settings activated.
+    we check the successful call of dynamic settings plugins
+    by analysing the logs since the testing plugins write to the log.
+    """
     pass_type_id = "pass.demo.lmu.de"
     with open(settings_test.root_dir / "unsigned-passes" / "1234.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
@@ -127,7 +146,7 @@ def test_dynamic_settings_sign_existing_generic_pass_and_get_bytes(
         if log["realm"] == "dynamic-settings" and log["event"] == "get_fernet_key"
     ]
 
-    # if DynamicSettings are alled correctly there should be some logs
+    # if DynamicSettings are called correctly there should be some logs
     assert len(logs) == 2
     print(settings)
 
@@ -136,6 +155,14 @@ def test_dynamic_settings_sign_existing_generic_pass_and_get_bytes(
         log
         for log in testlog
         if log["realm"] == "dynamic-settings" and log["event"] == "get_private_key"
+    ]
+
+    assert len(logs) > 0
+
+    logs = [
+        log
+        for log in testlog
+        if log["realm"] == "dynamic-settings" and log["event"] == "get_pass_certificate"
     ]
 
     assert len(logs) > 0
