@@ -11,6 +11,8 @@ _PLUGIN_CLASS_NAMES = {
     "Logging": Logging,
     "DynamicSettings": DynamicSettings,
 }
+
+
 _PLUGIN_REGISTRY: dict[
     str, list[PassDataAcquisition | PassRegistration | Logging | DynamicSettings]
 ] = {}
@@ -49,8 +51,6 @@ def get_pass_registrations() -> list[PassRegistration]:
     plugins = [
         ep.load() for ep in eps if ep.name.startswith("PassRegistration")
     ] + _PLUGIN_REGISTRY.get("PassRegistration", [])
-    # if not plugins:
-    #     raise NotImplementedError("No pass registration plug-in found")
     for plugin in plugins:
         if not isinstance(plugin, PassRegistration):
             raise ValueError(f"{plugin} not implements PassRegistration")
@@ -87,6 +87,11 @@ def get_dynamic_settings_handlers() -> list[DynamicSettings]:
     plugins = [
         ep.load() for ep in eps if ep.name.startswith("DynamicSettings")
     ] + _PLUGIN_REGISTRY.get("DynamicSettings", [])
+
+    # for now we only support one dynamic settings handler
+    # for handling multiple handlers we need to define a strategy
+    if len(plugins) > 1:
+        raise ValueError("multiple DynamicSettings plugins found, only one is allowed")
     for plugin in plugins:
         if not isinstance(plugin, DynamicSettings):
             raise ValueError(f"{plugin} not implements DynamicSettings")
