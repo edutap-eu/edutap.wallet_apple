@@ -441,9 +441,7 @@ async def download_pass(request: Request, token: str, settings=Depends(get_setti
     )
 
     try:
-        pass_type_identifier, serial_number = api.extract_auth_token(
-            token  # , settings.fernet_key
-        )
+        pass_type_identifier, serial_number = api.extract_auth_token(token)
         res = await prepare_pass(pass_type_identifier, serial_number, update=False)
 
         fh = api.pkpass(res)

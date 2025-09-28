@@ -1,10 +1,12 @@
 # pylint: disable=import-outside-toplevel
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.primitives.serialization.pkcs7 import PKCS7Options
 from cryptography.hazmat.primitives.serialization.pkcs7 import PKCS7SignatureBuilder
+from cryptography.x509 import Certificate
 from cryptography.x509 import load_pem_x509_certificate
 from pathlib import Path
 from typing import Optional
@@ -47,19 +49,43 @@ def sign_manifest(
     return pkcs7_signature
 
 
+def create_keys(
+    private_key_data: bytes,
+    certificate_data: bytes,
+    wwdr_certificate_data: bytes,
+    password: str | None = None,
+) -> tuple[PrivateKeyTypes, Certificate, Certificate]:
+    """Create private key and certificates needed for signing passes.
+
+    :param private_key_data: private key data as bytes
+    :param certificate_data: Apple certificate data as bytes
+    :param wwdr_certificate_data: Apple WWDR certificate data as bytes
+    :return: tuple with private key, certificate and wwdr_certificate
+    """
+    certificate = load_pem_x509_certificate(certificate_data, default_backend())
+    private_key = load_pem_private_key(
+        private_key_data, password=password, backend=default_backend()
+    )
+    wwdr_certificate = load_pem_x509_certificate(
+        wwdr_certificate_data, default_backend()
+    )
+    return private_key, certificate, wwdr_certificate
+
+
 def load_key_files(
     private_key_path: Union[str, Path],
     certificate_path: Union[str, Path],
     wwdr_certificate_path: Union[str, Path],
     password: Optional[str] = None,
-) -> tuple[bytes, bytes, bytes]:
-    """
+) -> tuple[PrivateKeyTypes, Certificate, Certificate]:
+    """Create private key and certificates needed for signing passes.
+
+    Same as `create_keys`, but reads the key and certificate data from files.
+
     :param private_key_path: path to private key
     :param certificate_path: path to Apple certificate
     :param wwdr_certificate_path: path to Apple WWDR certificate
-    :return: tuple of private key, certificate and wwdr_certificate as bytes
-
-    all certs are expected to be in PEM format
+    :return: tuple of private key, certificate and wwdr_certificate
     """
     with open(private_key_path, "rb") as fh:
         private_key_data = fh.read()
@@ -67,32 +93,9 @@ def load_key_files(
         certificate_data = fh.read()
     with open(wwdr_certificate_path, "rb") as fh:
         wwdr_certificate_data = fh.read()
-
     return create_keys(
         private_key_data, certificate_data, wwdr_certificate_data, password
     )
-
-
-def create_keys(
-    private_key_data: bytes,
-    certificate_data: bytes,
-    wwdr_certificate_data: bytes,
-    password: str | None = None,
-) -> tuple[bytes, bytes, bytes]:
-    """
-    create keys out of bytes
-    """
-    certificate = load_pem_x509_certificate(certificate_data, default_backend())
-    private_key = load_pem_private_key(
-        private_key_data, password=password, backend=default_backend()
-    )
-    # if not isinstance(private_key, (RSAPrivateKey, EllipticCurvePrivateKey)):
-    #     raise TypeError("Private key must be an RSAPrivateKey or EllipticCurvePrivateKey")
-    wwdr_certificate = load_pem_x509_certificate(
-        wwdr_certificate_data, default_backend()
-    )
-
-    return private_key, certificate, wwdr_certificate
 
 
 def create_signature(

@@ -1,4 +1,6 @@
 from collections import OrderedDict
+from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
+from cryptography.x509 import Certificate
 from edutap.wallet_apple import crypto
 from edutap.wallet_apple.models import semantic_tags
 from edutap.wallet_apple.models.datatypes import Beacon
@@ -992,55 +994,51 @@ class PkPass(BaseModel):
             return json.dumps(old_manifest_json)
         return json.dumps(hashes)
 
+    def _sign(
+        self,
+        private_key: PrivateKeyTypes,
+        certificate: Certificate,
+        wwdr_certificate: Certificate,
+    ):
+        self.files["pass.json"] = self._pass_json.encode("utf-8")
+
+        manifest = self._create_manifest()
+        self.files["manifest.json"] = manifest.encode("utf-8")
+        signature = crypto.sign_manifest(
+            manifest,
+            private_key,
+            certificate,
+            wwdr_certificate,
+        )
+
+        self.files["signature"] = signature
+
     def sign(
         self,
         private_key_path: str | Path,
         certificate_path: str | Path,
         wwdr_certificate_path: str | Path,
     ):
-        private_key, certificate, wwdr_certificate = crypto.load_key_files(
-            private_key_path, certificate_path, wwdr_certificate_path
+        self._sign(
+            *crypto.load_key_files(
+                private_key_path, certificate_path, wwdr_certificate_path
+            )
         )
-        self.files["pass.json"] = self._pass_json.encode("utf-8")
-
-        manifest = self._create_manifest()
-        # manifest = self.files["manifest.json"].decode("utf-8")
-        self.files["manifest.json"] = manifest.encode("utf-8")
-        signature = crypto.sign_manifest(
-            manifest,
-            private_key,
-            certificate,
-            wwdr_certificate,
-        )
-
-        self.files["signature"] = signature
 
     def sign_direct(
         self,
-        private_key: bytes,
-        certificate_path: bytes,
-        wwdr_certificate: bytes,
+        private_key_data: bytes,
+        certificate_data: bytes,
+        wwdr_certificate_data: bytes,
     ):
+        """Same as sign, but we get the key and cert data direct as bytes instead
+        of file paths.
         """
-        same as sign, but we get the key and cert data direct as bytes instead
-        of file paths
-        """
-        private_key, certificate, wwdr_certificate = crypto.create_keys(
-            private_key, certificate_path, wwdr_certificate
+        self._sign(
+            *crypto.create_keys(
+                private_key_data, certificate_data, wwdr_certificate_data
+            )
         )
-        self.files["pass.json"] = self._pass_json.encode("utf-8")
-
-        manifest = self._create_manifest()
-        # manifest = self.files["manifest.json"].decode("utf-8")
-        self.files["manifest.json"] = manifest.encode("utf-8")
-        signature = crypto.sign_manifest(
-            manifest,
-            private_key,
-            certificate,
-            wwdr_certificate,
-        )
-
-        self.files["signature"] = signature
 
     def _build_zip(self, fh: typing.BinaryIO | None = None) -> zipfile.ZipFile:
         """
