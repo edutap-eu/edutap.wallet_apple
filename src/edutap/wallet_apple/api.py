@@ -1,6 +1,5 @@
 from .models import passes
 from .models.passes import PkPass  # noqa: F401
-from edutap.wallet_apple.plugins import get_dynamic_settings
 from edutap.wallet_apple.plugins import get_pass_data_acquisitions
 from edutap.wallet_apple.settings import Settings
 from typing import Any
@@ -52,30 +51,48 @@ def verify(
     pkpass.verify(recompute_manifest=recompute_manifest)
 
 
-async def sign(pkpass: passes.PkPass, settings: Settings | None = None):
+def sign(pkpass: passes.PkPass, settings: Settings | None = None):
     """
     Sign the pass.
 
     :param pkpass: PkPass model instance.
-    :param settings: Settings model instance. if not given it will be loaded from the environment.
-    works inplace, the pkpass will be signed.
+    :param settings: Settings model instance. if not given it will be loaded
+    from the environment. works inplace, the pkpass will be signed.
     """
     if settings is None:
         settings = Settings()
 
     pass_type_identifier = pkpass.pass_object_safe.passTypeIdentifier
 
-    dynamic_settings = get_dynamic_settings()
-    if dynamic_settings is not None:
-        private_key_data = await dynamic_settings.get_private_key(pass_type_identifier)
-        certificate_data = await dynamic_settings.get_pass_certificate(
-            pass_type_identifier
-        )
-    else:
-        with open(settings.private_key, "rb") as fh:
-            private_key_data = fh.read()
-        with open(settings.get_certificate_path(pass_type_identifier), "rb") as fh:
-            certificate_data = fh.read()
+    with open(settings.private_key, "rb") as fh:
+        private_key_data = fh.read()
+    with open(settings.get_certificate_path(pass_type_identifier), "rb") as fh:
+        certificate_data = fh.read()
+    with open(settings.wwdr_certificate, "rb") as fh:
+        wwdr_certificate_data = fh.read()
+
+    pkpass.sign_direct(
+        private_key_data,
+        certificate_data,
+        wwdr_certificate_data,
+    )
+
+
+def sign_direct(
+    pkpass: passes.PkPass,
+    private_key_data: bytes,
+    certificate_data: bytes,
+):
+    """
+    Sign the pass by specific pass configuration.
+
+    :param pkpass: PkPass model instance.
+    :param private_key_data: Pass private key as bytes.
+    :param certificate_data: Pass certificate key as bytes.
+    :param settings: Settings model instance. if not given it will be loaded
+    from the environment.
+    """
+    settings = Settings()
 
     with open(settings.wwdr_certificate, "rb") as fh:
         wwdr_certificate_data = fh.read()

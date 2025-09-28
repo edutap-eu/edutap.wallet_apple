@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     handler_prefix: str = "apple_update_service"
     fernet_key: str | None = None
 
+    pass_data_passthrough: bool = False
+    """If True, pass is expected to be already fully prepared for delivery and
+    returned as is in `donload_pass` and `get_updated_pass`. Use this method
+    in a multi pass configuration setup.
+    """
+
     pydantic_extra: Literal["allow", "ignore", "forbid"] = "forbid"
     """How to handle extra fields in the pass data"""
 
@@ -65,8 +71,3 @@ class Settings(BaseSettings):
 
     def get_logger(self):
         return logger
-
-    pass_data_passthrough: bool = False
-    """If True, the pass data is passed through without signing. this flag is
-    used in `handlers.fastapi.prepare_pass`.
-    """

@@ -1,4 +1,3 @@
-from .protocols import DynamicSettings
 from .protocols import Logging
 from .protocols import PassDataAcquisition
 from .protocols import PassRegistration
@@ -9,20 +8,17 @@ _PLUGIN_CLASS_NAMES = {
     "PassDataAcquisition": PassDataAcquisition,
     "PassRegistration": PassRegistration,
     "Logging": Logging,
-    "DynamicSettings": DynamicSettings,
 }
 
 
-_PLUGIN_REGISTRY: dict[
-    str, list[PassDataAcquisition | PassRegistration | Logging | DynamicSettings]
-] = {}
+_PLUGIN_REGISTRY: dict[str, list[PassDataAcquisition | PassRegistration | Logging]] = {}
 
-PLUGINS = PassDataAcquisition | PassRegistration | Logging | DynamicSettings
+PLUGINS = PassDataAcquisition | PassRegistration | Logging
 
 
 def add_plugin(
     name: str,
-    plugin: PassDataAcquisition | PassRegistration | Logging | DynamicSettings,
+    plugin: PassDataAcquisition | PassRegistration | Logging,
 ) -> None:
 
     if not isinstance(plugin, _PLUGIN_CLASS_NAMES[name]):
@@ -30,19 +26,6 @@ def add_plugin(
     if name not in _PLUGIN_REGISTRY:
         _PLUGIN_REGISTRY.setdefault(name, [])
         _PLUGIN_REGISTRY[name].append(plugin)
-
-
-def remove_plugins(*plugins: PLUGINS) -> None:
-    """
-    Remove plugins from the registry. Not performant, but it is not called often.
-    """
-    for plugin in plugins:
-        for name, plugin_list in list(_PLUGIN_REGISTRY.items()):
-            if plugin in plugin_list:
-                plugin_list.remove(plugin)
-                if not plugin_list:  # Clean up empty lists
-                    del _PLUGIN_REGISTRY[name]
-                break
 
 
 def get_pass_registrations() -> list[PassRegistration]:
@@ -79,22 +62,3 @@ def get_logging_handlers() -> list[Logging]:
         if not isinstance(plugin, Logging):
             raise ValueError(f"{plugin} not implements Logging")
     return [plugin() for plugin in plugins]
-
-
-def get_dynamic_settings() -> DynamicSettings | None:
-    eps = entry_points(group="edutap.wallet_apple.plugins")
-    # allow multiple entries by searching for the prefix
-    plugins = [
-        ep.load() for ep in eps if ep.name.startswith("DynamicSettings")
-    ] + _PLUGIN_REGISTRY.get("DynamicSettings", [])
-    # no plugins found
-    if not plugins:
-        return None
-    # for now we only support one dynamic settings handler
-    # for handling multiple handlers we need to define a strategy
-    if len(plugins) > 1:
-        raise ValueError("multiple DynamicSettings plugins found, only one is allowed")
-    plugin = plugins[0]()
-    if not isinstance(plugin, DynamicSettings):
-        raise ValueError(f"{plugin} not implements DynamicSettings")
-    return plugin

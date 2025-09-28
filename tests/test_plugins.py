@@ -3,7 +3,6 @@ from edutap.wallet_apple.plugins import add_plugin
 from edutap.wallet_apple.plugins import get_logging_handlers
 from edutap.wallet_apple.plugins import get_pass_data_acquisitions
 from edutap.wallet_apple.plugins import get_pass_registrations
-from edutap.wallet_apple.plugins import remove_plugins
 
 import pytest
 
@@ -103,9 +102,3 @@ def test_add_plugin():
     assert len(get_pass_registrations()) == count_pass_registrations + 1
     assert len(get_pass_data_acquisitions()) == count_pass_data_acquisitions + 1
     assert len(get_logging_handlers()) == count_logging_handlers + 1
-
-    remove_plugins(DummyPassDataAcquisition, DummyPassRegistration, DummyLogging)
-
-    assert len(get_pass_registrations()) == count_pass_registrations
-    assert len(get_pass_data_acquisitions()) == count_pass_data_acquisitions
-    assert len(get_logging_handlers()) == count_logging_handlers

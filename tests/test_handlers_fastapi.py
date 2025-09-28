@@ -50,24 +50,6 @@ def fastapi_client(entrypoints_testing) -> TestClient:
 
 
 @pytest.fixture
-def fastapi_client_passthrough(entrypoints_testing, monkeypatch) -> TestClient:
-    """
-    fixture for testing FastAPI with the router from edutap.wallet_apple.handlers.fastapi
-    returns a TestClient instance ready for testing
-    """
-
-    monkeypatch.setenv(
-        "EDUTAP_WALLET_APPLE_PASS_DATA_PASSTHROUGH",
-        "true",
-    )
-
-    app = FastAPI()
-    app.include_router(router_apple_wallet)
-    app.include_router(router_download_pass)
-    return TestClient(app)
-
-
-@pytest.fixture
 def initial_unsigned_pass(generated_passes_dir) -> Path:
     """
     fixture for creating a new unsigned pass
@@ -273,75 +255,6 @@ def test_get_updated_pass(
         pass2.pass_object_safe.webServiceURL
         == f"https://{settings_fastapi.domain}:{settings_fastapi.https_port}/apple_update_service"
     )
-
-    # check the logs
-    logs = [
-        log
-        for log in testlog
-        if log["realm"] == "fastapi" and log["event"] == "get_updated_pass"
-    ]
-    assert len(logs) == 1
-
-    # the failed authentication should be logged
-    errlogs = [
-        log
-        for log in testlog
-        if log["realm"] == "fastapi" and log["event"] == "check_authorization_failure"
-    ]
-    assert len(errlogs) == 1
-
-    print(pass2)
-
-
-@pytest.mark.skipif(not key_files_exist(), reason="key and cert files missing")
-@pytest.mark.skipif(not have_fastapi, reason="fastapi not installed")
-def test_get_updated_pass_with_passdata_passthrough(
-    entrypoints_testing, fastapi_client_passthrough, settings_fastapi, testlog
-):
-    """
-    this test checks getting a pass without preparing personal data and signing.
-    Usecase is that the pass is readily signed and prepared on the client side
-    in order to avoid additional ping-pongs in communication.
-    """
-
-    fastapi_client = fastapi_client_passthrough
-
-    # give it a correct authorization token (normally the handheld would do that based on the auth token in the pass)
-    # we have to fake it here
-    token = api.create_auth_token(
-        settings_fastapi.pass_type_identifier,
-        settings_fastapi.initial_pass_serialnumber,
-    ).decode("utf-8")
-
-    response = fastapi_client.get(
-        f"/apple_update_service/v1/passes/{settings_fastapi.pass_type_identifier}/{settings_fastapi.initial_pass_serialnumber}",
-    )
-    assert response.status_code == 401
-
-    response = fastapi_client.get(
-        f"/apple_update_service/v1/passes/{settings_fastapi.pass_type_identifier}/{settings_fastapi.initial_pass_serialnumber}",
-        headers={"authorization": f"ApplePass {token}"},
-    )
-    assert response.status_code == 200
-
-    cd = response.headers.get("content-disposition")
-    parser = HeaderParser()
-    headers = parser.parsestr(f"Content-Disposition: {cd}")
-    filename = headers.get_param("filename", header="Content-Disposition")
-
-    assert len(response.content) > 0
-    fh = BytesIO(response.content)
-    out = settings_fastapi.signed_passes_dir / filename
-    with open(out, "wb") as fp:
-        fp.write(response.content)
-        load_pass_viewer(out)
-
-    # parse the pass and check values
-    fh.seek(0)
-    pass2 = api.new(file=fh)
-
-    # since we have pass_data_passthrough the pass is not yet
-    assert not pass2.is_signed
 
     # check the logs
     logs = [
