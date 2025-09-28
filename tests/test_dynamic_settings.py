@@ -67,7 +67,6 @@ async def test_dynamic_settings_sign_existing_generic_pass_and_get_bytes(
         token = api.create_auth_token(
             pkpass.pass_object_safe.passTypeIdentifier,
             "1234",  # TODO: serial number softcoded,
-            # fernet_key=fernet_key,
         )
         pkpass.pass_object_safe.authenticationToken = token.decode("utf-8")
         pkpass.pass_object_safe.serialNumber = "1234"

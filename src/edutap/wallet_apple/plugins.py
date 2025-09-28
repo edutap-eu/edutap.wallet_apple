@@ -87,12 +87,14 @@ def get_dynamic_settings() -> DynamicSettings | None:
     plugins = [
         ep.load() for ep in eps if ep.name.startswith("DynamicSettings")
     ] + _PLUGIN_REGISTRY.get("DynamicSettings", [])
-
+    # no plugins found
+    if not plugins:
+        return None
     # for now we only support one dynamic settings handler
     # for handling multiple handlers we need to define a strategy
     if len(plugins) > 1:
         raise ValueError("multiple DynamicSettings plugins found, only one is allowed")
-    plugin = plugins[0]
+    plugin = plugins[0]()
     if not isinstance(plugin, DynamicSettings):
         raise ValueError(f"{plugin} not implements DynamicSettings")
-    return plugin()
+    return plugin

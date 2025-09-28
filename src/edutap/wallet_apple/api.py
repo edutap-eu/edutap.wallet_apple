@@ -156,11 +156,7 @@ def save_link(
     if url_prefix[0] != "/":
         url_prefix = f"/{url_prefix}"
 
-    token = create_auth_token(
-        pass_type_id,
-        serial_number,
-        #   settings.fernet_key
-    ).decode("utf-8")
+    token = create_auth_token(pass_type_id, serial_number).decode("utf-8")
     if settings.https_port == 443 or not settings.https_port:
         return f"{schema}://{settings.domain}{url_prefix}/v1/download-pass/{token}"
 
