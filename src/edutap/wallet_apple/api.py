@@ -1,6 +1,6 @@
 from .models import passes
 from .models.passes import PkPass  # noqa: F401
-from edutap.wallet_apple.plugins import get_dynamic_settings_handler
+from edutap.wallet_apple.plugins import get_dynamic_settings
 from edutap.wallet_apple.plugins import get_pass_data_acquisitions
 from edutap.wallet_apple.settings import Settings
 from typing import Any
@@ -52,7 +52,7 @@ def verify(
     pkpass.verify(recompute_manifest=recompute_manifest)
 
 
-def sign(pkpass: passes.PkPass, settings: Settings | None = None):
+async def sign(pkpass: passes.PkPass, settings: Settings | None = None):
     """
     Sign the pass.
 
@@ -63,18 +63,18 @@ def sign(pkpass: passes.PkPass, settings: Settings | None = None):
     if settings is None:
         settings = Settings()
 
-    passtype_identifier = pkpass.pass_object_safe.passTypeIdentifier
+    pass_type_identifier = pkpass.pass_object_safe.passTypeIdentifier
 
-    dynamic_settings_handler = get_dynamic_settings_handler()
-    if dynamic_settings_handler is not None:
-        private_key_data = dynamic_settings_handler.get_private_key(passtype_identifier)
-        certificate_data = dynamic_settings_handler.get_pass_certificate(
-            passtype_identifier
+    dynamic_settings = get_dynamic_settings()
+    if dynamic_settings is not None:
+        private_key_data = await dynamic_settings.get_private_key(pass_type_identifier)
+        certificate_data = await dynamic_settings.get_pass_certificate(
+            pass_type_identifier
         )
     else:
         with open(settings.private_key, "rb") as fh:
             private_key_data = fh.read()
-        with open(settings.get_certificate_path(passtype_identifier), "rb") as fh:
+        with open(settings.get_certificate_path(pass_type_identifier), "rb") as fh:
             certificate_data = fh.read()
 
     with open(settings.wwdr_certificate, "rb") as fh:

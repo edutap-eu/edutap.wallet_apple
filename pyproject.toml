@@ -40,6 +40,7 @@ Documentation = "https://docs.edutap.eu/packages/edutap_wallet_apple/index.html"
 [project.optional-dependencies]
 test = [
     "pytest",
+    "pytest-asyncio",
     "pytest-cov",
     "requests-mock",
     "fastapi",

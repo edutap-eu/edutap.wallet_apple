@@ -354,7 +354,7 @@ async def prepare_pass(
         weburl = f"{scheme}://{settings.domain}:{settings.https_port}{apipath}"
         pass1.pass_object_safe.webServiceURL = weburl
         # pass1.pass_object_safe.authenticationToken = None
-        api.sign(pass1)
+        await api.sign(pass1)
 
         return pass1
 

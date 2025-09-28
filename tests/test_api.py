@@ -36,7 +36,8 @@ def test_load_pass_from_json():
         ("ecca25-gala-broken.json", False),
     ],
 )
-def test_load_pass_with_extra_fields_from_json(
+@pytest.mark.asyncio
+async def test_load_pass_with_extra_fields_from_json(
     json_file: str, is_valid: bool, settings_test: Settings
 ):
     """
@@ -64,7 +65,7 @@ def test_load_pass_with_extra_fields_from_json(
             and pkpass.pass_object_safe.passTypeIdentifier
             in settings_test.get_available_passtype_ids()
         ):
-            api.sign(pkpass, settings=settings_test)
+            await api.sign(pkpass, settings=settings_test)
             assert pkpass.is_signed
         assert pkpass is not None
 
@@ -127,7 +128,8 @@ def test_create_and_save_unsigned_pass_from_json_dict(
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
 @pytest.mark.integration
-def test_sign_existing_pass_and_get_bytes_io(
+@pytest.mark.asyncio
+async def test_sign_existing_pass_and_get_bytes_io(
     apple_passes_dir, generated_passes_dir, settings_test: Settings, pass_type_id: str
 ):
     with open(apple_passes_dir / "BoardingPass.pkpass", "rb") as fh:
@@ -138,7 +140,7 @@ def test_sign_existing_pass_and_get_bytes_io(
             "Donald Duck"
         )
 
-        api.sign(pkpass, settings=settings_test)
+        await api.sign(pkpass, settings=settings_test)
         assert pkpass.is_signed
 
         ofile = generated_passes_dir / "BoardingPass-signed1.pkpass"
@@ -153,7 +155,8 @@ def test_sign_existing_pass_and_get_bytes_io(
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
 @pytest.mark.integration
-def test_sign_and_verify_pass(
+@pytest.mark.asyncio
+async def test_sign_and_verify_pass(
     apple_passes_dir, settings_test: Settings, pass_type_id: str
 ):
     with open(apple_passes_dir / "BoardingPass.pkpass", "rb") as fh:
@@ -176,7 +179,7 @@ def test_sign_and_verify_pass(
             assert "pass is not verified" in str(ex)
 
         # now we sign the pass and the verification should pass
-        api.sign(pkpass, settings=settings_test)
+        await api.sign(pkpass, settings=settings_test)
         api.verify(pkpass, settings=settings_test)
         assert pkpass.is_signed
 
@@ -184,7 +187,8 @@ def test_sign_and_verify_pass(
 @pytest.mark.skip("wait for pydantic fix")
 @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
-def test_serialize_existing_pass_as_json_dict(
+@pytest.mark.asyncio
+async def test_serialize_existing_pass_as_json_dict(
     apple_passes_dir, generated_passes_dir, settings_test: Settings, pass_type_id: str
 ):
     """
@@ -205,7 +209,7 @@ def test_serialize_existing_pass_as_json_dict(
             "Donald Duck"
         )
 
-        api.sign(pkpass, settings=settings_test)
+        await api.sign(pkpass, settings=settings_test)
         assert pkpass.is_signed
 
         d = pkpass.model_dump(mode="BytesIO")
@@ -217,7 +221,8 @@ def test_serialize_existing_pass_as_json_dict(
 # @pytest.mark.skipif(not key_files_exist(), reason="key files are missing")
 @pytest.mark.integration
 @pytest.mark.parametrize("pass_type_id", settings.get_available_passtype_ids())
-def test_sign_existing_generic_pass_and_get_bytes_io(
+@pytest.mark.asyncio
+async def test_sign_existing_generic_pass_and_get_bytes_io(
     apple_passes_dir,
     generated_passes_dir,
     settings_test: Settings,
@@ -242,7 +247,7 @@ def test_sign_existing_generic_pass_and_get_bytes_io(
             pkpass.pass_object_safe.serialNumber,
             settings=settings_test,
         )
-        api.sign(pkpass, settings=settings_test)
+        await api.sign(pkpass, settings=settings_test)
         assert pkpass.is_signed
 
         ofile = generated_passes_dir / "1234.pkpass"

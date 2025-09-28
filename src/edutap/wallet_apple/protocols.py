@@ -97,15 +97,12 @@ class DynamicSettings(Protocol):
     multi-tenancy for the wallet module
     """
 
-    def get_private_key(self, pass_type_identifier: str) -> bytes:
+    async def get_private_key(self, pass_type_identifier: str) -> bytes:
         """
         returns a private key depending on a pass type identifier
         """
 
-    def get_pass_certificate(self, pass_type_identifier: str) -> bytes:
+    async def get_pass_certificate(self, pass_type_identifier: str) -> bytes:
         """
         returns a private key depending on a pass type identifier
         """
-
-    # async def get_available_passtype_ids(self) -> list[str]:
-    #     ...

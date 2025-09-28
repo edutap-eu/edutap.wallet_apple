@@ -13,10 +13,7 @@ logger = settings.get_logger()
 
 class TestDynamicSettings:
 
-    def get_private_key(self, pass_type_identifier: str) -> bytes:
-        """
-        returns a private key depending on a pass type identifier
-        """
+    async def get_private_key(self, pass_type_identifier: str) -> bytes:
         logger.info(
             "get_private_key",
             pass_type_identifier=pass_type_identifier,
@@ -25,10 +22,7 @@ class TestDynamicSettings:
         with open(settings.private_key, "rb") as fh:
             return fh.read()
 
-    def get_pass_certificate(self, pass_type_identifier: str) -> bytes:
-        """
-        returns a private key depending on a pass type identifier
-        """
+    async def get_pass_certificate(self, pass_type_identifier: str) -> bytes:
         logger.info(
             "get_pass_certificate",
             pass_type_identifier=pass_type_identifier,
@@ -40,15 +34,15 @@ class TestDynamicSettings:
 
 @pytest.fixture
 def dynamic_settings():
-    """registers test plugin for dynamic settings"""
+    """Registers test plugin for dynamic settings"""
 
     add_plugin("DynamicSettings", TestDynamicSettings)
     yield
-    # cleanup
     remove_plugins(TestDynamicSettings)
 
 
-def test_dynamic_settings_sign_existing_generic_pass_and_get_bytes(
+@pytest.mark.asyncio
+async def test_dynamic_settings_sign_existing_generic_pass_and_get_bytes(
     apple_passes_dir,
     generated_passes_dir,
     pass_data_passthrough,
@@ -82,7 +76,7 @@ def test_dynamic_settings_sign_existing_generic_pass_and_get_bytes(
             pkpass.pass_object_safe.serialNumber,
             settings=settings_test,
         )
-        api.sign(pkpass, settings=settings_test)
+        await api.sign(pkpass, settings=settings_test)
         assert pkpass.is_signed
 
     # test signing a pass and check the logs for the dynamic settings for get_private_key and get_pass_certificate

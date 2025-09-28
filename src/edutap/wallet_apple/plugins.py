@@ -81,7 +81,7 @@ def get_logging_handlers() -> list[Logging]:
     return [plugin() for plugin in plugins]
 
 
-def get_dynamic_settings_handlers() -> list[DynamicSettings]:
+def get_dynamic_settings() -> DynamicSettings | None:
     eps = entry_points(group="edutap.wallet_apple.plugins")
     # allow multiple entries by searching for the prefix
     plugins = [
@@ -92,17 +92,7 @@ def get_dynamic_settings_handlers() -> list[DynamicSettings]:
     # for handling multiple handlers we need to define a strategy
     if len(plugins) > 1:
         raise ValueError("multiple DynamicSettings plugins found, only one is allowed")
-    for plugin in plugins:
-        if not isinstance(plugin, DynamicSettings):
-            raise ValueError(f"{plugin} not implements DynamicSettings")
-    return [plugin() for plugin in plugins]
-
-
-def get_dynamic_settings_handler() -> DynamicSettings | None:
-    """
-    Returns the first dynamic settings handler or None if no handler is found.
-    """
-    handlers = get_dynamic_settings_handlers()
-    if handlers:
-        return handlers[0]
-    return None
+    plugin = plugins[0]
+    if not isinstance(plugin, DynamicSettings):
+        raise ValueError(f"{plugin} not implements DynamicSettings")
+    return plugin()
