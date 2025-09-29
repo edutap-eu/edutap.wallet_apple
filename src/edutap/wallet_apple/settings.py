@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     )
     root_dir: Path = Field(default_factory=lambda dd: dd.get("root_dir", ROOT_DIR))
     cert_dir_relative: str = "certs"
-    """Relative path to the root directory, can be overriddenby `cert_dir`."""
+    """Relative path to the root directory, can be overridden by `cert_dir`."""
 
     cert_dir: Path = Field(
         default_factory=lambda dd: dd["root_dir"] / dd["cert_dir_relative"]
@@ -51,23 +51,23 @@ class Settings(BaseSettings):
     fernet_key: str | None = None
 
     pass_data_passthrough: bool = False
-    """If True, pass is expected to be already fully prepared for delivery and
-    returned as is in `donload_pass` and `get_updated_pass`. Use this method
-    in a multi pass configuration setup.
+    """If true, no modification are made to the pass.
+    The pass is expected to be already fully prepared for delivery.
+    It will be returned as is in `download_pass` and `get_updated_pass`.
+    Use this method in a multi pass configuration setup.
     """
 
     pydantic_extra: Literal["allow", "ignore", "forbid"] = "forbid"
     """How to handle extra fields in the pass data"""
 
     def get_certificate_path(self, pass_type_identifier: str) -> Path:
-        """Return the path to the certificate file for the given pass type
-        identifier.
-        """
+        """Path to the certificate file for the given pass type identifier."""
         return self.cert_dir / f"certificate-{pass_type_identifier}.pem"
 
     def get_available_passtype_ids(self) -> list[str]:
-        """Returns the available pass type identifiers"""
+        """List of available pass type identifiers"""
         return [p.stem.split("-")[-1] for p in self.cert_dir.glob("certificate-*.pem")]
 
     def get_logger(self):
+        """A Structlog based logger."""
         return logger

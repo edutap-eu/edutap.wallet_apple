@@ -8,6 +8,7 @@ from typing import runtime_checkable
 class PassRegistration(Protocol):
     """
     Protocol definition for an injectable PassRegistration handler.
+
     It will be used by the webservice to handle pass registration.
     """
 
@@ -23,7 +24,10 @@ class PassRegistration(Protocol):
         """
 
     async def unregister_pass(
-        self, device_library_id: str, pass_type_id: str, serial_number: str
+        self,
+        device_library_id: str,
+        pass_type_id: str,
+        serial_number: str,
     ) -> None:
         """
         see https://developer.apple.com/documentation/walletpasses/unregister-a-pass-for-update-notifications
@@ -37,11 +41,16 @@ class PassDataAcquisition(Protocol):
     """
 
     async def get_pass_data(
-        self, *, pass_type_id: str | None, serial_number: str, update: bool = False
+        self,
+        *,
+        pass_type_id: str | None,
+        serial_number: str,
+        update: bool = False,
     ) -> handlers.PassData:
         """
-        Fetches pass creation data from the database
-        is called by the Edutap Apple Provider upon creation of a new pass
+        Fetches pass creation data from the database.
+
+        It is called by the eduTAP Apple Provider upon creation of a new pass.
 
         :param pass_type_id: the pass type identifier
         :param serial_number: the serial number of the pass
@@ -51,11 +60,16 @@ class PassDataAcquisition(Protocol):
         """
 
     async def get_push_tokens(
-        self, device_library_id: str | None, pass_type_id: str, serial_number: str
+        self,
+        device_library_id: str | None,
+        pass_type_id: str,
+        serial_number: str,
     ) -> list[handlers.PushToken]:
         """
-        called during pass update,
-        returns a push token
+        Called during pass update,
+
+        Returns a push token
+
         see https://developer.apple.com/documentation/walletpasses/pushtoken
         and https://developer.apple.com/documentation/usernotifications/sending-notification-requests-to-apns
         XXX: device_library_id appears to always be None, double check and
@@ -63,18 +77,25 @@ class PassDataAcquisition(Protocol):
         """
 
     async def get_update_serial_numbers(
-        self, device_library_id: str, pass_type_id: str, last_updated: str | None = None
+        self,
+        device_library_id: str,
+        pass_type_id: str,
+        last_updated: str | None = None,
     ) -> handlers.SerialNumbers:
         """
-        Fetches the serial numbers of the passes that have been updated since the last update
+        Fetches the serial numbers of the passes that have been updated since the last update.
+
         see https://developer.apple.com/documentation/walletpasses/get-the-list-of-updatable-passes
         """
 
     async def check_authentication_token(
-        self, pass_type_id: str | None, serial_number: str | None, token: str
+        self,
+        pass_type_id: str | None,
+        serial_number: str | None,
+        token: str,
     ) -> bool:
         """
-        checks if a given authentication token is valid
+        Checks if a given authentication token is valid
         """
 
 
@@ -84,7 +105,10 @@ class Logging(Protocol):
     Protocol definition for a logging handler
     """
 
-    async def log(self, entries: handlers.LogEntries) -> None:
+    async def log(
+        self,
+        entries: handlers.LogEntries,
+    ) -> None:
         """
         see https://developer.apple.com/documentation/walletpasses/log-a-message
         """

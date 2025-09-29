@@ -113,7 +113,8 @@ async def register_pass(
     HTTP-PATH: /v1/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}
     HTTP-Path-Parameters:
         * deviceLibraryIdentifier: str (required) A unique identifier you use to identify and authenticate the device.
-        * passTypeIdentifier: str (required) The pass type identifier of the pass to register for update notifications. This value corresponds to the value of the passTypeIdentifier key of the pass.
+        * passTypeIdentifier: str (required) The pass type identifier of the pass to register for update notifications.
+                              This value corresponds to the value of the passTypeIdentifier key of the pass.
         * serialNumber: str (required)
     HTTP-Headers:
         * Authorization: ApplePass <authenticationToken>
@@ -121,10 +122,11 @@ async def register_pass(
         * pushToken: <push token, which the server needs to send push notifications to this device> }
 
     Params definition
-    :deviceLibraryIdentifier      - the device's identifier
-    :passTypeIdentifier   - the bundle identifier for a class of passes, sometimes referred to as the pass topic, e.g. pass.com.apple.backtoschoolgift, registered with WWDR
-    :serialNumber  - the pass' serial number
-    :pushToken      - the value needed for Apple Push Notification service
+    :deviceLibraryIdentifier - the device's identifier
+    :passTypeIdentifier      - the bundle identifier for a class of passes.
+                               Sometimes referred to as the pass topic, e.g. pass.com.apple.backtoschoolgift, registered with WWDR.
+    :serialNumbe             - the pass' serial number
+    :pushToken               - the value needed for Apple Push Notification service
 
     server action: if the authentication token is correct, associate the given push token and device identifier with this pass
     server response:
@@ -134,8 +136,10 @@ async def register_pass(
 
     :async:
     :param str deviceLibraryIdentifier: A unique identifier you use to identify and authenticate the device.
-    :param str passTypeIdentifier:      The pass type identifier of the pass to register for update notifications. This value corresponds to the value of the passTypeIdentifier key of the pass.
-    :param str serialNumber:            The serial number of the pass to register. This value corresponds to the serialNumber key of the pass.
+    :param str passTypeIdentifier:      The pass type identifier of the pass to register for update notifications.
+                                        This value corresponds to the value of the passTypeIdentifier key of the pass.
+    :param str serialNumber:            The serial number of the pass to register.
+                                        This value corresponds to the serialNumber key of the pass.
 
     :return:
     """
@@ -252,7 +256,7 @@ async def device_log(
     """
     Logging/Debugging from the device, called by the handheld device
 
-    log an error or unexpected server behavior, to help with server debugging
+    Log an error or unexpected server behavior, to help with server debugging
     POST /v1/log
     JSON payload: { "description" : <human-readable description of error> }
 
@@ -322,7 +326,9 @@ async def get_updated_pass(
 
 
 async def get_pass_data(
-    pass_type_identifier: str, serial_number: str, update: bool
+    pass_type_identifier: str,
+    serial_number: str,
+    update: bool,
 ) -> BinaryIO:
     """Get pass data from pass data acquisition handler."""
     for handler in get_pass_data_acquisitions():
@@ -368,8 +374,8 @@ async def list_updatable_passes(
     """
     see https://developer.apple.com/documentation/walletpasses/get-the-list-of-updatable-passes
 
-    Attention: check for correct authentication token, do not allow it to be called
-    anonymously
+    Attention: check for correct authentication token.
+    Do not allow it to be called anonymously
     """
     logger = settings.get_logger()
     logger.info(
@@ -414,10 +420,15 @@ async def list_updatable_passes(
 
 
 @router_download_pass.get("/download-pass/{token}")
-async def download_pass(request: Request, token: str, settings=Depends(get_settings)):
+async def download_pass(
+    request: Request,
+    token: str,
+    settings=Depends(get_settings),
+):
     """
-    download a pass from the server. The parameter is a token, so fromoutside
-    the personal pass data are not deducible.
+    Download a pass from the server.
+
+    The parameter is a token, so fromoutside the personal pass data are not deducible.
 
     GET /v1/download-pass/<token>
 
