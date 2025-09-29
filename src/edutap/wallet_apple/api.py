@@ -12,7 +12,8 @@ import ssl
 
 
 def new(
-    data: Optional[dict[str, Any]] = None, file: Optional[BinaryIO] = None
+    data: Optional[dict[str, Any]] = None,
+    file: Optional[BinaryIO] = None,
 ) -> passes.PkPass:
     """
     Create pass model.
@@ -21,7 +22,8 @@ def new(
     :param file: Binary IO data containing an existing PkPass zip file.
     :return: PkPass model instance.
 
-    you must provide either data or file
+    Parameters data and file are mutually exclusive.
+    I none of both are given, an empty model is returned.
     """
     if data is not None and file is not None:
         raise ValueError(
@@ -40,7 +42,9 @@ def new(
 
 
 def verify(
-    pkpass: passes.PkPass, recompute_manifest=True, settings: Settings | None = None
+    pkpass: passes.PkPass,
+    recompute_manifest=True,
+    settings: Settings | None = None,
 ):
     """
     Verify the pass.
@@ -51,23 +55,60 @@ def verify(
     pkpass.verify(recompute_manifest=recompute_manifest)
 
 
-def sign(pkpass: passes.PkPass, settings: Settings | None = None):
+def sign(
+    pkpass: passes.PkPass,
+    settings: Settings | None = None,
+):
     """
     Sign the pass.
 
     :param pkpass: PkPass model instance.
-    :param settings: Settings model instance. if not given it will be loaded from the environment.
-    works inplace, the pkpass will be signed.
+    :param settings: Settings model instance.
+                     If not given it will be loaded from the environment.
+                     Works inplace, the pkpass will be signed.
     """
     if settings is None:
         settings = Settings()
 
-    passtype_identifier = pkpass.pass_object_safe.passTypeIdentifier
+    pass_type_identifier = pkpass.pass_object_safe.passTypeIdentifier
 
-    pkpass.sign(
-        settings.private_key,
-        settings.get_certificate_path(passtype_identifier),
-        settings.wwdr_certificate,
+    with open(settings.private_key, "rb") as fh:
+        private_key_data = fh.read()
+    with open(settings.get_certificate_path(pass_type_identifier), "rb") as fh:
+        certificate_data = fh.read()
+    with open(settings.wwdr_certificate, "rb") as fh:
+        wwdr_certificate_data = fh.read()
+
+    pkpass.sign_direct(
+        private_key_data,
+        certificate_data,
+        wwdr_certificate_data,
+    )
+
+
+def sign_direct(
+    pkpass: passes.PkPass,
+    private_key_data: bytes,
+    certificate_data: bytes,
+):
+    """
+    Sign the pass by specific pass configuration.
+
+    :param pkpass: PkPass model instance.
+    :param private_key_data: Pass private key as bytes.
+    :param certificate_data: Pass certificate key as bytes.
+    :param settings: Settings model instance.
+                     if not given it will be loaded from the environment.
+    """
+    settings = Settings()
+
+    with open(settings.wwdr_certificate, "rb") as fh:
+        wwdr_certificate_data = fh.read()
+
+    pkpass.sign_direct(
+        private_key_data,
+        certificate_data,
+        wwdr_certificate_data,
     )
 
 
@@ -83,10 +124,14 @@ def pkpass(pkpass: passes.PkPass) -> BinaryIO:
 
 
 def create_auth_token(
-    pass_type_identifier: str, serial_number: str, fernet_key: str | bytes | None = None
+    pass_type_identifier: str,
+    serial_number: str,
+    fernet_key: str | bytes | None = None,
 ) -> bytes:
     """
-    create an authentication token using cryptography.Fernet symmetric encryption
+    Create an authentication token using cryptography.
+
+    Uses fernet symmetric encryption.
     """
     if fernet_key is None:
         settings = Settings()
@@ -104,7 +149,7 @@ def extract_auth_token(
     token: str | bytes, fernet_key: bytes | None = None
 ) -> tuple[str, str]:
     """
-    extract the pass_type_identifier and serial_number from the authentication token
+    Extract the pass_type_identifier and serial_number from the authentication token
     """
     if fernet_key is None:
         settings = Settings()
@@ -127,11 +172,10 @@ def save_link(
     schema: str = "https",
 ) -> str:
     """
-    creates a link to download the pass
-    this link is encrypted, so that the pass holder identity
-    cannot be inferred from the link
+    Creates a link to download the pass
 
-    :param identifier: Pass identifier.
+    This link is encrypted.
+    The pass holder identity cannot be inferred from the link.
     """
     if settings is None:
         settings = Settings()
@@ -140,9 +184,7 @@ def save_link(
     if url_prefix[0] != "/":
         url_prefix = f"/{url_prefix}"
 
-    token = create_auth_token(pass_type_id, serial_number, settings.fernet_key).decode(
-        "utf-8"
-    )
+    token = create_auth_token(pass_type_id, serial_number).decode("utf-8")
     if settings.https_port == 443 or not settings.https_port:
         return f"{schema}://{settings.domain}{url_prefix}/v1/download-pass/{token}"
 
@@ -150,10 +192,15 @@ def save_link(
 
 
 async def trigger_update(
-    passTypeIdentifier, serialNumber, settings: Settings | None = None
+    passTypeIdentifier,
+    serialNumber,
+    settings: Settings | None = None,
 ):
     """
-    performs a APNs call to push an update to a pass/device
+    Triggers an update of a registered pass.
+
+    Performs a Apple Push Notification (APN) call.
+    It pushes an update notification to a pass on a each device.
     """
     if settings is None:
         settings = Settings()

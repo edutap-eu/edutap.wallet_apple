@@ -110,7 +110,24 @@ def testlog():
     from structlog.testing import capture_logs  # type: ignore
 
     with capture_logs() as logs:
+        logs.clear()
         yield logs
+        logs.clear()
+        return logs
+
+
+@pytest.fixture(scope="function")
+def testlog_empty():
+    """
+    create a logging handler that stores the log messages into a list
+    this logging handler will configured into logger
+    """
+    from structlog.testing import capture_logs  # type: ignore
+
+    with capture_logs() as logs:
+        logs.clear()
+        yield logs
+        logs.clear()
         return logs
 
 

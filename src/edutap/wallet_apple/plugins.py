@@ -9,11 +9,16 @@ _PLUGIN_CLASS_NAMES = {
     "PassRegistration": PassRegistration,
     "Logging": Logging,
 }
+
+
 _PLUGIN_REGISTRY: dict[str, list[PassDataAcquisition | PassRegistration | Logging]] = {}
+
+PLUGINS = PassDataAcquisition | PassRegistration | Logging
 
 
 def add_plugin(
-    name: str, plugin: PassDataAcquisition | PassRegistration | Logging
+    name: str,
+    plugin: PassDataAcquisition | PassRegistration | Logging,
 ) -> None:
 
     if not isinstance(plugin, _PLUGIN_CLASS_NAMES[name]):
@@ -29,8 +34,6 @@ def get_pass_registrations() -> list[PassRegistration]:
     plugins = [
         ep.load() for ep in eps if ep.name.startswith("PassRegistration")
     ] + _PLUGIN_REGISTRY.get("PassRegistration", [])
-    if not plugins:
-        raise NotImplementedError("No pass registration plug-in found")
     for plugin in plugins:
         if not isinstance(plugin, PassRegistration):
             raise ValueError(f"{plugin} not implements PassRegistration")
@@ -43,8 +46,6 @@ def get_pass_data_acquisitions() -> list[PassDataAcquisition]:
     plugins = [
         ep.load() for ep in eps if ep.name == "PassDataAcquisition"
     ] + _PLUGIN_REGISTRY.get("PassDataAcquisition", [])
-    if not plugins:
-        raise NotImplementedError("No pass data acquisition plug-in found")
     for plugin in plugins:
         if not isinstance(plugin, PassDataAcquisition):
             raise ValueError(f"{plugin} not implements PassDataAcquisition")
@@ -57,8 +58,6 @@ def get_logging_handlers() -> list[Logging]:
     plugins = [
         ep.load() for ep in eps if ep.name.startswith("Logging")
     ] + _PLUGIN_REGISTRY.get("Logging", [])
-    # if not plugins:
-    #     raise NotImplementedError("No logging plug-in found")
     for plugin in plugins:
         if not isinstance(plugin, Logging):
             raise ValueError(f"{plugin} not implements Logging")
