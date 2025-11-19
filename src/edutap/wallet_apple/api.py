@@ -195,12 +195,21 @@ async def trigger_update(
     passTypeIdentifier,
     serialNumber,
     settings: Settings | None = None,
+    ssl_context: ssl.SSLContext | None = None,
 ):
     """
     Triggers an update of a registered pass.
 
     Performs a Apple Push Notification (APN) call.
     It pushes an update notification to a pass on a each device.
+
+    :param passTypeIdentifier: Pass type identifier.
+    :param serialNumber: Serial number of the pass.
+    :param settings: Settings model instance. If not provided, will be loaded
+        from environment.
+    :param ssl_context: Optional SSL context for the APN call. If not provided,
+        one will be created based on the certificate for the passTypeIdentifier
+        from settings.
     """
     if settings is None:
         settings = Settings()
@@ -213,12 +222,13 @@ async def trigger_update(
             None, passTypeIdentifier, serialNumber
         )
 
-    # create the ssl context for the APN call based on the certificate for the passTypeIdentifier
-    ssl_context = ssl.create_default_context()
-    ssl_context.load_cert_chain(
-        certfile=settings.get_certificate_path(passTypeIdentifier),
-        keyfile=settings.private_key,
-    )
+    # create the ssl context if not given
+    if ssl_context is None:
+        ssl_context = ssl.create_default_context()
+        ssl_context.load_cert_chain(
+            certfile=settings.get_certificate_path(passTypeIdentifier),
+            keyfile=settings.private_key,
+        )
 
     updated = []
 
