@@ -4,7 +4,7 @@ ci:
     skip: [check-manifest, pyroma]
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
     - id: check-ast
     - id: check-json
@@ -15,23 +15,23 @@ repos:
     - id: end-of-file-fixer
     - id: trailing-whitespace
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.1
+    rev: v3.21.2
     hooks:
     -   id: pyupgrade
 -   repo: https://github.com/pycqa/isort
-    rev: 6.0.1
+    rev: 7.0.0
     hooks:
     -   id: isort
--   repo: https://github.com/psf/black
-    rev: 25.1.0
+-   repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 26.1.0
     hooks:
     -   id: black
 -   repo: https://github.com/PyCQA/flake8
-    rev: 7.2.0
+    rev: 7.3.0
     hooks:
     -   id: flake8
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.15.0
+    rev: v1.19.1
     hooks:
       - id: mypy
         args: ['--explicit-package-bases']
@@ -49,15 +49,15 @@ repos:
         additional_dependencies:
           - tomli
 -   repo: https://github.com/mgedmin/check-manifest
-    rev: "0.50"
+    rev: "0.51"
     hooks:
     -   id: check-manifest
 -   repo: https://github.com/regebro/pyroma
-    rev: "4.2"
+    rev: "5.0.1"
     hooks:
     -   id: pyroma
 -   repo: https://github.com/mgedmin/check-python-versions
-    rev: "0.22.1"
+    rev: "0.24.0"
     hooks:
     -   id: check-python-versions
         args: ['--only', 'pyproject.toml']

@@ -15,6 +15,7 @@ from starlette.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_4
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 from typing import Annotated
+from typing import BinaryIO
 
 import datetime
 
@@ -145,7 +146,8 @@ async def register_pass(
     HTTP-PATH: /v1/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}
     HTTP-Path-Parameters:
         * deviceLibraryIdentifier: str (required) A unique identifier you use to identify and authenticate the device.
-        * passTypeIdentifier: str (required) The pass type identifier of the pass to register for update notifications. This value corresponds to the value of the passTypeIdentifier key of the pass.
+        * passTypeIdentifier: str (required) The pass type identifier of the pass to register for update notifications.
+                              This value corresponds to the value of the passTypeIdentifier key of the pass.
         * serialNumber: str (required)
     HTTP-Headers:
         * Authorization: ApplePass <authenticationToken>
@@ -153,10 +155,11 @@ async def register_pass(
         * pushToken: <push token, which the server needs to send push notifications to this device> }
 
     Params definition
-    :deviceLibraryIdentifier      - the device's identifier
-    :passTypeIdentifier   - the bundle identifier for a class of passes, sometimes referred to as the pass topic, e.g. pass.com.apple.backtoschoolgift, registered with WWDR
-    :serialNumber  - the pass' serial number
-    :pushToken      - the value needed for Apple Push Notification service
+    :deviceLibraryIdentifier - the device's identifier
+    :passTypeIdentifier      - the bundle identifier for a class of passes.
+                               Sometimes referred to as the pass topic, e.g. pass.com.apple.backtoschoolgift, registered with WWDR.
+    :serialNumbe             - the pass' serial number
+    :pushToken               - the value needed for Apple Push Notification service
 
     server action: if the authentication token is correct, associate the given push token and device identifier with this pass
     server response:
@@ -166,8 +169,10 @@ async def register_pass(
 
     :async:
     :param str deviceLibraryIdentifier: A unique identifier you use to identify and authenticate the device.
-    :param str passTypeIdentifier:      The pass type identifier of the pass to register for update notifications. This value corresponds to the value of the passTypeIdentifier key of the pass.
-    :param str serialNumber:            The serial number of the pass to register. This value corresponds to the serialNumber key of the pass.
+    :param str passTypeIdentifier:      The pass type identifier of the pass to register for update notifications.
+                                        This value corresponds to the value of the passTypeIdentifier key of the pass.
+    :param str serialNumber:            The serial number of the pass to register.
+                                        This value corresponds to the serialNumber key of the pass.
 
     :return:
     """
@@ -282,7 +287,7 @@ async def device_log(
     """
     Logging/Debugging from the device, called by the handheld device
 
-    log an error or unexpected server behavior, to help with server debugging
+    Log an error or unexpected server behavior, to help with server debugging
     POST /v1/log
     JSON payload: { "description" : <human-readable description of error> }
 
@@ -322,18 +327,17 @@ async def get_updated_pass(
     )
 
     try:
-        res = await prepare_pass(passTypeIdentifier, serialNumber, update=True)
-        fh = api.pkpass(res)
-
+        pass_data = await get_pass_data(passTypeIdentifier, serialNumber, update=True)
+        settings = Settings()
+        if not settings.pass_data_passthrough:
+            pass_data = await prepare_pass(pass_data)
         headers = {
             "Content-Disposition": 'attachment; filename="blurb.pkpass"',
             "Content-Type": "application/octet-stream",
             "Last-Modified": f"{datetime.datetime.now()}",
         }
-
-        # Erstelle eine StreamingResponse mit dem BytesIO-Objekt
         return StreamingResponse(
-            fh,
+            pass_data,
             headers=headers,
             media_type="application/vnd.apple.pkpass",
         )
@@ -347,45 +351,41 @@ async def get_updated_pass(
             url=request.url,
             error=str(e),
         )
-
         raise
 
 
-async def prepare_pass(
-    passTypeIdentifier: str, serialNumber: str, update: bool
-) -> api.PkPass:
-    """
-    helper function to prepare a pass for delivery.
-    it is used for initially downloading a pass and for updating a pass.
-    The latter endpoint is protected by an authentication token.
-
-    this function retrieves an unsigned pass from the database, sets individual
-    properties (teamIdetifier, passTypeIdentifier) and signs the pass.
-    """
-    for get_pass_data_acquisition_handler in get_pass_data_acquisitions():
-        pass_data = await get_pass_data_acquisition_handler.get_pass_data(
-            pass_type_id=passTypeIdentifier, serial_number=serialNumber, update=update
+async def get_pass_data(
+    pass_type_identifier: str,
+    serial_number: str,
+    update: bool,
+) -> BinaryIO:
+    """Get pass data from pass data acquisition handler."""
+    for handler in get_pass_data_acquisitions():
+        return await handler.get_pass_data(
+            pass_type_id=pass_type_identifier,
+            serial_number=serial_number,
+            update=update,
         )
-        settings = Settings()
-        # now we have to deserialize a PkPass, set individual propsand sign it
-        pass1 = api.new(file=pass_data)
-        pass1.pass_object_safe.teamIdentifier = settings.team_identifier
-        # pass1.pass_object_safe.passTypeIdentifier = passTypeIdentifier
-        # pass1.pass_object_safe.serialNumber = serialNumber
-
-        scheme = "https"
-        # chop off the last part of the path because it contains the
-        # apple api version and this is automatically added by the the
-        # device when it calls this endpoint
-        apipath = "/".join(router_apple_wallet.prefix.split("/")[:-1])
-        weburl = f"{scheme}://{settings.domain}:{settings.https_port}{apipath}"
-        pass1.pass_object_safe.webServiceURL = weburl
-        # pass1.pass_object_safe.authenticationToken = None
-        api.sign(pass1)
-
-        return pass1
-
     raise LookupError("Pass not found")
+
+
+async def prepare_pass(pass_data: BinaryIO) -> BinaryIO:
+    """Prepare pass for delivery.
+
+    An unsigned pass is expected. The team identifier and the web
+    service URL are set from global settings and the pass gets signed.
+    """
+    settings = Settings()
+    pkpass = api.new(file=pass_data)
+    pkpass.pass_object_safe.teamIdentifier = settings.team_identifier
+    # chop off the last part of the path because it contains the
+    # apple api version and this is automatically added by the the
+    # device when it calls this endpoint
+    apipath = "/".join(router_apple_wallet.prefix.split("/")[:-1])
+    weburl = f"https://{settings.domain}:{settings.https_port}{apipath}"
+    pkpass.pass_object_safe.webServiceURL = weburl
+    api.sign(pkpass)
+    return api.pkpass(pkpass)
 
 
 @router_apple_wallet.get(
@@ -401,8 +401,8 @@ async def list_updatable_passes(
     """
     see https://developer.apple.com/documentation/walletpasses/get-the-list-of-updatable-passes
 
-    Attention: check for correct authentication token, do not allow it to be called
-    anonymously
+    Attention: check for correct authentication token.
+    Do not allow it to be called anonymously
     """
     logger = settings.get_logger()
     logger.info(
@@ -447,10 +447,15 @@ async def list_updatable_passes(
 
 
 @router_download_pass.get("/download-pass/{token}")
-async def download_pass(request: Request, token: str, settings=Depends(get_settings)):
+async def download_pass(
+    request: Request,
+    token: str,
+    settings=Depends(get_settings),
+):
     """
-    download a pass from the server. The parameter is a token, so fromoutside
-    the personal pass data are not deducible.
+    Download a pass from the server.
+
+    The parameter is a token, so fromoutside the personal pass data are not deducible.
 
     GET /v1/download-pass/<token>
 
@@ -466,21 +471,20 @@ async def download_pass(request: Request, token: str, settings=Depends(get_setti
     )
 
     try:
-        pass_type_identifier, serial_number = api.extract_auth_token(
-            token, settings.fernet_key
+        pass_type_identifier, serial_number = api.extract_auth_token(token)
+        pass_data = await get_pass_data(
+            pass_type_identifier, serial_number, update=False
         )
-        res = await prepare_pass(pass_type_identifier, serial_number, update=False)
-
-        fh = api.pkpass(res)
-
+        settings = Settings()
+        if not settings.pass_data_passthrough:
+            pass_data = await prepare_pass(pass_data)
         headers = {
             "Content-Disposition": f'attachment; filename="{serial_number}.pkpass"',
             "Content-Type": "application/octet-stream",
             "Last-Modified": f"{datetime.datetime.now()}",
         }
-
         return StreamingResponse(
-            fh,
+            pass_data,
             headers=headers,
             media_type="application/vnd.apple.pkpass",
         )
@@ -491,5 +495,4 @@ async def download_pass(request: Request, token: str, settings=Depends(get_setti
             url=request.url,
             error=str(e),
         )
-
         raise
