@@ -22,6 +22,9 @@ class Settings(BaseSettings):
         env_file=os.environ.get("EDUTAP_WALLET_APPLE_ENV_FILE", ".env"),
         extra="allow",
     )
+
+    environment: Literal["development", "testing", "production"] = "testing"
+
     root_dir: Path = Field(default_factory=lambda dd: dd.get("root_dir", ROOT_DIR))
     cert_dir_relative: str = "certs"
     """Relative path to the root directory, can be overridden by `cert_dir`."""
