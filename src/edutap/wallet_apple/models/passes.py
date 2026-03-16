@@ -28,6 +28,12 @@ from typing import Dict
 from typing import Literal
 from typing_extensions import deprecated
 
+try:
+    from edutap.wallet_apple_ndaparts.models import FidoProfile, IssuerBindingData
+except ImportError:
+    FidoProfile = BaseModel
+    IssuerBindingData = BaseModel
+
 import base64
 import functools
 import hashlib
@@ -596,6 +602,13 @@ class Pass(BaseModel):
     The value needs to be a complete date that includes hours and minutes, and may optionally include seconds.
     """
 
+    fidoProfile: FidoProfile | None = None
+    """
+    Optional.
+    An object that contains the FIDO profile information for the pass.
+    Requires edutap.wallet_apple_ndaparts to be installed.
+    """
+
     footerBackgroundColor: str | None = None
     """
     Optional.
@@ -627,6 +640,13 @@ class Pass(BaseModel):
     An identifier the system uses to group related boarding passes or event tickets.
     Wallet displays passes with the same groupingIdentifier, passTypeIdentifier, and type as a group.
     Use this identifier to group passes that are tightly related, such as boarding passes for different connections on the same trip.
+    """
+
+    issuerBindingData: IssuerBindingData | None = None
+    """
+    Optional.
+    An object that contains the issuer binding data for the pass.
+    Requires edutap.wallet_apple_ndaparts to be installed.
     """
 
     labelColor: str | None = None
