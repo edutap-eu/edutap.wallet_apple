@@ -3,7 +3,6 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from typing import BinaryIO
 
-
 DeviceTypeIdentifier = str
 PassData = BinaryIO
 

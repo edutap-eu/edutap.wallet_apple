@@ -4,7 +4,6 @@ from pydantic import ConfigDict
 from pydantic.config import ExtraValues
 from typing import Literal
 
-
 settings = Settings()
 
 EXTRA_ATTRIBUTES_BEHAVIOR: ExtraValues = settings.pydantic_extra

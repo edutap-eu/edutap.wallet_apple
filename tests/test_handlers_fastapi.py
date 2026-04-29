@@ -16,7 +16,6 @@ from plugins import SettingsTest
 import json
 import pytest
 
-
 settings = SettingsTest()
 
 try:
