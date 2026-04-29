@@ -15,7 +15,6 @@ import conftest as conftest
 import json
 import pytest
 
-
 settings = SettingsTest()
 
 

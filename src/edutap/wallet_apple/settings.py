@@ -7,7 +7,6 @@ from typing import Literal
 import os
 import structlog  # type: ignore
 
-
 logger = structlog.get_logger("edutap.wallet_apple")
 
 ROOT_DIR = Path(__file__).parents[3].resolve()

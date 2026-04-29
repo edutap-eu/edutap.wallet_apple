@@ -17,7 +17,6 @@ import subprocess
 import tempfile
 import uuid
 
-
 cwd = Path(__file__).parent
 data = cwd / "data"
 jsons = data / "jsons"

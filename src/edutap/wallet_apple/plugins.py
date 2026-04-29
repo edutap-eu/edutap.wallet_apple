@@ -3,7 +3,6 @@ from .protocols import PassDataAcquisition
 from .protocols import PassRegistration
 from importlib.metadata import entry_points
 
-
 _PLUGIN_CLASS_NAMES = {
     "PassDataAcquisition": PassDataAcquisition,
     "PassRegistration": PassRegistration,

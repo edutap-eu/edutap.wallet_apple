@@ -19,7 +19,6 @@ import platform
 import pytest
 import uuid
 
-
 settings = SettingsTest()
 
 
