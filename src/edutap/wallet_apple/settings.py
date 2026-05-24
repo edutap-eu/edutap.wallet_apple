@@ -66,7 +66,9 @@ class Settings(BaseSettings):
 
     def get_available_passtype_ids(self) -> list[str]:
         """List of available pass type identifiers"""
-        return [p.stem.split("-")[-1] for p in self.cert_dir.glob("certificate-*.pem")]
+        return [
+            p.stem.split("-", 1)[-1] for p in self.cert_dir.glob("certificate-*.pem")
+        ]
 
     def get_logger(self):
         """A Structlog based logger."""
