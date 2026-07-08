@@ -4,6 +4,7 @@ from edutap.wallet_apple.models.passes import BarcodeFormat
 
 import conftest as conftest
 import json
+import pytest
 
 
 def test_model():
@@ -174,6 +175,18 @@ def test_code128_pass():
     assert thawedJson["barcodes"][0]["format"] == BarcodeFormat.CODE128.value
 
 
+def test_qr_pass_keeps_legacy_format():
+    """
+    QR is a legacy-capable barcode format, so the legacy barcode
+    field must keep the QR format instead of falling back to PDF417.
+    """
+    passobject = create_shell_pass(BarcodeFormat.QR).pass_object
+    jsonData = passobject.model_dump_json()
+    thawedJson = json.loads(jsonData)
+    assert thawedJson["barcode"]["format"] == BarcodeFormat.QR.value
+    assert thawedJson["barcodes"][0]["format"] == BarcodeFormat.QR.value
+
+
 def test_pdf_417_pass():
     """
     This test is to create a pass with a barcode that is valid
@@ -184,6 +197,34 @@ def test_pdf_417_pass():
     thawedJson = json.loads(jsonData)
     assert thawedJson["barcode"]["format"] == BarcodeFormat.PDF417.value
     assert thawedJson["barcodes"][0]["format"] == BarcodeFormat.PDF417.value
+
+
+@pytest.mark.parametrize(
+    "fmt,expected",
+    [
+        ("EAN13", "PKBarcodeFormatEAN13"),
+        ("CODE39", "PKBarcodeFormatCode39"),
+        ("CODABAR", "PKBarcodeFormatCodabar"),
+        ("ITF", "PKBarcodeFormatITF"),
+    ],
+)
+def test_ios27_barcode_formats(fmt, expected):
+    """
+    iOS 27 adds EAN-13, Code 39, Codabar and ITF barcode formats.
+    They serialize with their PKBarcodeFormat identifier, and the
+    legacy barcode field falls back to PDF417 since they are not
+    legacy-capable.
+    """
+    barcode_format = getattr(BarcodeFormat, fmt)
+    assert barcode_format.value == expected
+
+    passobject = create_shell_pass(barcodeFormat=barcode_format).pass_object
+    thawedJson = json.loads(passobject.model_dump_json())
+    assert thawedJson["barcodes"][0]["format"] == expected
+    assert thawedJson["barcode"]["format"] == BarcodeFormat.PDF417.value
+
+    roundtripped = passes.Pass.from_json(passobject.model_dump_json(exclude_none=True))
+    assert roundtripped.barcodes[0].format == barcode_format
 
 
 def test_files():
