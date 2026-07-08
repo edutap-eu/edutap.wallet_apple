@@ -4,6 +4,7 @@ from edutap.wallet_apple.models.passes import BarcodeFormat
 
 import conftest as conftest
 import json
+import pydantic
 import pytest
 
 
@@ -225,6 +226,46 @@ def test_ios27_barcode_formats(fmt, expected):
 
     roundtripped = passes.Pass.from_json(passobject.model_dump_json(exclude_none=True))
     assert roundtripped.barcodes[0].format == barcode_format
+
+
+def test_featured_actions():
+    """
+    iOS 27 adds the top-level featuredActions key: up to two tappable
+    actions in priority order, each with identifier, type and url.
+    """
+    passobject = create_shell_pass().pass_object
+    passobject.featuredActions = [
+        passes.FeaturedAction(
+            identifier="offers",
+            type="membershipBenefits",
+            url="https://example.com/offers",
+        )
+    ]
+    dumped = passobject.model_dump(exclude_none=True)
+    assert dumped["featuredActions"][0]["identifier"] == "offers"
+    assert dumped["featuredActions"][0]["type"] == "membershipBenefits"
+    assert dumped["featuredActions"][0]["url"] == "https://example.com/offers"
+
+    roundtripped = passes.Pass.from_json(passobject.model_dump_json(exclude_none=True))
+    assert roundtripped.featuredActions == passobject.featuredActions
+
+
+def test_featured_actions_allows_at_most_two():
+    action = {
+        "identifier": "offers",
+        "type": "membershipBenefits",
+        "url": "https://example.com/offers",
+    }
+    with pytest.raises(pydantic.ValidationError):
+        passes.Pass(
+            storeCard=passes.StoreCard(),
+            organizationName="Org Name",
+            passTypeIdentifier=conftest.PASS_TYPE_IDENTIFIER,
+            teamIdentifier="Team Identifier",
+            serialNumber="1234567",
+            description="A Sample Pass",
+            featuredActions=[action, action, action],
+        )
 
 
 def test_files():
