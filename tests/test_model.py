@@ -59,6 +59,35 @@ def test_load_generic_pass():
     assert json_
 
 
+def test_load_poster_generic_pass():
+    """
+    iOS 27 poster generic passes ship the posterGeneric style key
+    together with a generic fallback for older devices. Both keys
+    must validate side by side, and pass_information returns the
+    poster style since that is what current devices display.
+    """
+    buf = open(conftest.jsons / "poster_generic_pass.json").read()
+    pass1 = passes.Pass.model_validate_json(buf)
+
+    assert pass1.posterGeneric is not None
+    assert pass1.generic is not None
+    assert pass1.pass_information.__class__ == passes.PosterGeneric
+    assert pass1.posterGeneric.footerFields[0].key == "membershipType"
+
+    json_ = pass1.model_dump(exclude_none=True)
+    assert "posterGeneric" in json_
+    assert "generic" in json_
+    assert json_["posterGeneric"]["footerFields"][0]["value"] == "Family Pass"
+
+
+def test_poster_generic_add_footer_field():
+    info = passes.PosterGeneric()
+    info.addFooterField("membershipType", "Family Pass", None)
+    dumped = info.model_dump(exclude_none=True)
+    assert dumped["footerFields"][0]["key"] == "membershipType"
+    assert dumped["footerFields"][0]["value"] == "Family Pass"
+
+
 def test_load_boarding_pass():
     buf = open(conftest.jsons / "boarding_pass.json").read()
     pass1 = passes.Pass.model_validate_json(buf)

@@ -437,6 +437,35 @@ class StoreCard(PassInformation):
     """
 
 
+@passmodel("posterGeneric")
+class PosterGeneric(PassInformation):
+    """
+    Generic pass with full-bleed background artwork. Requires iOS 27 or
+    later; ship it together with a generic fallback for older devices.
+
+    No reference page exists yet at
+    https://developer.apple.com/documentation/walletpasses (iOS 27 beta),
+    see https://developer.apple.com/videos/play/wwdc2026/209/ and
+    https://developer.apple.com/wallet/whats-new/ instead.
+    """
+
+    footerFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        pydantic.Field(default_factory=list)
+    )
+    """
+    Optional.
+    Fields to be displayed in the footer of the pass.
+    Only the first footer field is displayed.
+    """
+
+    def addFooterField(self, key, value, label, textAlignment=None):
+        self.footerFields.append(
+            PassFieldContent(
+                key=key, value=value, label=label, textAlignment=textAlignment
+            )
+        )
+
+
 class Pass(BaseModel):
     """
     Represents a pass object. This is the base class for all pass types.
@@ -865,12 +894,18 @@ class Pass(BaseModel):
 
     @property
     def pass_information(self):
-        """Returns the pass information object by checking all passmodel entries using all()"""
+        """Returns the pass information object by checking all passmodel entries.
+
+        Poster styles take precedence over their designed fallback type:
+        an iOS 27 poster pass ships e.g. posterGeneric together with a
+        generic fallback for older devices, and current devices display
+        the poster style.
+        """
+        names = sorted(
+            pass_model_registry, key=lambda name: not name.startswith("poster")
+        )
         return next(
-            filter(
-                lambda x: x is not None,
-                (map(lambda x: getattr(self, x), pass_model_registry)),
-            )
+            info for info in (getattr(self, name) for name in names) if info is not None
         )
 
     @classmethod

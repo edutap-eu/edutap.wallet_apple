@@ -1,0 +1,53 @@
+{
+    "description": "A Sample Poster Generic Pass",
+    "formatVersion": 1,
+    "organizationName": "Org Name",
+    "passTypeIdentifier": "pass.demo.lmu.de",
+    "serialNumber": "100006",
+    "teamIdentifier": "JG943677ZY",
+    "posterGeneric": {
+        "headerFields": [
+            {
+                "key": "memberID",
+                "label": "Guest No.",
+                "value": "102035"
+            }
+        ],
+        "primaryFields": [
+            {
+                "key": "name",
+                "value": "John Doe",
+                "label": "Name"
+            }
+        ],
+        "footerFields": [
+            {
+                "key": "membershipType",
+                "value": "Family Pass"
+            }
+        ]
+    },
+    "generic": {
+        "headerFields": [
+            {
+                "key": "memberID",
+                "label": "Guest No.",
+                "value": "102035"
+            }
+        ],
+        "primaryFields": [
+            {
+                "key": "name",
+                "value": "John Doe",
+                "label": "Name"
+            }
+        ]
+    },
+    "barcodes": [
+        {
+            "format": "PKBarcodeFormatQR",
+            "message": "102035",
+            "messageEncoding": "iso-8859-1"
+        }
+    ]
+}
