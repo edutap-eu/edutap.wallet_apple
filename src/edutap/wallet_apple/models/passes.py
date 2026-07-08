@@ -295,6 +295,19 @@ class Barcode(BaseModel):
     altText: str = ""  # Optional. Text displayed near the barcode
 
 
+class FeaturedAction(BaseModel):
+    """
+    An action displayed as a tappable tile under the pass face.
+    Requires iOS 27 or later.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    identifier: str  # Required. A unique identifier for the action
+    type: str  # Required. The action type, for example "membershipBenefits"
+    url: str  # Required. The universal link the action opens
+
+
 IBeacon = Beacon  # Alias for backward compatibility
 
 
@@ -594,6 +607,15 @@ class Pass(BaseModel):
     Optional. string
     The date and time the pass expires.
     The value needs to be a complete date that includes hours and minutes, and may optionally include seconds.
+    """
+
+    featuredActions: list[FeaturedAction] | None = pydantic.Field(
+        default=None, max_length=2
+    )
+    """
+    Optional.
+    Up to two actions to display as tappable tiles under the pass face, in priority order.
+    Requires iOS 27 or later.
     """
 
     footerBackgroundColor: str | None = None
