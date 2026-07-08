@@ -506,7 +506,7 @@ class Pass(BaseModel):
         if legacyBarcode is None:
             return None
 
-        if legacyBarcode not in original_formats:
+        if legacyBarcode.format not in original_formats:
             legacyBarcode = Barcode(
                 message=legacyBarcode.message,
                 format=BarcodeFormat.PDF417,

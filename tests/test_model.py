@@ -174,6 +174,18 @@ def test_code128_pass():
     assert thawedJson["barcodes"][0]["format"] == BarcodeFormat.CODE128.value
 
 
+def test_qr_pass_keeps_legacy_format():
+    """
+    QR is a legacy-capable barcode format, so the legacy barcode
+    field must keep the QR format instead of falling back to PDF417.
+    """
+    passobject = create_shell_pass(BarcodeFormat.QR).pass_object
+    jsonData = passobject.model_dump_json()
+    thawedJson = json.loads(jsonData)
+    assert thawedJson["barcode"]["format"] == BarcodeFormat.QR.value
+    assert thawedJson["barcodes"][0]["format"] == BarcodeFormat.QR.value
+
+
 def test_pdf_417_pass():
     """
     This test is to create a pass with a barcode that is valid
