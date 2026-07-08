@@ -14,6 +14,11 @@ class BarcodeFormat(Enum):
     QR = "PKBarcodeFormatQR"
     AZTEC = "PKBarcodeFormatAztec"
     CODE128 = "PKBarcodeFormatCode128"
+    # requires iOS 27 or later
+    EAN13 = "PKBarcodeFormatEAN13"
+    CODE39 = "PKBarcodeFormatCode39"
+    CODABAR = "PKBarcodeFormatCodabar"
+    ITF = "PKBarcodeFormatITF"
 
 
 class TransitType(Enum):
