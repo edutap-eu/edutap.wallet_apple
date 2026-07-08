@@ -299,6 +299,11 @@ class FeaturedAction(BaseModel):
     """
     An action displayed as a tappable tile under the pass face.
     Requires iOS 27 or later.
+
+    No reference page exists yet at
+    https://developer.apple.com/documentation/walletpasses (iOS 27 beta),
+    see https://developer.apple.com/videos/play/wwdc2026/209/ and
+    https://developer.apple.com/wallet/whats-new/ instead.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -615,7 +620,7 @@ class Pass(BaseModel):
     """
     Optional.
     Up to two actions to display as tappable tiles under the pass face, in priority order.
-    Requires iOS 27 or later.
+    Requires iOS 27 or later, see FeaturedAction for references.
     """
 
     footerBackgroundColor: str | None = None
