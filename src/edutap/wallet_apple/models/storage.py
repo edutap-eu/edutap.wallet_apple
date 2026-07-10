@@ -3,7 +3,6 @@ from datetime import timezone
 from pydantic import BaseModel
 from pydantic import Field
 
-
 # Based on: https://developer.apple.com/documentation/walletpasses/adding-a-web-service-to-update-passes#Store-Information
 
 

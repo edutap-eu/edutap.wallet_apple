@@ -7,7 +7,6 @@ from typing import Literal
 import os
 import structlog  # type: ignore
 
-
 logger = structlog.get_logger("edutap.wallet_apple")
 
 ROOT_DIR = Path(__file__).parents[3].resolve()
@@ -66,7 +65,9 @@ class Settings(BaseSettings):
 
     def get_available_passtype_ids(self) -> list[str]:
         """List of available pass type identifiers"""
-        return [p.stem.split("-")[-1] for p in self.cert_dir.glob("certificate-*.pem")]
+        return [
+            p.stem.split("-", 1)[-1] for p in self.cert_dir.glob("certificate-*.pem")
+        ]
 
     def get_logger(self):
         """A Structlog based logger."""

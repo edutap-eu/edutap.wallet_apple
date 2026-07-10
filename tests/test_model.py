@@ -4,6 +4,8 @@ from edutap.wallet_apple.models.passes import BarcodeFormat
 
 import conftest as conftest
 import json
+import pydantic
+import pytest
 
 
 def test_model():
@@ -55,6 +57,35 @@ def test_load_generic_pass():
     assert pass1.pass_information.__class__ == passes.Generic
     json_ = pass1.model_dump(exclude_none=True)
     assert json_
+
+
+def test_load_poster_generic_pass():
+    """
+    iOS 27 poster generic passes ship the posterGeneric style key
+    together with a generic fallback for older devices. Both keys
+    must validate side by side, and pass_information returns the
+    poster style since that is what current devices display.
+    """
+    buf = open(conftest.jsons / "poster_generic_pass.json").read()
+    pass1 = passes.Pass.model_validate_json(buf)
+
+    assert pass1.posterGeneric is not None
+    assert pass1.generic is not None
+    assert pass1.pass_information.__class__ == passes.PosterGeneric
+    assert pass1.posterGeneric.footerFields[0].key == "membershipType"
+
+    json_ = pass1.model_dump(exclude_none=True)
+    assert "posterGeneric" in json_
+    assert "generic" in json_
+    assert json_["posterGeneric"]["footerFields"][0]["value"] == "Family Pass"
+
+
+def test_poster_generic_add_footer_field():
+    info = passes.PosterGeneric()
+    info.addFooterField("membershipType", "Family Pass", None)
+    dumped = info.model_dump(exclude_none=True)
+    assert dumped["footerFields"][0]["key"] == "membershipType"
+    assert dumped["footerFields"][0]["value"] == "Family Pass"
 
 
 def test_load_boarding_pass():
@@ -174,6 +205,18 @@ def test_code128_pass():
     assert thawedJson["barcodes"][0]["format"] == BarcodeFormat.CODE128.value
 
 
+def test_qr_pass_keeps_legacy_format():
+    """
+    QR is a legacy-capable barcode format, so the legacy barcode
+    field must keep the QR format instead of falling back to PDF417.
+    """
+    passobject = create_shell_pass(BarcodeFormat.QR).pass_object
+    jsonData = passobject.model_dump_json()
+    thawedJson = json.loads(jsonData)
+    assert thawedJson["barcode"]["format"] == BarcodeFormat.QR.value
+    assert thawedJson["barcodes"][0]["format"] == BarcodeFormat.QR.value
+
+
 def test_pdf_417_pass():
     """
     This test is to create a pass with a barcode that is valid
@@ -184,6 +227,74 @@ def test_pdf_417_pass():
     thawedJson = json.loads(jsonData)
     assert thawedJson["barcode"]["format"] == BarcodeFormat.PDF417.value
     assert thawedJson["barcodes"][0]["format"] == BarcodeFormat.PDF417.value
+
+
+@pytest.mark.parametrize(
+    "fmt,expected",
+    [
+        ("EAN13", "PKBarcodeFormatEAN13"),
+        ("CODE39", "PKBarcodeFormatCode39"),
+        ("CODABAR", "PKBarcodeFormatCodabar"),
+        ("ITF", "PKBarcodeFormatITF"),
+    ],
+)
+def test_ios27_barcode_formats(fmt, expected):
+    """
+    iOS 27 adds EAN-13, Code 39, Codabar and ITF barcode formats.
+    They serialize with their PKBarcodeFormat identifier, and the
+    legacy barcode field falls back to PDF417 since they are not
+    legacy-capable.
+    """
+    barcode_format = getattr(BarcodeFormat, fmt)
+    assert barcode_format.value == expected
+
+    passobject = create_shell_pass(barcodeFormat=barcode_format).pass_object
+    thawedJson = json.loads(passobject.model_dump_json())
+    assert thawedJson["barcodes"][0]["format"] == expected
+    assert thawedJson["barcode"]["format"] == BarcodeFormat.PDF417.value
+
+    roundtripped = passes.Pass.from_json(passobject.model_dump_json(exclude_none=True))
+    assert roundtripped.barcodes[0].format == barcode_format
+
+
+def test_featured_actions():
+    """
+    iOS 27 adds the top-level featuredActions key: up to two tappable
+    actions in priority order, each with identifier, type and url.
+    """
+    passobject = create_shell_pass().pass_object
+    passobject.featuredActions = [
+        passes.FeaturedAction(
+            identifier="offers",
+            type="membershipBenefits",
+            url="https://example.com/offers",
+        )
+    ]
+    dumped = passobject.model_dump(exclude_none=True)
+    assert dumped["featuredActions"][0]["identifier"] == "offers"
+    assert dumped["featuredActions"][0]["type"] == "membershipBenefits"
+    assert dumped["featuredActions"][0]["url"] == "https://example.com/offers"
+
+    roundtripped = passes.Pass.from_json(passobject.model_dump_json(exclude_none=True))
+    assert roundtripped.featuredActions == passobject.featuredActions
+
+
+def test_featured_actions_allows_at_most_two():
+    action = {
+        "identifier": "offers",
+        "type": "membershipBenefits",
+        "url": "https://example.com/offers",
+    }
+    with pytest.raises(pydantic.ValidationError):
+        passes.Pass(
+            storeCard=passes.StoreCard(),
+            organizationName="Org Name",
+            passTypeIdentifier=conftest.PASS_TYPE_IDENTIFIER,
+            teamIdentifier="Team Identifier",
+            serialNumber="1234567",
+            description="A Sample Pass",
+            featuredActions=[action, action, action],
+        )
 
 
 def test_files():

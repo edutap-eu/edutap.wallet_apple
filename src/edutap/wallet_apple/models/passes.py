@@ -306,6 +306,24 @@ class Barcode(BaseModel):
     altText: str = ""  # Optional. Text displayed near the barcode
 
 
+class FeaturedAction(BaseModel):
+    """
+    An action displayed as a tappable tile under the pass face.
+    Requires iOS 27 or later.
+
+    No reference page exists yet at
+    https://developer.apple.com/documentation/walletpasses (iOS 27 beta),
+    see https://developer.apple.com/videos/play/wwdc2026/209/ and
+    https://developer.apple.com/wallet/whats-new/ instead.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    identifier: str  # Required. A unique identifier for the action
+    type: str  # Required. The action type, for example "membershipBenefits"
+    url: str  # Required. The universal link the action opens
+
+
 IBeacon = Beacon  # Alias for backward compatibility
 
 
@@ -430,6 +448,35 @@ class StoreCard(PassInformation):
     """
 
 
+@passmodel("posterGeneric")
+class PosterGeneric(PassInformation):
+    """
+    Generic pass with full-bleed background artwork. Requires iOS 27 or
+    later; ship it together with a generic fallback for older devices.
+
+    No reference page exists yet at
+    https://developer.apple.com/documentation/walletpasses (iOS 27 beta),
+    see https://developer.apple.com/videos/play/wwdc2026/209/ and
+    https://developer.apple.com/wallet/whats-new/ instead.
+    """
+
+    footerFields: typing.List[PassFieldContent | SemanticPassFieldContent] = (
+        pydantic.Field(default_factory=list)
+    )
+    """
+    Optional.
+    Fields to be displayed in the footer of the pass.
+    Only the first footer field is displayed.
+    """
+
+    def addFooterField(self, key, value, label, textAlignment=None):
+        self.footerFields.append(
+            PassFieldContent(
+                key=key, value=value, label=label, textAlignment=textAlignment
+            )
+        )
+
+
 class Pass(BaseModel):
     """
     Represents a pass object. This is the base class for all pass types.
@@ -517,7 +564,7 @@ class Pass(BaseModel):
         if legacyBarcode is None:
             return None
 
-        if legacyBarcode not in original_formats:
+        if legacyBarcode.format not in original_formats:
             legacyBarcode = Barcode(
                 message=legacyBarcode.message,
                 format=BarcodeFormat.PDF417,
@@ -607,10 +654,20 @@ class Pass(BaseModel):
     The value needs to be a complete date that includes hours and minutes, and may optionally include seconds.
     """
 
+<<<<<<< HEAD
     fidoProfile: FidoProfile | None = None
     """
     Optional.
     An object that contains the FIDO profile information for the pass.
+=======
+    featuredActions: list[FeaturedAction] | None = pydantic.Field(
+        default=None, max_length=2
+    )
+    """
+    Optional.
+    Up to two actions to display as tappable tiles under the pass face, in priority order.
+    Requires iOS 27 or later, see FeaturedAction for references.
+>>>>>>> origin/main
     """
 
     footerBackgroundColor: str | None = None
@@ -861,12 +918,18 @@ class Pass(BaseModel):
 
     @property
     def pass_information(self):
-        """Returns the pass information object by checking all passmodel entries using all()"""
+        """Returns the pass information object by checking all passmodel entries.
+
+        Poster styles take precedence over their designed fallback type:
+        an iOS 27 poster pass ships e.g. posterGeneric together with a
+        generic fallback for older devices, and current devices display
+        the poster style.
+        """
+        names = sorted(
+            pass_model_registry, key=lambda name: not name.startswith("poster")
+        )
         return next(
-            filter(
-                lambda x: x is not None,
-                (map(lambda x: getattr(self, x), pass_model_registry)),
-            )
+            info for info in (getattr(self, name) for name in names) if info is not None
         )
 
     @classmethod
