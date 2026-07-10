@@ -341,4 +341,6 @@ def test_fido_profile_and_issuer_binding_data_models():
     assert dumped["fidoProfile"]["accountHash"] == "YWJjZA=="
     assert "keyHash" not in dumped["fidoProfile"]
     assert dumped["issuerBindingData"]["issuerBindingData"] == "c2ln"
-    assert str(dumped["issuerBindingData"]["learnMoreURL"]).startswith("https://example.com")
+    assert str(dumped["issuerBindingData"]["learnMoreURL"]).startswith(
+        "https://example.com"
+    )
