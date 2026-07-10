@@ -654,12 +654,12 @@ class Pass(BaseModel):
     The value needs to be a complete date that includes hours and minutes, and may optionally include seconds.
     """
 
-<<<<<<< HEAD
     fidoProfile: FidoProfile | None = None
     """
     Optional.
     An object that contains the FIDO profile information for the pass.
-=======
+    """
+
     featuredActions: list[FeaturedAction] | None = pydantic.Field(
         default=None, max_length=2
     )
@@ -667,7 +667,6 @@ class Pass(BaseModel):
     Optional.
     Up to two actions to display as tappable tiles under the pass face, in priority order.
     Requires iOS 27 or later, see FeaturedAction for references.
->>>>>>> origin/main
     """
 
     footerBackgroundColor: str | None = None
