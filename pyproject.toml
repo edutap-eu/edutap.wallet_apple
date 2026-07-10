@@ -1,8 +1,8 @@
 [project]
 name = "edutap.wallet-apple"
-version = "1.0.0a3"
+version = "1.0.0a4"
 description = "Library for Apple Wallet Communication"
-keywords = ["wallet", "apple", "api", "pass", 'fastapi', 'digital identity']
+keywords = ["wallet", "apple", "api", "pass", "fastapi", "digital identity"]
 readme = "README.md"
 authors = [
     {name = "Alexander Loechel", email = "Alexander.Loechel@lmu.de"},
@@ -11,12 +11,14 @@ authors = [
     {name = "Robert Niederreiter", email = "rnix@squarewave.at"},
 ]
 requires-python = ">=3.10"
-license = { text = "EUPL 1.2" }
+license = "EUPL-1.2"
+license-files = ["LICENSE"]
 classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -51,7 +53,7 @@ fastapi = [
     "h2",
     "httpx",
 ]
-typecheck  = [
+typecheck = [
     "mypy",
     "pytest-stub",
     "types-PyYAML",
