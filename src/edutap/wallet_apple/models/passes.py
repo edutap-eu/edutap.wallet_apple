@@ -38,6 +38,17 @@ import yaml
 import zipfile
 
 
+class FidoProfile(BaseModel):
+    accountHash: str
+    relyingPartyIdentifier: str
+    keyHash: str | None = None
+
+
+class IssuerBindingData(BaseModel):
+    issuerBindingData: str
+    learnMoreURL: AnyHttpUrl
+
+
 def bytearray_to_base64(bytearr):
     encoded_data = base64.b64encode(bytearr)
     return encoded_data.decode("utf-8")
@@ -643,6 +654,12 @@ class Pass(BaseModel):
     The value needs to be a complete date that includes hours and minutes, and may optionally include seconds.
     """
 
+<<<<<<< HEAD
+    fidoProfile: FidoProfile | None = None
+    """
+    Optional.
+    An object that contains the FIDO profile information for the pass.
+=======
     featuredActions: list[FeaturedAction] | None = pydantic.Field(
         default=None, max_length=2
     )
@@ -650,6 +667,7 @@ class Pass(BaseModel):
     Optional.
     Up to two actions to display as tappable tiles under the pass face, in priority order.
     Requires iOS 27 or later, see FeaturedAction for references.
+>>>>>>> origin/main
     """
 
     footerBackgroundColor: str | None = None
@@ -683,6 +701,12 @@ class Pass(BaseModel):
     An identifier the system uses to group related boarding passes or event tickets.
     Wallet displays passes with the same groupingIdentifier, passTypeIdentifier, and type as a group.
     Use this identifier to group passes that are tightly related, such as boarding passes for different connections on the same trip.
+    """
+
+    issuerBindingData: IssuerBindingData | None = None
+    """
+    Optional.
+    An object that contains the issuer binding data for the pass.
     """
 
     labelColor: str | None = None

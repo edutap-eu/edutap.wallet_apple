@@ -313,3 +313,32 @@ def test_files():
     manifest_json = passfile._create_manifest()
     manifest = json.loads(manifest_json)
     assert "170eed23019542b0a2890a0bf753effea0db181a" == manifest["logo.png"]
+
+
+def test_fido_profile_and_issuer_binding_data_models():
+    from edutap.wallet_apple.models.passes import FidoProfile
+    from edutap.wallet_apple.models.passes import IssuerBindingData
+
+    fido = FidoProfile(
+        accountHash="YWJjZA==",
+        relyingPartyIdentifier="pass.demo.lmu.de",
+    )
+    assert fido.keyHash is None
+
+    ibd = IssuerBindingData(
+        issuerBindingData="c2ln",
+        learnMoreURL="https://example.com/learn-more",
+    )
+    assert str(ibd.learnMoreURL).startswith("https://example.com")
+
+    passobject = create_shell_pass().pass_object
+    assert passobject is not None
+
+    passobject.fidoProfile = fido
+    passobject.issuerBindingData = ibd
+    dumped = passobject.model_dump(exclude_none=True)
+
+    assert dumped["fidoProfile"]["accountHash"] == "YWJjZA=="
+    assert "keyHash" not in dumped["fidoProfile"]
+    assert dumped["issuerBindingData"]["issuerBindingData"] == "c2ln"
+    assert str(dumped["issuerBindingData"]["learnMoreURL"]).startswith("https://example.com")
