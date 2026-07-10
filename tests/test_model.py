@@ -330,3 +330,15 @@ def test_fido_profile_and_issuer_binding_data_models():
         learnMoreURL="https://example.com/learn-more",
     )
     assert str(ibd.learnMoreURL).startswith("https://example.com")
+
+    passobject = create_shell_pass().pass_object
+    assert passobject is not None
+
+    passobject.fidoProfile = fido
+    passobject.issuerBindingData = ibd
+    dumped = passobject.model_dump(exclude_none=True)
+
+    assert dumped["fidoProfile"]["accountHash"] == "YWJjZA=="
+    assert "keyHash" not in dumped["fidoProfile"]
+    assert dumped["issuerBindingData"]["issuerBindingData"] == "c2ln"
+    assert str(dumped["issuerBindingData"]["learnMoreURL"]).startswith("https://example.com")
