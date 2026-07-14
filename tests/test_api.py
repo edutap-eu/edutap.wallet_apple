@@ -14,6 +14,7 @@ from pydantic import ValidationError
 import conftest as conftest
 import json
 import pytest
+import zipfile
 
 settings = SettingsTest()
 
@@ -72,6 +73,58 @@ def test_load_pass_from_zip():
     with open(conftest.resources / "basic_pass.pkpass", "rb") as fh:
         pkpass = api.new(file=fh)
         assert pkpass is not None
+
+
+def _make_template(source_pkpass: bytes, tooling: bool = True) -> BytesIO:
+    """Build an in-memory .pkpasstemplate from an existing pkpass.
+
+    A .pkpasstemplate has the same flat layout as a .pkpass, but the
+    Apple Pass Designer additionally writes a designer-only ``tooling.json``.
+    This helper reuses an existing pkpass fixture as the base and adds that
+    artifact. Replace with real designer fixtures once available.
+    """
+    template = BytesIO()
+    with (
+        zipfile.ZipFile(BytesIO(source_pkpass)) as zin,
+        zipfile.ZipFile(template, "w") as zout,
+    ):
+        for name in zin.namelist():
+            zout.writestr(name, zin.read(name))
+        if tooling:
+            zout.writestr(
+                "tooling.json",
+                b'{"automaticallyGenerateCompatiblePass": true, "designerVersion": "1.0"}',
+            )
+    template.seek(0)
+    return template
+
+
+def test_from_template_strips_tooling_json():
+    """from_template loads a .pkpasstemplate and removes the designer-only
+    tooling.json, while keeping all real pass files."""
+    with open(conftest.resources / "basic_pass.pkpass", "rb") as fh:
+        template = _make_template(fh.read())
+
+    pkpass = api.from_template(file=template)
+
+    assert pkpass is not None
+    assert "tooling.json" not in pkpass.files
+    assert "pass.json" in pkpass.files
+    assert "icon.png" in pkpass.files
+
+
+def test_from_template_without_tooling_json_loads_unchanged():
+    """A template without tooling.json (already pkpass-shaped) loads with all
+    files intact."""
+    with open(conftest.resources / "basic_pass.pkpass", "rb") as fh:
+        source = fh.read()
+    template = _make_template(source, tooling=False)
+
+    pkpass = api.from_template(file=template)
+
+    assert pkpass is not None
+    expected = set(zipfile.ZipFile(BytesIO(source)).namelist())
+    assert set(pkpass.files.keys()) == expected
 
 
 def test_load_pass_with_data_and_file_must_fail():
