@@ -123,7 +123,8 @@ def test_from_template_without_tooling_json_loads_unchanged():
     pkpass = api.from_template(file=template)
 
     assert pkpass is not None
-    expected = set(zipfile.ZipFile(BytesIO(source)).namelist())
+with zipfile.ZipFile(BytesIO(source)) as zf:
+    expected = set(zf.namelist())
     assert set(pkpass.files.keys()) == expected
 
 
