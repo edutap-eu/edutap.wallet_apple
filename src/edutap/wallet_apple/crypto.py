@@ -49,6 +49,37 @@ def sign_manifest(
     return pkcs7_signature
 
 
+def sign_pkcs7_detached(
+    data: bytes,
+    private_key: PrivateKeyTypes,
+    certificate: Certificate,
+    extra_certificate: Certificate,
+    password: Optional[bytes] = None,
+) -> bytes:
+    """Create a detached PKCS#7 (DER) signature over arbitrary bytes.
+
+    SHA-256; embeds ``extra_certificate`` (e.g. an intermediate CA) in the
+    signature. Generic primitive with no domain semantics.
+
+    :param data: bytes to sign
+    :param private_key: private key used for signing
+    :param certificate: certificate matching the private key
+    :param extra_certificate: additional certificate to embed in the signature
+    :param password: unused, kept for signature symmetry with the other
+        signing helpers in this module
+    :return: detached pkcs7 signature as DER-encoded bytes
+    """
+    signature_builder = (
+        PKCS7SignatureBuilder()
+        .set_data(data)
+        .add_signer(certificate, private_key, hashes.SHA256())
+        .add_certificate(extra_certificate)
+    )
+    return signature_builder.sign(
+        Encoding.DER, [PKCS7Options.DetachedSignature, PKCS7Options.Binary]
+    )
+
+
 def create_keys(
     private_key_data: bytes,
     certificate_data: bytes,
