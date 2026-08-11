@@ -35,28 +35,31 @@ def sign_manifest(
     :param key: path to private key
     :wwdr_certificate: path to wwdr_certificate
     :return: pkcs7 signature as bytes
-    """
 
-    # PKCS7: see https://www.youtube.com/watch?v=3YJ0by1r3qE
-    signature_builder = (
-        PKCS7SignatureBuilder()
-        .set_data(manifest.encode("utf-8"))
-        .add_signer(certificate, private_key, hashes.SHA256())
-        .add_certificate(wwdr_certificate)
+    Thin wrapper over :func:`sign_pkcs7`. Produces an *attached* signature
+    (``detached=False``), the form this library has always emitted for the
+    pass ``manifest.json``.
+    """
+    return sign_pkcs7(
+        manifest.encode("utf-8"),
+        private_key,
+        certificate,
+        wwdr_certificate,
+        detached=False,
+        password=password,
     )
 
-    pkcs7_signature = signature_builder.sign(Encoding.DER, [])
-    return pkcs7_signature
 
-
-def sign_pkcs7_detached(
+def sign_pkcs7(
     data: bytes,
     private_key: PrivateKeyTypes,
     certificate: Certificate,
     extra_certificate: Certificate,
+    *,
+    detached: bool = False,
     password: Optional[bytes] = None,
 ) -> bytes:
-    """Create a detached PKCS#7 (DER) signature over arbitrary bytes.
+    """Create a PKCS#7 (DER) signature over arbitrary bytes.
 
     SHA-256; embeds ``extra_certificate`` (e.g. an intermediate CA) in the
     signature. Generic primitive with no domain semantics.
@@ -65,19 +68,24 @@ def sign_pkcs7_detached(
     :param private_key: private key used for signing
     :param certificate: certificate matching the private key
     :param extra_certificate: additional certificate to embed in the signature
+    :param detached: when true the signed data is NOT embedded in the PKCS#7
+        structure (this is the form Apple's Wallet pass-signing spec specifies
+        for the manifest signature); when false the data is embedded (attached)
     :param password: unused, kept for signature symmetry with the other
         signing helpers in this module
-    :return: detached pkcs7 signature as DER-encoded bytes
+    :return: pkcs7 signature as DER-encoded bytes
     """
+    # PKCS7: see https://www.youtube.com/watch?v=3YJ0by1r3qE
     signature_builder = (
         PKCS7SignatureBuilder()
         .set_data(data)
         .add_signer(certificate, private_key, hashes.SHA256())
         .add_certificate(extra_certificate)
     )
-    return signature_builder.sign(
-        Encoding.DER, [PKCS7Options.DetachedSignature, PKCS7Options.Binary]
+    options = (
+        [PKCS7Options.DetachedSignature, PKCS7Options.Binary] if detached else []
     )
+    return signature_builder.sign(Encoding.DER, options)
 
 
 def create_keys(
