@@ -82,9 +82,7 @@ def sign_pkcs7(
         .add_signer(certificate, private_key, hashes.SHA256())
         .add_certificate(extra_certificate)
     )
-    options = (
-        [PKCS7Options.DetachedSignature, PKCS7Options.Binary] if detached else []
-    )
+    options = [PKCS7Options.DetachedSignature, PKCS7Options.Binary] if detached else []
     return signature_builder.sign(Encoding.DER, options)
 
 
