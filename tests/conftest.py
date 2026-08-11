@@ -1,3 +1,8 @@
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import NameOID
 from edutap.wallet_apple import crypto
 from edutap.wallet_apple.models.passes import Barcode
 from edutap.wallet_apple.models.passes import BarcodeFormat
@@ -10,6 +15,7 @@ from importlib import metadata
 from pathlib import Path
 from typing import Callable
 
+import datetime
 import os
 import platform
 import pytest
@@ -25,7 +31,7 @@ certs = data / "certs"
 password_file = certs / "password.txt"
 cert_file = certs / "private" / "certificate.pem"
 key_file = certs / "private" / "private.key"
-wwdr_file = certs / "private" / "wwdr_certificate.pem"
+wwdr_file = certs / "wwdr_certificate.pem"
 
 PASS_TYPE_IDENTIFIER = "pass.demo.lmu.de"
 
@@ -98,6 +104,40 @@ def settings_test():
     )
 
     return settings
+
+
+@pytest.fixture(scope="session")
+def signing_material() -> tuple[bytes, bytes, bytes]:
+    """PEM-encoded (private_key, certificate, wwdr_certificate) bytes for crypto tests.
+
+    Private key and certificate are an ephemeral self-signed pair generated on
+    the fly, so crypto tests do not depend on real Apple developer
+    credentials. The wwdr certificate is the real Apple WWDR intermediate
+    shipped in ``tests/data/certs``.
+    """
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    name = x509.Name(
+        [x509.NameAttribute(NameOID.COMMON_NAME, "edutap.wallet_apple test signer")]
+    )
+    now = datetime.datetime.now(datetime.timezone.utc)
+    certificate = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(private_key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - datetime.timedelta(days=1))
+        .not_valid_after(now + datetime.timedelta(days=1))
+        .sign(private_key, hashes.SHA256())
+    )
+    private_key_data = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    certificate_data = certificate.public_bytes(serialization.Encoding.PEM)
+    wwdr_certificate_data = wwdr_file.read_bytes()
+    return private_key_data, certificate_data, wwdr_certificate_data
 
 
 @pytest.fixture(scope="function")
