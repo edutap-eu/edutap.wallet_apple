@@ -31,8 +31,7 @@ certs = data / "certs"
 password_file = certs / "password.txt"
 cert_file = certs / "private" / "certificate.pem"
 key_file = certs / "private" / "private.key"
-wwdr_file = certs / "private" / "wwdr_certificate.pem"
-wwdr_certificate_file = certs / "wwdr_certificate.pem"
+wwdr_file = certs / "wwdr_certificate.pem"
 
 PASS_TYPE_IDENTIFIER = "pass.demo.lmu.de"
 
@@ -137,7 +136,7 @@ def signing_material() -> tuple[bytes, bytes, bytes]:
         encryption_algorithm=serialization.NoEncryption(),
     )
     certificate_data = certificate.public_bytes(serialization.Encoding.PEM)
-    wwdr_certificate_data = wwdr_certificate_file.read_bytes()
+    wwdr_certificate_data = wwdr_file.read_bytes()
     return private_key_data, certificate_data, wwdr_certificate_data
 
 
