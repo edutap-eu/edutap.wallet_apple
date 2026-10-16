@@ -41,6 +41,28 @@ def new(
     return pkpass
 
 
+def from_template(
+    file: BinaryIO,
+) -> passes.PkPass:
+    """
+    Create a pass model from a ``.pkpasstemplate``.
+
+    A ``.pkpasstemplate`` is the project format of Apple's Pass Designer.
+    Structurally it matches a ``.pkpass`` (all files at the archive root under
+    the standard names), but it additionally contains a designer-only
+    ``tooling.json`` that is not part of a Wallet pass.
+
+    This loads the template like a regular pkpass and removes ``tooling.json``.
+    The returned pass still needs to be (re-)signed via :func:`sign` before use.
+
+    :param file: Binary IO data containing a ``.pkpasstemplate`` zip file.
+    :return: PkPass model instance.
+    """
+    pkpass = passes.PkPass.from_zip(file)
+    pkpass.files.pop("tooling.json", None)
+    return pkpass
+
+
 def verify(
     pkpass: passes.PkPass,
     recompute_manifest=True,
